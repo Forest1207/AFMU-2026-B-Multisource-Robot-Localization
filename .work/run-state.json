@@ -6,7 +6,7 @@
   "year": null,
   "problem_id": null,
   "created_at_utc": "2026-08-18T16:37:50.640849+00:00",
-  "updated_at_utc": "2026-08-18T19:17:15.356270+00:00",
+  "updated_at_utc": "2026-08-18T23:05:31.091692+00:00",
   "assumptions": [],
   "open_issues": [],
   "decisions": [
@@ -89,10 +89,10 @@
     },
     "final-paper": {
       "path": "08_delivery\\B题-完整论文.pdf",
-      "sha256": "6b6df8e7552a164f3049f8d93b2abd59cacb8d2ceee264a3d5caf5d8daba23ba",
-      "bytes": 1838568,
-      "purpose": "27页严格验证最终LaTeX论文PDF",
-      "recorded_at_utc": "2026-08-18T19:14:16.562034+00:00"
+      "sha256": "7e4e2c18894fe9e4f623c11aadfbf7fe09775d67c250d6566d7dcad765bdf81a",
+      "bytes": 1834243,
+      "purpose": "删除非标准数据审计章节后的27页正式论文",
+      "recorded_at_utc": "2026-08-18T23:05:30.863197+00:00"
     },
     "final-score": {
       "path": "evidence\\final_score.md",
@@ -212,6 +212,21 @@
         "evidence\\gates\\PK2_delivery_gate.md"
       ],
       "at_utc": "2026-08-18T19:17:15.356270+00:00"
+    },
+    "W2-SECTION-REVISION": {
+      "status": "PASS",
+      "evidence": [
+        "evidence\\latex_validation.json",
+        "evidence\\pdf_visual_qa.md"
+      ],
+      "at_utc": "2026-08-18T23:05:30.669751+00:00"
+    },
+    "PK2-SECTION-REVISION": {
+      "status": "PASS",
+      "evidence": [
+        "evidence\\gates\\PK2_delivery_gate.md"
+      ],
+      "at_utc": "2026-08-18T23:05:31.091692+00:00"
     }
   },
   "history": [
@@ -345,7 +360,25 @@
       "gate": "PK2",
       "gate_status": "PASS",
       "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T23:05:30.669751+00:00",
+      "event": "advance",
+      "from": "complete",
+      "to": "package",
+      "gate": "W2-SECTION-REVISION",
+      "gate_status": "PASS",
+      "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T23:05:31.091692+00:00",
+      "event": "advance",
+      "from": "package",
+      "to": "complete",
+      "gate": "PK2-SECTION-REVISION",
+      "gate_status": "PASS",
+      "user_approval": null
     }
   ],
-  "next_action": "论文、LaTeX、结果表、证据链与GitHub发布均已完成"
+  "next_action": "第五章已删除，PDF、LaTeX与GitHub同步完成"
 }

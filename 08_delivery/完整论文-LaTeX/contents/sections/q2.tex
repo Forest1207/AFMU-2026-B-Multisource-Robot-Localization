@@ -2,6 +2,8 @@
 
 \subsection{联合时间—空间偏差模型}\label{ux8054ux5408ux65f6ux95f4ux7a7aux95f4ux504fux5deeux6a21ux578b}
 
+本问沿用经典多传感器数据融合的分层思想\cite{hall1997}，并用 Huber 损失抑制粗大残差对时空标定的影响\cite{huber1964}。
+
 以定位方式 1 的时钟为参考，定义定位方式 2 的设备时刻到参考时刻的映射为
 
 \begin{equation}
@@ -72,6 +74,8 @@ m，说明稳健化没有依赖少量异常点改变结论；含粗大离群点�
 m，该量是两套含噪观测之差，而不是融合轨迹相对真值的误差。
 
 \subsection{异步常加速度状态空间模型}\label{ux5f02ux6b65ux5e38ux52a0ux901fux5ea6ux72b6ux6001ux7a7aux95f4ux6a21ux578b}
+
+融合阶段采用 Kalman 滤波的递推估计框架\cite{kalman1960}，并用 RTS 固定区间平滑利用离线全区间信息\cite{rts1965}。
 
 设状态为
 

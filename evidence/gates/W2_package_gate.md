@@ -10,7 +10,7 @@
 
 ## 自动验证
 
-- `evidence/latex_validation.json`：`passed=true`；27 页，正文含参考文献 25 页、附录 2 页，42 个编号公式、19 幅图、5 张表、8 条引用。
+- `evidence/latex_validation.json`：`passed=true`；27 页，正文含参考文献 25 页、附录 2 页，40 个编号公式、19 幅图、5 张表、8 条引用。
 - XeLaTeX 连续两遍正常退出；无缺失文件、未定义命令、重复标签、未解析交叉引用、字体缺失、Overfull/Underfull 或空白页。
 - A4、25 mm 边距、摘要首页、无目录、无承诺书和编号页、页脚连续页码、无队伍/姓名/学校/教师信息。
 - 最低栅格图分辨率 730 dpi，高于 300 dpi 门槛；其余主要图件为矢量 PDF。

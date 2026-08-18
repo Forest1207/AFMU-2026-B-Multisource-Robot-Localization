@@ -29,7 +29,7 @@ t_{2,\mathrm{ref}}=t_2-\Delta t,
 \subsection{统计—工程双阈值偏差判定}\label{ux7edfux8ba1ux5de5ux7a0bux53ccux9608ux503cux504fux5deeux5224ux5b9a}
 
 为避免把时序相关残差当作独立样本，采用 Newey--West/HAC
-长期协方差估计样本均值的协方差
+长期协方差估计样本均值的协方差\cite{neweywest1987}
 \(\widehat{\boldsymbol\Sigma}_{\bar d}\)，检验
 
 \begin{equation}
@@ -49,7 +49,7 @@ E_b=\frac{\|\bar{\mathbf d}\|_2}{s_r},
 其中 \(s_r\) 是二维残差模长的 MAD 稳健尺度。仅当 \(p<0.05\) 且
 \(E_b\ge0.25\)
 时，才认为偏差同时具有统计意义与工程意义，并在融合状态中启用偏差项。为检验推断对分布和相关结构的依赖，再使用保持局部时序结构的移动块
-bootstrap 构造逐轴置信区间，并用 HAC 回归检验偏差趋势。
+bootstrap 构造逐轴置信区间\cite{kunsch1989}，并用 HAC 回归检验偏差趋势。
 
 实算普通均值为
 

@@ -2,7 +2,7 @@
   "main_tex": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX\\main.tex",
   "project_root": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX",
   "pdf_path": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\B题-完整论文.pdf",
-  "source_sha256": "f0159ff295fa6bafc5d530d164d00c57c16eeb35be402315b7a88dbd584b859e",
+  "source_sha256": "e1b771ccee8a0ce601e07cfe315bfb7efe08c199745a215d07fbece87e9bb334",
   "rendered_pages": 27,
   "body_pages": 25,
   "main_matter_pages": 25,
@@ -24,15 +24,15 @@
   },
   "build_manifest": {
     "schema_version": 1,
-    "created_at": "2026-08-18T19:05:17.118763+00:00",
+    "created_at": "2026-08-18T23:04:20.292777+00:00",
     "passed": true,
     "main_tex": "main.tex",
     "project_root": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX",
-    "source_sha256": "f0159ff295fa6bafc5d530d164d00c57c16eeb35be402315b7a88dbd584b859e",
-    "compiled_source_sha256": "f0159ff295fa6bafc5d530d164d00c57c16eeb35be402315b7a88dbd584b859e",
-    "post_build_source_sha256": "f0159ff295fa6bafc5d530d164d00c57c16eeb35be402315b7a88dbd584b859e",
-    "pdf_sha256": "6b6df8e7552a164f3049f8d93b2abd59cacb8d2ceee264a3d5caf5d8daba23ba",
-    "project_manifest_sha256": "96be5c085f1dc94ba4c151f082ae437ee4d0d304b0888f31d6c6744f314520e2",
+    "source_sha256": "e1b771ccee8a0ce601e07cfe315bfb7efe08c199745a215d07fbece87e9bb334",
+    "compiled_source_sha256": "e1b771ccee8a0ce601e07cfe315bfb7efe08c199745a215d07fbece87e9bb334",
+    "post_build_source_sha256": "e1b771ccee8a0ce601e07cfe315bfb7efe08c199745a215d07fbece87e9bb334",
+    "pdf_sha256": "7e4e2c18894fe9e4f623c11aadfbf7fe09775d67c250d6566d7dcad765bdf81a",
+    "project_manifest_sha256": "5192d6ba776620dd62b5f5703ac7a4a451611423a3fe8ffad56a1c3b8800a60b",
     "engine": "xelatex",
     "tools": {
       "latexmk": {
@@ -56,7 +56,7 @@
         ],
         "cwd": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX",
         "returncode": 0,
-        "duration_seconds": 4.625
+        "duration_seconds": 4.765
       },
       {
         "command": [
@@ -69,7 +69,7 @@
         ],
         "cwd": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX",
         "returncode": 0,
-        "duration_seconds": 4.109
+        "duration_seconds": 3.906
       }
     ],
     "warnings": [],
@@ -79,7 +79,7 @@
       "reason": null
     },
     "issues": [],
-    "reproduce": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\.venv\\Scripts\\python.exe C:\\Users\\王艺骏\\.codex\\skills\\math-contest-assistant\\tools\\latex\\scripts\\latex_paper.py build D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX\\main.tex --engine xelatex --timeout 240 --publish D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\B题-完整论文.pdf --overwrite"
+    "reproduce": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\.venv\\Scripts\\python.exe C:\\Users\\王艺骏\\.codex\\skills\\math-contest-assistant\\tools\\latex\\scripts\\latex_paper.py build D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX\\main.tex --engine xelatex --timeout 180 --publish D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\B题-完整论文.pdf --overwrite"
   },
   "thresholds": {
     "min_content_units": 0,
@@ -93,16 +93,16 @@
       "name": "max_pages",
       "default": 25,
       "value": 30,
-      "reason": "2026国赛规范规定正文不超过30页；本稿正文含参考文献共25页，附录另2页，总计27页。"
+      "reason": "2026国赛规范规定正文不超过30页；删除非标准独立章节后，正文含参考文献仍为25页，附录另2页，总计27页。"
     }
   ],
   "metrics": {
-    "content_units": 12443,
-    "equations": 42,
+    "content_units": 11850,
+    "equations": 40,
     "figures": 19,
     "tables": 5,
     "citations": 8,
-    "source_files": 17,
+    "source_files": 16,
     "question_figure_coverage": {
       "q1": true,
       "q2": true,
