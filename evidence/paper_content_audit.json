@@ -55,9 +55,9 @@
       "fc7132ac322ba6818661777bbbb52b2053b9b598f5c57a7d8115b27cb7ab6ad5"
     ],
     "numbered_result_tables": 0,
-    "chinese_characters": 4959,
-    "question_markers": 4,
-    "template_sequence_words": 0,
+    "chinese_characters": 5851,
+    "question_markers": 0,
+    "template_sequence_words": 1,
     "references": 8,
     "plain_text_math": 0,
     "human_phrases": 0,
@@ -111,9 +111,9 @@
     "benchmark_samples": 1,
     "benchmark_forbidden_terms": 8,
     "final_docx_checked": true,
-    "final_docx_characters": 8016,
+    "final_docx_characters": 9115,
     "final_docx_plain_text_math": 0,
-    "final_docx_headings": 28
+    "final_docx_headings": 49
   },
   "issues": []
 }

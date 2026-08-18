@@ -1,0 +1,47 @@
+\section{模型的建立与求解}\label{sec:model-establishment-solution}
+
+\subsection{总体分析}\label{sec:model-overview}
+
+为避免将“模型一至模型四”误解为同一问题的候选模型，本文约定模型一、模型二、模型三和模型四分别对应问题一、问题二、问题三和问题四。四个模型共享平面坐标单位米、时间单位秒和10 Hz输出步长，但证据边界不同：模型一处理题设无噪声数据；模型二估计含噪数据的时间与相对空间偏差；模型三先检验偏差再选择融合状态；模型四只在模型三的固定轨迹上优化任务，不改变上游轨迹。
+
+四个模型的输入输出接口见表\ref{tab:model-interfaces}。时间配准误差首先进入跨设备相对残差，随后通过滤波状态及模型内不确定性传递到目标距离、速度、加速度和完整准备窗裕度。因此，下游模型使用上游结果时同时继承其时钟定义、单位和不确定性边界。
+
+\begin{table}[htbp]
+\centering
+\caption{模型一至模型四的输入输出接口}
+\label{tab:model-interfaces}
+\small
+\begin{tabular}{c c p{3.0cm} p{3.7cm} p{3.7cm}}
+\toprule
+模型 & 对应问题 & 主要输入 & 核心输出 & 下游用途 \\
+\midrule
+模型一 & 问题一 & 附件1无噪声定位 & 时间校正量、10 Hz位置 & 统一时间符号与输出字段 \\
+模型二 & 问题二 & 附件2含噪定位 & 时空标定、10 Hz融合状态 & 建立异步融合方法 \\
+模型三 & 问题三 & 附件3实际定位 & 偏差判定、状态与标准差 & 提供固定任务轨迹 \\
+模型四 & 问题四 & 模型三轨迹、附件4目标 & 九项日程与约束裕度 & 填写结果工作簿副本 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+总体技术路线见图\ref{fig:technical-route}。原始4 Hz和5 Hz观测先完成时间配准，再按问题条件进入无噪声重建或含噪异步融合；偏差判定决定模型三的状态维度，最终状态与不确定性进入固定轨迹任务优化。该单向流程保证前问的时间符号和10 Hz字段不会在后问被重新解释。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.86\textwidth]{paper/technical_route.pdf}
+  \caption{模型一至模型四的总体技术路线与证据传递}
+  \label{fig:technical-route}
+\end{figure}
+
+子问题依赖和共享接口见图\ref{fig:subproblem-flow}。模型三向模型四传递位置、速度、加速度及模型内位置标准差；由于题目规定轨迹固定，模型四只判断准备窗可行性和任务冲突，不重新规划路径。该接口要求模型三披露非事件时刻的短时传播近似，并由模型四通过连续时间复核和扰动试验控制其工程使用边界。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.88\textwidth]{paper/subproblem_flow.pdf}
+  \caption{四个模型的依赖关系、共享时钟与状态接口}
+  \label{fig:subproblem-flow}
+\end{figure}
+
+\input{contents/sections/q1.tex}
+\input{contents/sections/q2.tex}
+\input{contents/sections/q3.tex}
+\input{contents/sections/q4.tex}

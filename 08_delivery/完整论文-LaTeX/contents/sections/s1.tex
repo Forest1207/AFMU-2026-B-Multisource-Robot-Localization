@@ -41,18 +41,4 @@
 \subsection{问题间关联分析}
 四问形成逐层传递的证据链：问题一验证固定时间偏差和异频重建的基本机制；问题二扩展到含噪声和固定偏差的异步融合；问题三先判定偏差状态是否必要，再给出实际轨迹及状态不确定性；问题四在该轨迹上完成任务调度。为避免符号歧义，后文每一问均在公式旁明确时间戳的映射方向，而不只报告偏差数值。
 
-图\ref{fig:technical-route}给出从原始观测到任务日程的总体技术路线；图\ref{fig:subproblem-flow}进一步标明前问输出和后问输入之间的状态、时钟与不确定性接口。
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=.94\textwidth]{paper/technical_route.pdf}
-  \caption{配准、融合、偏差判定与任务调度的总体技术路线}
-  \label{fig:technical-route}
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=.88\textwidth]{paper/subproblem_flow.pdf}
-  \caption{四个子问题的依赖关系与共享数据接口}
-  \label{fig:subproblem-flow}
-\end{figure}
+四个模型的输入输出接口、总体技术路线和共享数据关系在第\ref{sec:model-overview}节统一说明。

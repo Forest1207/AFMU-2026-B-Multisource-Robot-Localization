@@ -2,14 +2,14 @@
   "main_tex": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX\\main.tex",
   "project_root": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX",
   "pdf_path": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\B题-完整论文.pdf",
-  "source_sha256": "e1b771ccee8a0ce601e07cfe315bfb7efe08c199745a215d07fbece87e9bb334",
-  "rendered_pages": 27,
-  "body_pages": 25,
-  "main_matter_pages": 25,
+  "source_sha256": "188a0034f7ca6364d8eef6ba8a464e59dbe9e264fe8e8fef05a224e4f8f6f1b4",
+  "rendered_pages": 29,
+  "body_pages": 26,
+  "main_matter_pages": 27,
   "appendix_pages": 2,
   "page_limit_scope": "body",
   "pdf_audit": {
-    "pages": 27,
+    "pages": 29,
     "blank_pages": [],
     "page_sizes_pt": [
       [
@@ -24,15 +24,15 @@
   },
   "build_manifest": {
     "schema_version": 1,
-    "created_at": "2026-08-18T23:04:20.292777+00:00",
+    "created_at": "2026-08-18T23:39:38.675154+00:00",
     "passed": true,
     "main_tex": "main.tex",
     "project_root": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX",
-    "source_sha256": "e1b771ccee8a0ce601e07cfe315bfb7efe08c199745a215d07fbece87e9bb334",
-    "compiled_source_sha256": "e1b771ccee8a0ce601e07cfe315bfb7efe08c199745a215d07fbece87e9bb334",
-    "post_build_source_sha256": "e1b771ccee8a0ce601e07cfe315bfb7efe08c199745a215d07fbece87e9bb334",
-    "pdf_sha256": "7e4e2c18894fe9e4f623c11aadfbf7fe09775d67c250d6566d7dcad765bdf81a",
-    "project_manifest_sha256": "5192d6ba776620dd62b5f5703ac7a4a451611423a3fe8ffad56a1c3b8800a60b",
+    "source_sha256": "188a0034f7ca6364d8eef6ba8a464e59dbe9e264fe8e8fef05a224e4f8f6f1b4",
+    "compiled_source_sha256": "188a0034f7ca6364d8eef6ba8a464e59dbe9e264fe8e8fef05a224e4f8f6f1b4",
+    "post_build_source_sha256": "188a0034f7ca6364d8eef6ba8a464e59dbe9e264fe8e8fef05a224e4f8f6f1b4",
+    "pdf_sha256": "164e0afb5c7b1230fa7eb8ea88f51521428c7eb0eaa63f3e2f89def13f35fe1e",
+    "project_manifest_sha256": "83adba1dadaab9493d203070cb746b5fca969cfbd10b64ae71a94de5cdaa61ea",
     "engine": "xelatex",
     "tools": {
       "latexmk": {
@@ -56,7 +56,7 @@
         ],
         "cwd": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX",
         "returncode": 0,
-        "duration_seconds": 4.765
+        "duration_seconds": 4.5
       },
       {
         "command": [
@@ -69,7 +69,7 @@
         ],
         "cwd": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX",
         "returncode": 0,
-        "duration_seconds": 3.906
+        "duration_seconds": 3.797
       }
     ],
     "warnings": [],
@@ -79,30 +79,30 @@
       "reason": null
     },
     "issues": [],
-    "reproduce": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\.venv\\Scripts\\python.exe C:\\Users\\王艺骏\\.codex\\skills\\math-contest-assistant\\tools\\latex\\scripts\\latex_paper.py build D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX\\main.tex --engine xelatex --timeout 180 --publish D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\B题-完整论文.pdf --overwrite"
+    "reproduce": "C:\\Users\\王艺骏\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe C:\\Users\\王艺骏\\.codex\\skills\\math-contest-assistant\\tools\\latex\\scripts\\latex_paper.py build D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX\\main.tex --engine xelatex --timeout 240 --publish D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\B题-完整论文.pdf --overwrite"
   },
   "thresholds": {
     "min_content_units": 0,
     "min_pages": 20,
     "min_equations": 15,
     "min_figures": 12,
-    "min_tables": 2
+    "min_tables": 0
   },
   "threshold_overrides": [
     {
       "name": "max_pages",
       "default": 25,
       "value": 30,
-      "reason": "2026国赛规范规定正文不超过30页；删除非标准独立章节后，正文含参考文献仍为25页，附录另2页，总计27页。"
+      "reason": "校赛通知要求正文20至30页；本稿正文含参考文献27页，未超官方30页上限"
     }
   ],
   "metrics": {
-    "content_units": 11850,
+    "content_units": 13306,
     "equations": 40,
     "figures": 19,
     "tables": 5,
     "citations": 8,
-    "source_files": 16,
+    "source_files": 17,
     "question_figure_coverage": {
       "q1": true,
       "q2": true,

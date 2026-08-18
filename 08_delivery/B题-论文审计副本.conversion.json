@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
-  "created_at": "2026-08-18T19:07:49.962009+00:00",
+  "created_at": "2026-08-18T23:38:05.917974+00:00",
   "source_format": "markdown",
   "source": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\07_paper\\final_paper.md",
   "source_files": [
     "final_paper.md"
   ],
-  "source_sha256": "77bd935455b16ad6ffc01fa8d3a4636c99aa801e3aa718536a030f3f6d530115",
+  "source_sha256": "6eb3c572bedbdae6103b60b7ceae13bac30d6a39e0bcbd0d89dae0c1212a8f75",
   "project_files": [
     "final_paper.md"
   ],
-  "project_sha256": "77bd935455b16ad6ffc01fa8d3a4636c99aa801e3aa718536a030f3f6d530115",
+  "project_sha256": "6eb3c572bedbdae6103b60b7ceae13bac30d6a39e0bcbd0d89dae0c1212a8f75",
   "output": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\B题-论文审计副本.docx",
-  "output_sha256": "826dc7ecc88e47d1c48df4b281d87991e45522abd0480b777cafd2b7d4230fe6",
+  "output_sha256": "6cd7ae73268cf07a6811374d631e4dc35d59ad4eb35048a628da028bafae9ac4",
   "template": null,
   "template_sha256": null,
   "pandoc": {
@@ -27,18 +27,18 @@
     "docx",
     "--standalone",
     "--citeproc",
-    "C:\\Users\\王艺骏\\AppData\\Local\\Temp\\tmpjlawatf7.md",
+    "C:\\Users\\王艺骏\\AppData\\Local\\Temp\\tmpqvf_9xpw.md",
     "--output",
-    "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\tmpgi1q8s2n.docx",
+    "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\tmpgcip7qnl.docx",
     "--resource-path=D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\07_paper"
   ],
   "returncode": 0,
-  "duration_seconds": 1.859,
+  "duration_seconds": 1.688,
   "warnings": [],
   "allowed_warnings": [],
   "warning_override": {
     "patterns": [],
     "reason": null
   },
-  "reproduce": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\.venv\\Scripts\\python.exe C:\\Users\\王艺骏\\.codex\\skills\\math-contest-assistant\\tools\\docx\\scripts\\equations.py generate D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\07_paper\\final_paper.md --output D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\B题-论文审计副本.docx --timeout 120 --overwrite"
+  "reproduce": "C:\\Users\\王艺骏\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe C:\\Users\\王艺骏\\.codex\\skills\\math-contest-assistant\\tools\\docx\\scripts\\equations.py generate D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\07_paper\\final_paper.md --output D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\B题-论文审计副本.docx --timeout 120 --overwrite"
 }

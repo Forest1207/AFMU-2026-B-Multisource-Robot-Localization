@@ -1,6 +1,8 @@
-\section{问题一：无噪声异频定位数据的时间对齐与轨迹重建}\label{ux95eeux9898ux4e00ux65e0ux566aux58f0ux5f02ux9891ux5b9aux4f4dux6570ux636eux7684ux65f6ux95f4ux5bf9ux9f50ux4e0eux8f68ux8ff9ux91cdux5efa}
+\subsection{模型一的建立与求解：无噪声时间配准与10 Hz轨迹重建}\label{sec:model-q1}
 
-\subsection{任务与证据边界}\label{ux4efbux52a1ux4e0eux8bc1ux636eux8fb9ux754c}
+\subsubsection{模型一的建立}\label{sec:q1-establishment}
+
+\noindent\textbf{（1）模型目标、输入输出与证据边界。}
 
 附件 1 给出同一机器人轨迹的两组无噪声采样：方式 1 为 4 Hz，方式 2 为 5
 Hz。两台设备开机先后不同，故设备时间轴之间存在固定偏差。本问需要估计该
@@ -11,7 +13,7 @@ Hz。两台设备开机先后不同，故设备时间轴之间存在固定偏差
 s，无缺失和重复时间戳。由于题面明确无噪声，本问不进行滤波、
 平滑或异常值删除。
 
-\subsection{模型选择}\label{ux6a21ux578bux9009ux62e9}
+\noindent\textbf{（2）方法选择与无噪声边界。}
 
 方案 A 直接在粗网格上最小化位置误差，简单但最终精度受网格步长限制；方案
 B
@@ -25,18 +27,20 @@ B。
 四种插值。最终以对齐后的 跨传感器位置 RMSE
 为主判据，并兼顾无噪声轨迹的连续可导性，选择 Cubic Spline；其中 PCHIP 的保形性质及其使用边界参照分段三次插值理论\cite{fritsch1980}。
 
-\subsection{时间偏差模型}\label{ux65f6ux95f4ux504fux5deeux6a21ux578b}
+\noindent\textbf{（3）时间映射与位置误差目标。}
 
 记两种定位数据为
 
 \begin{equation}
 D_m=\{(t_i^{(m)},x_i^{(m)},y_i^{(m)})\},\qquad m=1,2,
+\label{eq:q1-data}
 \end{equation}
 
 并分别建立连续二维轨迹 \(\mathbf r_m(t)\)。定义方式 2 的校正时间为
 
 \begin{equation}
 t_{2,\mathrm{aligned}}=t_2+\Delta t.
+\label{eq:q1-time-map}
 \end{equation}
 
 因此 \(\Delta t<0\) 表示方式 2 的时间戳需要整体向前平移。对候选偏差
@@ -48,6 +52,7 @@ t_{2,\mathrm{aligned}}=t_2+\Delta t.
 \max(t_{1,\min},t_{2,\min}+\Delta t),
 \min(t_{1,\max},t_{2,\max}+\Delta t)
 \right].
+\label{eq:q1-overlap}
 \end{equation}
 
 在公共评价时刻 \(\{t_k\}\) 上定义位置均方误差
@@ -56,21 +61,25 @@ t_{2,\mathrm{aligned}}=t_2+\Delta t.
 J(\Delta t)=\frac{1}{N}
 \sum_{k=1}^{N}
 \left\|\mathbf r_1(t_k)-\mathbf r_2(t_k-\Delta t)\right\|_2^2,
+\label{eq:q1-objective}
 \end{equation}
 
 从而得到
 
 \begin{equation}
 \Delta t^*=\arg\min_{\Delta t}J(\Delta t).
+\label{eq:q1-optimum}
 \end{equation}
 
-程序先在 0.1 s 公共网格上计算二维速度特征互相关，保留多个相关峰；随后在
+\subsubsection{模型一的求解}\label{sec:q1-solution}
+
+求解时先在 0.1 s 公共网格上计算二维速度特征互相关，保留多个相关峰；随后在
 全部可行偏差范围内以 0.5 s 步长扫描位置
 MSE，最后在最优候选附近用有界标量
 优化精细求解。精细优化使用固定评价网格，避免候选偏差改变公共区间起点所造成的
 数值非光滑。
 
-\subsection{时间校正与 10 Hz 重建}\label{ux65f6ux95f4ux6821ux6b63ux4e0e-10-hz-ux91cdux5efa}
+\noindent\textbf{（1）同时刻观测合并与10 Hz重建。}
 
 对方式 2 时间戳施加 \(\Delta t^*\)
 后，将两组观测合并、排序。若两个观测落在
@@ -79,30 +88,68 @@ MSE，最后在最优候选附近用有界标量
 
 \begin{equation}
 t_n=221.0+0.1n,\qquad n=0,1,\ldots,8494
+\label{eq:q1-grid}
 \end{equation}
 
 上输出 10 Hz 轨迹。输出区间为 \([221.0,1070.4]\)
 s，仅覆盖至少一种原始观测 支持的时间区间，不进行外推。
 
-\subsection{计算结果}\label{ux8ba1ux7b97ux7ed3ux679c}
+图\ref{fig:q1-objective}表明周期轨迹会形成多个局部低谷，因此互相关只用于候选生成，最终偏差必须由式\eqref{eq:q1-objective}在全可行域内确定。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.88\textwidth]{q1/objective_scan.pdf}
+  \caption{模型一全可行域时间偏差目标函数扫描}
+  \label{fig:q1-objective}
+\end{figure}
+
+\subsubsection{算法实现}\label{sec:q1-algorithm}
+
+模型一的计算过程归纳如下：
+\begin{enumerate}
+  \item 分别构造两路二维连续轨迹，并由速度特征互相关生成多个时间偏差候选；
+  \item 按式\eqref{eq:q1-overlap}确定全可行域，在固定公共网格上扫描式\eqref{eq:q1-objective}；
+  \item 在全局最优低谷附近进行有界连续细化，得到式\eqref{eq:q1-optimum}的数值解；
+  \item 按式\eqref{eq:q1-time-map}校正方式2时间戳，核验并合并同时刻观测；
+  \item 对唯一节点建立三次样条，并按式\eqref{eq:q1-grid}输出10 Hz轨迹。
+\end{enumerate}
+
+\subsubsection{结果分析}\label{sec:q1-results}
 
 采用符号约定
 \(t_{2,\mathrm{aligned}}=t_2+\Delta t\)，连续优化得到原始估计
 
 \begin{equation}
 \Delta t^*=-198.4316999986\ \mathrm{s}.
+\label{eq:q1-raw-offset}
 \end{equation}
 
 考虑输入时间戳的显示精度，正式报告为
 
 \begin{equation}
 \boxed{\Delta t^*=-198.4317\ \mathrm{s}}.
+\label{eq:q1-reported-offset}
 \end{equation}
 
 即方式 2 的时间轴需整体向前平移 198.4317 s。对齐公共区间长 700.35 s，
 位置 RMSE 为 \(8.51\times10^{-11}\) m。最终 10 Hz 结果共 8495 行，完整数据见附录所列结果文件。
 
-\subsection{验证与稳健性}\label{ux9a8cux8bc1ux4e0eux7a33ux5065ux6027}
+图\ref{fig:q1-aligned}显示校正后两路观测在公共区间内重合；图\ref{fig:q1-trajectory}给出在原始观测支持域内重建的完整10 Hz轨迹。两图共同说明式\eqref{eq:q1-time-map}只调整时间坐标，没有改变任何原始位置观测。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.88\textwidth]{q1/aligned_trajectory.pdf}
+  \caption{模型一时间校正后的两路定位轨迹（公共区间700.35 s）}
+  \label{fig:q1-aligned}
+\end{figure}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.84\textwidth]{q1/trajectory_10hz.pdf}
+  \caption{模型一在221.0--1070.4 s内重建的10 Hz完整轨迹}
+  \label{fig:q1-trajectory}
+\end{figure}
+
+\subsubsection{模型检验与稳健性}\label{sec:q1-validation}
 
 四种插值模型均给出相同的报告偏差。其对齐 RMSE 分别为：Linear
 \(4.76\times10^{-6}\) m、Cubic Spline \(8.51\times10^{-11}\) m、PCHIP
@@ -118,41 +165,18 @@ s，仅覆盖至少一种原始观测 支持的时间区间，不进行外推。
 s，所有情景按输入精度均报告 \(-198.4317\) s。最优点距搜索边界至少 100.35
 s，排除了边界伪最优。
 
-图\ref{fig:q1-objective}显示周期轨迹产生多个局部低谷，但全局最小值位于
-\(-198.4317\) s；这也说明互相关只能用于候选生成，最终必须由位置误差确定。
-对齐残差的量级为 \(10^{-10}\) m，支持无噪声一致性结论；
-图\ref{fig:q1-aligned}和图\ref{fig:q1-trajectory}分别给出校正效果与完整重建轨迹。
-四种插值的误差数量级比较见图\ref{fig:q1-model-comparison}。
+四种插值的误差数量级比较见图\ref{fig:q1-model-comparison}。图中四种方法给出的时间偏差一致，而三次样条的跨设备位置RMSE最低，说明方法选择由无噪声轨迹的局部曲率表达能力决定，并未改变时间偏差结论。
 
-\subsection{局限与后续接口}\label{ux5c40ux9650ux4e0eux540eux7eedux63a5ux53e3}
+\noindent\textbf{适用边界。}
 
 本模型依赖``固定时间偏差、无空间系统偏差、无随机噪声''三个题面条件。若设备时钟
 存在漂移或测量含噪，直接插值会低估不确定性，因此问题二、三需改用偏差辨识和
 统计融合。问题一输出的符号约定、公共区间处理和 10 Hz
-数据契约将作为后续各问的统一基准。目标函数、对齐效果和最终轨迹见
-图\ref{fig:q1-objective}至图\ref{fig:q1-trajectory}。
+数据契约将作为后续各问的统一基准。
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=.88\textwidth]{q1/objective_scan.pdf}
-  \caption{问题一全域时间偏差目标函数扫描}
-  \label{fig:q1-objective}
-\end{figure}
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=.88\textwidth]{q1/aligned_trajectory.pdf}
-  \caption{问题一时间校正后的两路定位轨迹}
-  \label{fig:q1-aligned}
-\end{figure}
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=.84\textwidth]{q1/trajectory_10hz.pdf}
-  \caption{问题一重建的10 Hz完整轨迹}
-  \label{fig:q1-trajectory}
-\end{figure}
-\begin{figure}[htbp]
-  \centering
   \includegraphics[width=.78\textwidth]{paper/model_comparison.pdf}
-  \caption{问题一四种插值模型的跨设备位置RMSE比较}
+  \caption{模型一四种插值方法的跨设备位置RMSE比较}
   \label{fig:q1-model-comparison}
 \end{figure}

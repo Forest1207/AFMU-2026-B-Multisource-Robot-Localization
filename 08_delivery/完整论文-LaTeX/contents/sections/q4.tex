@@ -1,6 +1,8 @@
-\section{问题四：固定轨迹上的任务优化}\label{ux95eeux9898ux56dbux56faux5b9aux8f68ux8ff9ux4e0aux7684ux4efbux52a1ux4f18ux5316}
+\subsection{模型四的建立与求解：固定轨迹任务优化}\label{sec:model-q4}
 
-\subsection{任务约束与状态量}\label{ux4efbux52a1ux7ea6ux675fux4e0eux72b6ux6001ux91cf}
+\subsubsection{模型四的建立}\label{sec:q4-establishment}
+
+\noindent\textbf{（1）轨迹状态、目标距离与拍照方向角。}
 
 问题四不改变问题三所得轨迹，只在固定轨迹上选择任务和时刻。设机器人状态为
 \(\mathbf p(t)=(x(t),y(t))^{\mathsf T}\)、速度模 \(v(t)\)、加速度模
@@ -8,12 +10,14 @@
 
 \begin{equation}
 d_j(t)=\|\mathbf p(t)-\mathbf g_j\|_2.
+\label{eq:q4-distance}
 \end{equation}
 
 射击任务在执行前连续 1.5 s 内须满足
 
 \begin{equation}
 5\le d_j(t)\le30,\qquad v(t)\le2,\qquad a(t)\le1.5;
+\label{eq:q4-shooting-constraints}
 \end{equation}
 
 每个射击目标至多执行一次，单次命中概率为 0.85。拍照任务在执行前连续 0.5
@@ -21,12 +25,14 @@ s 内须满足
 
 \begin{equation}
 10\le d_j(t)\le40,\qquad v(t)\le1.5,\qquad a(t)\le1.5.
+\label{eq:q4-photo-constraints}
 \end{equation}
 
 机器人相对拍照目标的方向角定义为
 
 \begin{equation}
 \theta_j(t)=\operatorname{atan2}(y(t)-y_j,x(t)-x_j)\pmod {360^\circ},
+\label{eq:q4-photo-angle}
 \end{equation}
 
 同一目标两次拍照的圆周角距离不得小于
@@ -34,7 +40,7 @@ s 内须满足
 0.01 s
 数值间隔；每个射击目标至多计一次完成。结果总数还受模板九行容量限制。这两条属于模型假设而非题面原文，后续约束与最优性结论均以此为边界。
 
-\subsection{连续可行窗口与候选压缩}\label{ux8fdeux7eedux53efux884cux7a97ux53e3ux4e0eux5019ux9009ux538bux7f29}
+\noindent\textbf{（2）连续可行窗口与候选任务。}
 
 先在正式 10 Hz
 状态上，对每个可能执行时刻向前检查完整准备窗的全部采样点。对距离下界、距离上界、速度和加速度分别归一化，候选
@@ -48,6 +54,7 @@ m_c=\min_{t\in[t_c-L_c,t_c]}
 \frac{v_{\max}-v}{v_{\max}},
 \frac{a_{\max}-a}{a_{\max}}
 \right\}.
+\label{eq:q4-margin}
 \end{equation}
 
 在每个连续可行段内保留定时间隔点、局部高裕度点；拍照任务另按 30°
@@ -55,7 +62,7 @@ m_c=\min_{t\in[t_c-L_c,t_c]}
 网格重新检查完整准备区间，剔除任何负裕度候选。共得到 1255
 个候选，其中射击 595 个、拍照 660 个。
 
-\subsection{词典序混合整数规划}\label{ux8bcdux5178ux5e8fux6df7ux5408ux6574ux6570ux89c4ux5212}
+\noindent\textbf{（3）资源互斥、射击唯一性与词典序MILP。}
 
 令 \(x_c\in\{0,1\}\) 表示是否选择候选 \(c\)。对时间冲突候选对
 \((c,d)\in\mathcal T\)、同一射击目标候选集
@@ -68,18 +75,21 @@ x_c+x_d\le1\quad((c,d)\in\mathcal T\cup\mathcal A),
 \sum_{c\in\mathcal S_j}x_c\le1,
 \qquad
 \sum_cx_c\le9.
+\label{eq:q4-logical-constraints}
 \end{equation}
 
 第一级目标为
 
 \begin{equation}
 \max\sum_cx_c.
+\label{eq:q4-milp-stage1}
 \end{equation}
 
 固定最优任务数 \(N^*\) 后，引入最小裕度 \(z\)，以充分大的 \(M\) 施加
 
 \begin{equation}
 z\le m_c+M(1-x_c),\qquad \max z.
+\label{eq:q4-milp-stage2}
 \end{equation}
 
 最后固定 \(N^*\) 和
@@ -89,7 +99,31 @@ z\le m_c+M(1-x_c),\qquad \max z.
 gap 为
 0。求解器的线性优化实现背景参见文献\cite{huangfu2018}，但本文的最优性结论只依据实际求解状态、零 gap 与独立复核。由于九行是不可突破的题面输出上界，找到九项可行任务也证明了任务数量已达全局上界；裕度和多样性的最优性针对经连续验证的压缩候选集。
 
-\subsection{优化结果}\label{ux4f18ux5316ux7ed3ux679c}
+\subsubsection{模型四的求解}\label{sec:q4-solution}
+
+求解先识别连续可行窗口，再以0.01 s网格细化并压缩候选；随后依次最大化任务数量、最小安全裕度和总裕度/拍照多样性。三个阶段均固定前一阶段最优值，故次级目标不会牺牲任务数量。最终对候选窗口作0.001 s连续复核，并在时间保留两位小数后再次核验。
+
+候选可行性分布见图\ref{fig:q4-candidates}。候选集中于轨迹经过目标邻域且速度、加速度同时满足完整准备窗的区段，这一分布来自物理约束，而不是优化器任意删选。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.90\textwidth]{q4/candidate_feasibility_map.pdf}
+  \caption{模型四经连续准备窗复核后的1255个候选任务分布}
+  \label{fig:q4-candidates}
+\end{figure}
+
+\subsubsection{算法实现}\label{sec:q4-algorithm}
+
+\begin{enumerate}
+  \item 对模型三轨迹作状态插值，逐目标检查射击或拍照的完整准备窗；
+  \item 识别连续可行段，保留定时间隔点、局部高裕度点及拍照方向角代表点；
+  \item 在0.01 s网格上复核并压缩候选，建立时间冲突、角度冲突和射击唯一性约束；
+  \item 依次求解三级MILP，要求每一级均返回最优状态且MIP gap为0；若任一级不可行、未证最优或gap非零，则停止正式交付；
+  \item 对所选任务作0.001 s加密检查，完成两位小数舍入后再检查全部约束；
+  \item 仅把九行结果写入工作簿副本，保持原始模板、红色说明和范例不变。
+\end{enumerate}
+
+\subsubsection{结果分析}\label{sec:q4-results}
 
 正式方案见表\ref{tab:q4-schedule}。输出时刻按模板保留两位小数，并在舍入后再次进行 0.01
 s 全准备窗复核。
@@ -119,6 +153,7 @@ s 全准备窗复核。
 
 \begin{equation}
 E(N_{\mathrm{hit}})=4\times0.85=3.40.
+\label{eq:q4-expected-hits}
 \end{equation}
 
 五次拍照分属五个不同目标，因此同目标角差约束自动满足。正式方案最小归一化约束裕度为
@@ -126,7 +161,9 @@ E(N_{\mathrm{hit}})=4\times0.85=3.40.
 方案约为其 4.20
 倍。各任务的最小/最大距离、最大速度和最大加速度均在附录长表中给出。
 
-\subsection{稳健性与模板交付}\label{ux7a33ux5065ux6027ux4e0eux6a21ux677fux4ea4ux4ed8}
+轨迹、目标位置和所选任务见图\ref{fig:q4-layout}，日程时间线见图\ref{fig:q4-timeline}。任务集中在450.31--527.01 s是固定轨迹与目标几何共同作用的结果；所有准备/执行闭区间互不重叠，最紧相邻任务仍保留0.10 s间隔。
+
+\subsubsection{模型检验与稳健性}\label{sec:q4-validation}
 
 设置三档压力情景，每档使用固定随机种子生成 500 次扰动：中等情景采用 0.5
 倍问题三模型位置标准差和 5\% 速度/加速度相对扰动，标准情景采用 1.0
@@ -137,37 +174,30 @@ E(N_{\mathrm{hit}})=4\times0.85=3.40.
 
 最终将九行结果写入 \texttt{result.xlsx} 副本的 B2:E10。A 列序号、H:L
 红色说明和范例、其余单元格值及样式均经语义快照核对保持不变；原始模板未被覆盖。
-轨迹与目标位置见图\ref{fig:q4-layout}，候选可行性见图\ref{fig:q4-candidates}，
-优化日程见图\ref{fig:q4-timeline}，约束裕度见图\ref{fig:q4-margins}。
+约束裕度见图\ref{fig:q4-margins}。
 全部1255个候选的裕度经验分布见图\ref{fig:q4-margin-cdf}。
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=.88\textwidth]{q4/trajectory_targets_schedule.pdf}
-  \caption{问题四轨迹、目标点与所选任务}
+  \caption{模型四固定轨迹、目标点与九项所选任务}
   \label{fig:q4-layout}
 \end{figure}
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=.90\textwidth]{q4/candidate_feasibility_map.pdf}
-  \caption{问题四连续复核后的候选任务分布}
-  \label{fig:q4-candidates}
-\end{figure}
-\begin{figure}[htbp]
-  \centering
   \includegraphics[width=.88\textwidth]{q4/optimized_schedule_timeline.pdf}
-  \caption{问题四九项任务的准备与执行时间线}
+  \caption{模型四九项任务的准备与执行时间线}
   \label{fig:q4-timeline}
 \end{figure}
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=.90\textwidth]{q4/constraint_margins.pdf}
-  \caption{问题四所选任务的归一化约束裕度}
+  \caption{模型四九项任务的归一化完整准备窗约束裕度}
   \label{fig:q4-margins}
 \end{figure}
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=.78\textwidth]{paper/candidate_margin_cdf.pdf}
-  \caption{问题四射击与拍照候选裕度的经验累积分布}
+  \caption{模型四射击与拍照候选裕度的经验累积分布}
   \label{fig:q4-margin-cdf}
 \end{figure}
