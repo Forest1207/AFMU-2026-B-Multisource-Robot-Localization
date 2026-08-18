@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "mode": "full",
-  "stage": "package",
+  "stage": "complete",
   "competition": null,
   "year": null,
   "problem_id": null,
   "created_at_utc": "2026-08-18T16:37:50.640849+00:00",
-  "updated_at_utc": "2026-08-18T19:16:18.947132+00:00",
+  "updated_at_utc": "2026-08-18T19:17:15.356270+00:00",
   "assumptions": [],
   "open_issues": [],
   "decisions": [
@@ -205,6 +205,13 @@
         "evidence\\latex_validation.json"
       ],
       "at_utc": "2026-08-18T19:14:16.329624+00:00"
+    },
+    "PK2": {
+      "status": "PASS",
+      "evidence": [
+        "evidence\\gates\\PK2_delivery_gate.md"
+      ],
+      "at_utc": "2026-08-18T19:17:15.356270+00:00"
     }
   },
   "history": [
@@ -329,7 +336,16 @@
       "gate": "W2",
       "gate_status": "PASS",
       "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T19:17:15.356270+00:00",
+      "event": "advance",
+      "from": "package",
+      "to": "complete",
+      "gate": "PK2",
+      "gate_status": "PASS",
+      "user_approval": null
     }
   ],
-  "next_action": "同步交付并核验哈希"
+  "next_action": "论文、LaTeX、结果表、证据链与GitHub发布均已完成"
 }
