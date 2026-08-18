@@ -1,0 +1,181 @@
+\section{问题二：含噪异步定位的时空标定与融合}\label{ux95eeux9898ux4e8cux542bux566aux5f02ux6b65ux5b9aux4f4dux7684ux65f6ux7a7aux6807ux5b9aux4e0eux878dux5408}
+
+\subsection{联合时间—空间偏差模型}\label{ux8054ux5408ux65f6ux95f4ux7a7aux95f4ux504fux5deeux6a21ux578b}
+
+以定位方式 1 的时钟为参考，定义定位方式 2 的设备时刻到参考时刻的映射为
+
+\[
+t_{2,\mathrm{ref}}=t_2-\Delta t,
+\]
+
+并定义两设备之间的固定相对偏差为
+
+\[
+\mathbf b=\mathbf z_2-\mathbf z_1=(b_x,b_y)^\mathsf T.
+\]
+
+对于给定候选 \(\Delta t\)，在整个搜索区间共同有效的固定网格 \(\{t_k\}\)
+上构造差值
+
+\[
+\mathbf d_k(\Delta t)=\mathbf z_2(t_k+\Delta t)-\mathbf z_1(t_k).
+\]
+
+对坐标分量 \(j\in\{x,y\}\)，令
+
+\[
+u_{kj}=\frac{d_{kj}-b_j}{s_j},\qquad
+w_{kj}=\begin{cases}
+1,&|u_{kj}|\le c,\\
+c/|u_{kj}|,&|u_{kj}|>c,
+\end{cases}\quad c=1.345,
+\]
+
+并用标准逐轴 Huber IRLS 求解剖面偏差
+
+\[
+\widehat b_j(\Delta t)
+=\frac{\sum_k w_{kj}d_{kj}(\Delta t)}{\sum_k w_{kj}},
+\]
+
+再最小化
+
+\[
+J_H(\Delta t)=
+\frac{1}{N}\sum_{k=1}^{N}\sum_{j\in\{x,y\}}
+2s_j^2\rho_c(u_{kj}),
+\]
+
+其中 \(\rho_c\) 为标准 Huber 损失。尺度 \(s_j\)
+在本次搜索固定公共网格的搜索中点处稳健估计一次，随后对所有候选
+\(\Delta t\) 冻结，保证不同候选目标值可比。
+
+固定评价网格可避免不同候选偏差使用不同样本集合，从而防止目标函数因公共区间移动而产生数值伪偏移。运动特征互相关只用于给出粗中心；考虑数据噪声较强，精搜索采用粗值左右各
+10 s 的全扫描和局部连续细化。
+
+实算得到粗偏差 52.72 s，最终
+
+\[
+\boxed{\widehat{\Delta t}\approx50.17\ \mathrm{s}},\qquad
+\boxed{\widehat{\mathbf b}\approx(3.47,-1.83)^\mathsf T\ \mathrm{m}},
+\]
+
+对应机器值为 50.171732 s 与 \((3.466998,-1.833200)\) m，偏差模长约 3.92
+m。这里的 \(\mathbf b\)
+只表示两设备的相对系统差，因无外部真值，不能据此判断哪一设备存在绝对误差。普通最小二乘给出
+50.1706 s 与 \((3.4731,-1.8328)\)
+m，说明稳健化没有依赖少量异常点改变结论；含粗大离群点的合成试验中，Huber
+联合参数误差明显小于普通估计。
+
+偏差校正后，重叠区两流差值均值从约 \((3.4722,-1.8303)\) m 降至
+\((0.00516,0.00286)\) m。校正差值二维 RMSE 为 1.4592
+m，该量是两套含噪观测之差，而不是融合轨迹相对真值的误差。
+
+\subsection{异步常加速度状态空间模型}\label{ux5f02ux6b65ux5e38ux52a0ux901fux5ea6ux72b6ux6001ux7a7aux95f4ux6a21ux578b}
+
+设状态为
+
+\[
+\mathbf x(t)=(x,y,v_x,v_y,a_x,a_y)^\mathsf T.
+\]
+
+相邻任意事件间隔为 \(\tau\) 时，采用常加速度转移
+
+\[
+\mathbf x_{k|k-1}=\mathbf F(\tau_k)\mathbf x_{k-1|k-1}+\mathbf w_k,
+\]
+
+其中每一坐标轴的转移块为
+
+\[
+\begin{bmatrix}
+1&\tau&\tau^2/2\\0&1&\tau\\0&0&1
+\end{bmatrix},
+\]
+
+过程噪声取白噪声 jerk 离散协方差。方式 2 的原始坐标先减去
+\(\widehat{\mathbf b}\)，再把 4 Hz 与 5 Hz
+原始观测按校正事件时刻排序执行 Kalman
+更新；没有把插值点作为重复观测输入。对于二维创新
+\(\boldsymbol\nu_k\)，计算
+
+\[
+\mathrm{NIS}_k=\boldsymbol\nu_k^\mathsf T
+\mathbf S_k^{-1}\boldsymbol\nu_k.
+\]
+
+当其超过二维 \(\chi^2\) 分布 99\%
+门限时，仅按比例放大测量协方差并降低增益，而不直接删除观测。离线前向滤波完成后使用
+RTS 后向平滑，最后以 0.1 s 间隔传播平滑状态得到 10 Hz 输出。
+
+\subsection{噪声估计与参数选择}\label{ux566aux58f0ux4f30ux8ba1ux4e0eux53c2ux6570ux9009ux62e9}
+
+在短局部窗口内，常加速度轨迹的三阶有限差分为零。若单设备位置噪声独立同分布，系数
+\((-1,3,-3,1)\) 使三阶差分噪声方差为原噪声方差的 20
+倍。因此分别对两设备三阶差分使用 MAD 稳健尺度估计，得到
+
+\[
+\mathbf R_1=\operatorname{diag}(0.68991,0.71228)\ \mathrm{m}^2,
+\quad
+\mathbf R_2=\operatorname{diag}(0.65003,0.77553)\ \mathrm{m}^2.
+\]
+
+这一做法依赖``局部运动可由二次项近似''的假设，但避免了仅凭两设备差值把方差任意对半拆分的不可识别问题。过程噪声
+\(q\) 在 \(10^{-11}\) 至 \(10^2\) 的对数网格上，以
+
+\[
+S(q)=|\overline{\mathrm{NIS}}-2|+2\,\overline{|\rho_1(\nu)|}
+\]
+
+选择，使二维 NIS 均值接近理论自由度
+2，同时压低白化创新的一阶相关。调参阶段关闭协方差膨胀，并仅使用门控前的
+\(\mathbf S_{0,k}\) 与 \(\mathrm{NIS}_{0,k}\)：令
+\(\mathbf e_k=\operatorname{chol}(\mathbf S_{0,k})^{-1}\boldsymbol\nu_k\)，以
+\(\rho_1(\mathbf e)\) 计算相关项。选定 \(q\) 后才运行 99\%
+稳健门控，避免门控反馈参与过程噪声选择。最优值为
+\(q=3.162\times10^{-8}\)，位于候选网格内部。
+
+\subsection{融合结果与检验}\label{ux878dux5408ux7ed3ux679cux4e0eux68c0ux9a8c}
+
+门控前创新均值 NIS 为 1.9647，95\% 分位为 5.7980；门控后均值为
+1.9481。白化创新一阶相关绝对值均值为 0.0153，0.892\%
+的观测触发稳健降权。分设备 HAC 均值检验 p 值为 0.903 和
+0.338；虽然统计检验不能证明严格零均值，但均值效应指数最大仅
+0.0246，全程趋势效应指数最大 0.0942，均低于 0.25 的工程阈值。
+
+最终轨迹覆盖 102.0--951.5 s，共 8496 个 10 Hz
+状态点，位置、速度和加速度全部有限。相对于``校正后两流等权平均''的基线，RTS
+轨迹三阶差分粗糙度显著降低；该指标只说明随机高频抖动受抑制，不被解释为未知真值下的绝对精度提升。
+
+插值方法、IRLS 次数和搜索宽度的 12 个对照情景给出 50.1694--50.2699 s
+的时间偏差范围，空间偏差始终约为 \((3.47,-1.83)\) m，因此物理结论按 0.01
+s 和 0.01 m 报告。将正式过程噪声乘 10 或乘 0.1 后，轨迹 RMS 变化分别为
+0.0346 m 和 0.0654 m。将门控概率从 0.99 改为 0.975 或 0.995 时，轨迹 RMS
+变化仅为 0.00334 m 和 0.00153
+m。由此保留正式参数，并在附录中提供完整敏感性表。配准目标、校准效果、融合轨迹和
+创新诊断分别见图\ref{fig:q2-objective}至图\ref{fig:q2-innovations}。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.84\textwidth]{q2/objective_profile.pdf}
+  \caption{问题二稳健联合配准的目标函数剖面}
+  \label{fig:q2-objective}
+\end{figure}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.90\textwidth]{q2/calibration_comparison.pdf}
+  \caption{问题二校正前后的两设备位置比较}
+  \label{fig:q2-calibration}
+\end{figure}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.86\textwidth]{q2/fused_trajectory_10hz.pdf}
+  \caption{问题二10 Hz融合轨迹}
+  \label{fig:q2-trajectory}
+\end{figure}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.92\textwidth]{q2/innovation_diagnostics.pdf}
+  \caption{问题二白化创新与预检验NIS诊断}
+  \label{fig:q2-innovations}
+\end{figure}

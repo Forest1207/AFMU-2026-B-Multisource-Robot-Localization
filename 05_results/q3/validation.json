@@ -1,0 +1,28 @@
+{
+  "ok": true,
+  "checks": {
+    "required_columns": true,
+    "all_finite": true,
+    "strict_time": true,
+    "ten_hz": true,
+    "row_count_matches": true,
+    "uncertainty_positive": true,
+    "offset_inside_search": true,
+    "wald_does_not_reject": true,
+    "effect_engineering_small": true,
+    "bootstrap_axes_include_zero": true,
+    "no_detected_drift": true,
+    "bias_state_disabled": true,
+    "nis_consistent": true,
+    "whitened_innovation_lag1_small": true,
+    "selected_q_not_boundary": true,
+    "innovation_fields_complete": true,
+    "alignment_sensitivity_small": true,
+    "bias_decision_sensitivity_stable": true,
+    "bias_diagnostics_consistent": true,
+    "filter_covariance_psd": true,
+    "smoother_covariance_psd": true,
+    "output_covariance_psd": true,
+    "figure_triplets_complete": true
+  }
+}

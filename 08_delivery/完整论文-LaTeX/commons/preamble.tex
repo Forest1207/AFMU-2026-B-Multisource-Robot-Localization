@@ -1,0 +1,31 @@
+% 导言区：按校赛示例页压缩标题间距，并保持正文为小四宋体、两字符缩进。
+
+% 模板原标题使用宋体粗体，Windows 字体集会产生 SimSun 粗体回退警告。
+% 按论文示例页收紧各级标题的段前、段后距离，并统一使用黑体。
+% 一级标题采用四号，二级及以下标题采用正文小四字号。
+\makeatletter
+\renewcommand\section{\@startsection{section}{1}{\z@}%
+  {-1.0ex \@plus -.2ex \@minus -.1ex}%
+  {.8ex \@plus.1ex}%
+  {\centering\normalfont\zihao{4}\heiti}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+  {-1.0ex\@plus -.2ex \@minus -.1ex}%
+  {.4ex \@plus .1ex}%
+  {\normalfont\normalsize\heiti}}
+\renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}%
+  {-1.0ex\@plus -.2ex \@minus -.1ex}%
+  {.4ex \@plus .1ex}%
+  {\normalfont\normalsize\heiti}}
+\makeatother
+
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\renewcommand*{\baselinestretch}{1.38}
+\graphicspath{{figures/}}
+
+% 图表题注直接使用黑体，避免宋体粗体回退。
+\DeclareCaptionFont{hei}{\heiti}
+\captionsetup[figure]{font={hei,minusfour},position=bottom}
+\captionsetup[table]{font={hei,minusfour},position=top}
+
+\newcommand{\vect}[1]{\boldsymbol{#1}}

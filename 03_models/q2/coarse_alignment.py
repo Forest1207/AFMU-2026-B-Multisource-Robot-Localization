@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.interpolate import interp1d
-from scipy.signal import correlate, correlation_lags
+from scipy.signal import correlate, correlation_lags, savgol_filter
 
 
 def _speed_feature(time: np.ndarray, xy: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -65,3 +65,55 @@ def estimate_coarse_offset(
     # scipy correlate(a, b): if b must be shifted later to match a, the peak
     # lag is negative.  Negate it to obtain our convention query stream2 at t+dt.
     return float(-lag_seconds[int(np.argmax(corr))])
+
+
+def estimate_elapsed_position_offset(
+    t1: np.ndarray,
+    xy1: np.ndarray,
+    t2: np.ndarray,
+    xy2: np.ndarray,
+    grid_dt: float = 0.05,
+    max_elapsed_shift: float = 120.0,
+    smooth_seconds: float = 2.5,
+) -> float:
+    """Coarse offset when the two device-clock ranges do not overlap.
+
+    Each series is rebased to its own start, lightly smoothed, standardized per
+    coordinate (removing any constant spatial bias), and cross-correlated.  If
+    the elapsed-time pattern shift is ``c``, the Q2/Q3 query convention gives
+    ``dt = t2_start - t1_start - c``.
+    """
+    if grid_dt <= 0 or max_elapsed_shift <= 0 or smooth_seconds <= 0:
+        raise ValueError("grid and smoothing parameters must be positive.")
+
+    features = []
+    starts = []
+    for time, xy in ((t1, xy1), (t2, xy2)):
+        t = np.asarray(time, dtype=float).reshape(-1)
+        p = np.asarray(xy, dtype=float)
+        if p.shape != (t.size, 2) or t.size < 8 or np.any(np.diff(t) <= 0):
+            raise ValueError("Each stream must be a valid increasing 2-D series.")
+        starts.append(float(t[0]))
+        elapsed = t - t[0]
+        grid = np.arange(0.0, elapsed[-1], grid_dt)
+        raw = np.asarray(interp1d(elapsed, p, axis=0, bounds_error=True)(grid))
+        window = int(round(smooth_seconds / grid_dt))
+        window = window + 1 if window % 2 == 0 else window
+        window = min(window, raw.shape[0] - (1 - raw.shape[0] % 2))
+        window = max(window, 5)
+        smooth = savgol_filter(raw, window_length=window, polyorder=3, axis=0)
+        scale = np.std(smooth, axis=0)
+        scale = np.maximum(scale, np.finfo(float).eps)
+        features.append((smooth - np.mean(smooth, axis=0)) / scale)
+
+    corr = sum(
+        correlate(features[0][:, axis], features[1][:, axis], mode="full")
+        for axis in range(2)
+    )
+    lags = correlation_lags(features[0].shape[0], features[1].shape[0], mode="full")
+    shift = lags.astype(float) * grid_dt
+    mask = np.abs(shift) <= float(max_elapsed_shift)
+    if not np.any(mask):
+        raise ValueError("No elapsed-time lag candidates remain.")
+    elapsed_shift = float(shift[mask][int(np.argmax(corr[mask]))])
+    return float(starts[1] - starts[0] - elapsed_shift)

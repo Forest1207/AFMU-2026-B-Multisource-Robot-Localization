@@ -1,0 +1,32 @@
+{
+  "q1": [
+    {
+      "path": "../../06_figures/q1/objective_scan.png",
+      "svg_path": "../../06_figures/q1/objective_scan.svg",
+      "pdf_path": "../../06_figures/q1/objective_scan.pdf",
+      "purpose": "验证时间对齐目标函数的全局极小值与边界距离",
+      "source": "05_results/q1/objective_scan.csv"
+    },
+    {
+      "path": "../../06_figures/q1/aligned_trajectory.png",
+      "svg_path": "../../06_figures/q1/aligned_trajectory.svg",
+      "pdf_path": "../../06_figures/q1/aligned_trajectory.pdf",
+      "purpose": "展示两种定位方式在空间轨迹上的一致覆盖",
+      "source": "附件1.xlsx"
+    },
+    {
+      "path": "../../06_figures/q1/alignment_residuals.png",
+      "svg_path": "../../06_figures/q1/alignment_residuals.svg",
+      "pdf_path": "../../06_figures/q1/alignment_residuals.pdf",
+      "purpose": "验证最优偏差下x/y位置残差接近数值误差",
+      "source": "05_results/q1/parameters.json"
+    },
+    {
+      "path": "../../06_figures/q1/trajectory_10hz.png",
+      "svg_path": "../../06_figures/q1/trajectory_10hz.svg",
+      "pdf_path": "../../06_figures/q1/trajectory_10hz.pdf",
+      "purpose": "给出题目要求的10 Hz重建轨迹及起终点",
+      "source": "05_results/q1/trajectory_10hz.csv"
+    }
+  ]
+}

@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "contest": "cumcm",
+  "main_tex": "main.tex",
+  "template": {
+    "path": "C:\\Users\\王艺骏\\.codex\\skills\\math-contest-assistant\\tools\\latex\\assets\\templates\\cumcm-jayxin",
+    "source": "https://github.com/jayxin/cumcm",
+    "version": "v1.1.0",
+    "sha256": "02783907599472fe75e10e2472f16c5df5127dba6c04a2d2663e6d31f9438cd8"
+  },
+  "template_files": {
+    ".github/workflows/build-latex-doc.yaml": "fe31599745a0fe8fecd8669cb817830ceb86c135c39defb86f5a7ddcb77edaba",
+    ".gitignore": "2e2b45e1f5484fdf7cbac432d034c8f6a49454a3da24af31755caa101b56122f",
+    "commons/cumcmthesis.cls": "be61da5423048aa983c7b0f845cab57d96007e7c488f338bace8fdd519882b77",
+    "commons/preamble.tex": "6ddb1af05db8b6386e4f51af2d657aa1364ce99e04368738974add12ea094f62",
+    "contents/abstract.tex": "814d84aebc6a5b338b916472915969a9e56cab760c414a55a6b2339361e2dc97",
+    "contents/appendix/a0.tex": "e04b8b5e7a0d07d1371916ccac688c9f7aa3cc80b5da4badd072ac884b828b8d",
+    "contents/appendix/a1.tex": "9ed170e5e121afb75df70d9aca66e62aab0689933861485dca40f149fd6a14d7",
+    "contents/appendix/a2.tex": "fc4b5122a03795970274ea670007cf37be5b3cca75852411e9f4dada141c0244",
+    "contents/appendix/a3.tex": "ada8a9afae1c264a0aa8b05ad35a7812356d653369b1c6c1349f4ce0f59b6a92",
+    "contents/info.tex": "d5e3aa9032c3619392332e943697632fc55571f0a7ecf9fba4d9f2815e100a08",
+    "contents/references.tex": "d8f94f879a69050b0f1400505d883533398ed7c153090a9caa5f1edfc469c25e",
+    "contents/sections/s1.tex": "00ecefa8190ed7da2ced56ecf0fe0898ef08034a75c5d063f518ea2912bbd108",
+    "contents/sections/s2.tex": "e2177d45d0c08d3c17275ccd8d0aaf6b1aada5880cf3f03c4b015ba6b4aaf5c8",
+    "contents/sections/s3.tex": "be81c08ed65cf5b351a1b70da0c2d5a282e7ba86da0d2dd6c84f5bfed74b1d9f",
+    "contents/sections/s4.tex": "ec86fd87908e0cbf079022810d9506ebe5da635f312432beaf5d4cd56ba2a89b",
+    "contents/sections/s5.tex": "779f19f74afbcc5611725f6190d258199456f55ac81e55436bd65b9985c77672",
+    "contents/sections/s6.tex": "6b96731a889a32cc6973406d76dc809cae633ccc0d86b20bdcec757b7550c61f",
+    "docs/2026高教社杯全国大学生数学建模竞赛第一次通知.pdf": "cf9c59dc9fd329377c0696a83b804d373ab927b4036d28b608c1e9c7909e8ec0",
+    "docs/全国大学生数学建模竞赛论文格式规范-2019年修订稿.pdf": "4657ed523a6b76605a4e323913578e3edc41728dcccbb8391a981d72ee59e8f3",
+    "docs/全国大学生数学建模竞赛论文格式规范-2026年修订稿.pdf": "cece4bb3a900a0435160032b98ea26e03b0f2d7eca58424b0d023e26085aed26",
+    "fonts/arial/arial.ttf": "c9b76220a5be42ead4733611e417cd65c5fd8aeaa33eb56576ac378a37d130a1",
+    "fonts/arial/arialbd.ttf": "766f06ac8761f82f25d032a220e89438f6064591af9915061f20b949efdedf69",
+    "fonts/arial/arialbi.ttf": "e432c1b3568bd207e30e3d52d41e6431ea53a679eb52dd79b1a36aa6a4f3b994",
+    "fonts/arial/ariali.ttf": "79a5742b865cf06891d4ae43e42cac0e5169c7b7b06b5b3c24ef8e0966d27b62",
+    "fonts/arial/ariblk.ttf": "10df702864b1f89cb29ba0d6b97c04228338d16807e13e8d8c74b91aba5e5f23",
+    "fonts/times/times.ttf": "2cff2a03d8034801979dd6d16f09b9a825c3d710fcf068f2ebfbf0e1425c87cf",
+    "fonts/times/timesbd.ttf": "621b4a765fef5d255d19530f4bf936104c6519f2e232a0eef1923474e5b9cf22",
+    "fonts/times/timesbi.ttf": "2852329a38acf9252504669d9c23d5e88366cf77e8209d508f5e7198639648ea",
+    "fonts/times/timesi.ttf": "3a1c2bc8528bfa432e0414d4ec69bf5813563c474e16a9ad0f57ca262f8d24a2",
+    "latexmkrc": "6ac2e3f4a42b2e180f70a2ad58112d22a74743642c14a5e565fc66ffac687560",
+    "LICENSE.txt": "3d262cdf34dafa6955f703c634a8c238ec44109bc8dd6ef34fb7aa54809f7e66",
+    "main.tex": "388b34f9d40e485bb85ad5fa09a41168a8865edf1f0b78be2d0ad83069d480c5",
+    "README.md": "4e4baa7e16fa75d9de9742036142c573fa0963690b97d9b892a7edaba5617ba9"
+  },
+  "resource_bindings": [
+    {
+      "source": "paper_assets/q1/aligned_trajectory.pdf",
+      "destination": "figures/q1/aligned_trajectory.pdf",
+      "sha256": "7e5446597a2ed8959241147ac9758689121e56f6b3a743ed437d36a0ca152040",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:01.018808+00:00"
+    },
+    {
+      "source": "paper_assets/q1/objective_scan.pdf",
+      "destination": "figures/q1/objective_scan.pdf",
+      "sha256": "5a0e50923c7ebc3f9e0f2e3c1242ec8377885ce8d177f767e9d18dff0c6ff0a3",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:01.292587+00:00"
+    },
+    {
+      "source": "paper_assets/q1/trajectory_10hz.pdf",
+      "destination": "figures/q1/trajectory_10hz.pdf",
+      "sha256": "266cbd78a327c6e4d9d0191e9bbb52c06dbabf5aded86be5581eeb3b81c0f6f3",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:01.597665+00:00"
+    },
+    {
+      "source": "paper_assets/q2/calibration_comparison.pdf",
+      "destination": "figures/q2/calibration_comparison.pdf",
+      "sha256": "a13dd252e0f9ace3fc23e04b1fbdf1b90cb69dc870fa550889f0d0c0cbf31321",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:01.877501+00:00"
+    },
+    {
+      "source": "paper_assets/q2/fused_trajectory_10hz.pdf",
+      "destination": "figures/q2/fused_trajectory_10hz.pdf",
+      "sha256": "537e59bba2f6bbb43797cf5d13ee188861c2be73887645c3fa7dfa9bb1f7fa09",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:02.164626+00:00"
+    },
+    {
+      "source": "paper_assets/q2/innovation_diagnostics.pdf",
+      "destination": "figures/q2/innovation_diagnostics.pdf",
+      "sha256": "90a3af80e0144a5e2a3e6ccec9af0dbe4df4eefc1f8aebfc59672775c670913d",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:02.429224+00:00"
+    },
+    {
+      "source": "paper_assets/q2/objective_profile.pdf",
+      "destination": "figures/q2/objective_profile.pdf",
+      "sha256": "4f0ff7bc0403f9d94d42c7ce8054b2aa4cedd6b3bb74bba548a90b0abde410eb",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:02.701219+00:00"
+    },
+    {
+      "source": "paper_assets/q3/bias_confidence_interval.pdf",
+      "destination": "figures/q3/bias_confidence_interval.pdf",
+      "sha256": "cd380c8fb4bff9e69164dca52e6492daae578b90ac6150547bca39a99d55150a",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:02.969143+00:00"
+    },
+    {
+      "source": "paper_assets/q3/bias_time_series.pdf",
+      "destination": "figures/q3/bias_time_series.pdf",
+      "sha256": "87d79392f9b85fb69667c793c7141c4a11869f5e98693c7d1bb2a216f45387bb",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:03.248443+00:00"
+    },
+    {
+      "source": "paper_assets/q3/fused_trajectory_uncertainty.pdf",
+      "destination": "figures/q3/fused_trajectory_uncertainty.pdf",
+      "sha256": "b6bfc6cfbc0f79c4d3631f3ce4d135adb07c2b8d9aaf47e2cb3906c67699dd64",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:03.542388+00:00"
+    },
+    {
+      "source": "paper_assets/q3/process_noise_tuning.pdf",
+      "destination": "figures/q3/process_noise_tuning.pdf",
+      "sha256": "e5234b6f3206f093495a2488d0bde8d18cc02b4a7d5980581c77f58b28baf58f",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:03.815641+00:00"
+    },
+    {
+      "source": "paper_assets/q4/candidate_feasibility_map.pdf",
+      "destination": "figures/q4/candidate_feasibility_map.pdf",
+      "sha256": "c567f9265b42157cc754955820517934cd0e21cc91d9bead32de2c65417d0113",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:04.085241+00:00"
+    },
+    {
+      "source": "paper_assets/q4/constraint_margins.pdf",
+      "destination": "figures/q4/constraint_margins.pdf",
+      "sha256": "9d3a3f1c447569478e2a65b69fbe9596b3e32e1cbb5cc6bb30b8c789920bf400",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:04.362339+00:00"
+    },
+    {
+      "source": "paper_assets/q4/optimized_schedule_timeline.pdf",
+      "destination": "figures/q4/optimized_schedule_timeline.pdf",
+      "sha256": "9ce9e9e2a10da83bd1df3f3c0f8ac7f3ed00d77276195506f12e735183104333",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:04.638640+00:00"
+    },
+    {
+      "source": "paper_assets/q4/trajectory_targets_schedule.pdf",
+      "destination": "figures/q4/trajectory_targets_schedule.pdf",
+      "sha256": "b00811ef08d8dc2ce793e5f205fb85abc2004d5c031d927a158bbfa24b95daea",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:20:04.912303+00:00"
+    },
+    {
+      "source": "骨架使用说明.md",
+      "destination": "骨架使用说明.md",
+      "sha256": "f79e595fc1ad7deab33858dea21468f2b42066fcc08182d3a7489719269091ef",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:27:35.129824+00:00"
+    }
+  ],
+  "created_at": "2026-08-18T11:14:25.745138+00:00"
+}

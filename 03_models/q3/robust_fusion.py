@@ -26,6 +26,9 @@ class FilterResult:
     filtered_cov: np.ndarray
     transition_from_previous: np.ndarray
     innovation: np.ndarray
+    pre_gate_innovation_cov: np.ndarray
+    innovation_cov: np.ndarray
+    pre_gate_nis: np.ndarray
     nis: np.ndarray
     r_scale: np.ndarray
     estimate_bias: bool
@@ -270,6 +273,9 @@ def asynchronous_robust_kf(
     filtered_cov = np.empty_like(predicted_cov)
     transitions = np.empty((n_event, n_state, n_state), dtype=float)
     innovations = np.empty((n_event, 2), dtype=float)
+    pre_gate_innovation_cov = np.empty((n_event, 2, 2), dtype=float)
+    innovation_cov = np.empty((n_event, 2, 2), dtype=float)
+    pre_gate_nis = np.empty(n_event, dtype=float)
     nis = np.empty(n_event, dtype=float)
     r_scale = np.empty(n_event, dtype=float)
 
@@ -317,6 +323,9 @@ def asynchronous_robust_kf(
         filtered_state[k] = x
         filtered_cov[k] = P
         innovations[k] = innovation
+        pre_gate_innovation_cov[k] = S0
+        innovation_cov[k] = S
+        pre_gate_nis[k] = nis0
         nis[k] = float(
             innovation.T @ np.linalg.pinv(S, hermitian=True) @ innovation
         )
@@ -333,6 +342,9 @@ def asynchronous_robust_kf(
         filtered_cov=filtered_cov,
         transition_from_previous=transitions,
         innovation=innovations,
+        pre_gate_innovation_cov=pre_gate_innovation_cov,
+        innovation_cov=innovation_cov,
+        pre_gate_nis=pre_gate_nis,
         nis=nis,
         r_scale=r_scale,
         estimate_bias=estimate_bias,
@@ -398,6 +410,42 @@ def resample_smoothed_state(
             estimate_bias=smoothed.estimate_bias,
         )
         out[i] = F @ smoothed.state[idx]
+    return grid, out
+
+
+def resample_smoothed_covariance(
+    smoothed: SmoothedResult,
+    sample_dt: float = 0.1,
+    start_time: float | None = None,
+    end_time: float | None = None,
+    jerk_spectral_density: float = 0.5,
+    bias_random_walk_var: float = 1e-8,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Propagate smoothed event covariances to the same uniform state grid."""
+    if sample_dt <= 0:
+        raise ValueError("sample_dt must be positive.")
+    t = smoothed.time
+    lo = float(t[0] if start_time is None else max(start_time, t[0]))
+    hi = float(t[-1] if end_time is None else min(end_time, t[-1]))
+    if hi < lo:
+        raise ValueError("Requested output interval has no overlap.")
+    grid = np.arange(lo, hi + 0.5 * sample_dt, sample_dt)
+    grid = grid[grid <= hi + 1e-12]
+    n_state = smoothed.state.shape[1]
+    out = np.empty((grid.size, n_state, n_state), dtype=float)
+    for i, tg in enumerate(grid):
+        idx = int(np.searchsorted(t, tg, side="right") - 1)
+        idx = max(0, min(idx, t.size - 1))
+        dt = max(float(tg - t[idx]), 0.0)
+        F = ca_transition(dt, estimate_bias=smoothed.estimate_bias)
+        Q = ca_process_noise(
+            dt,
+            jerk_spectral_density=jerk_spectral_density,
+            estimate_bias=smoothed.estimate_bias,
+            bias_random_walk_var=bias_random_walk_var,
+        )
+        P = F @ smoothed.cov[idx] @ F.T + Q
+        out[i] = 0.5 * (P + P.T)
     return grid, out
 
 

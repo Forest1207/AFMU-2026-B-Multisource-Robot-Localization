@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "competition": "2026校内数学建模选拔赛",
+  "problem_id": "B",
+  "title": "多源融合机器人定位及任务优化",
+  "evidence_boundary": {
+    "facts": [
+      "定位方式1为4 Hz，定位方式2为5 Hz",
+      "Q1无噪声且仅存在设备开机先后差异",
+      "Q2存在随机测量噪声和固定系统偏差",
+      "Q3为实际测量数据，需先判断系统偏差是否存在",
+      "Q4轨迹固定，射击和拍照约束来自题目附录",
+      "result.xlsx仅有9行正式填写槽位且红色说明不得改变"
+    ],
+    "unknowns": [
+      "两设备相对时间偏差",
+      "Q2相对二维系统偏差",
+      "Q3系统偏差是否具有统计与工程意义",
+      "Q2/Q3测量噪声协方差",
+      "Q4最优任务组合与执行时刻"
+    ],
+    "forbidden_inferences": [
+      "无外部真值时不得把相对系统偏差解释为任一设备的绝对误差",
+      "不得把Q3对单一传感器的拟合误差解释为绝对定位精度",
+      "不得把启发式最好解称为全局最优"
+    ]
+  },
+  "inputs": [
+    {"name": "2026_B题.pdf", "sha256": "bb038252bb5c23573f8e1cd3a0dffd6bc5e9738af5832d92e730bdae8fe403f2", "role": "题目与Q4约束"},
+    {"name": "校内选拔赛通知.pdf", "sha256": "576bda31aabd9f0bece3c3ff13a4bc6b65c8b91b70a254e6d4dba059074d47bc", "role": "提交与论文格式规则"},
+    {"name": "附件1.xlsx", "sha256": "eb9dbdefb6d566b7d4396d7d0ad09e816afb43146ae7ad5e13882a745a9ba577", "role": "Q1"},
+    {"name": "附件2.xlsx", "sha256": "03031d2d633eabd8ef7cc530972bd738216cd6bb91858cb09cd44b70fe88df17", "role": "Q2"},
+    {"name": "附件3.xlsx", "sha256": "6348d12985fcabc238095ae026a4891ea28195ef5112b7788beb4bf94bd9b199", "role": "Q3与Q4轨迹"},
+    {"name": "附件4.xlsx", "sha256": "fa3594cba0f492654450dc0d4ea14101d411b57f25245093e6307d2bd06cd55b", "role": "Q4的18个射击目标与18个拍照目标"},
+    {"name": "result.xlsx", "sha256": "e79789ba98fbaaf16ab02f25e39e384804dd654c598a23475f4d977c705c9d34", "role": "Q4正式结果模板"}
+  ],
+  "shared_conventions": {
+    "reference_clock": "定位方式1",
+    "q1_time_correction": "t2_aligned = t2 + delta_t",
+    "q2_q3_query_convention": "方式1真实时刻t对应方式2设备时刻t+delta_t；方式2事件映射到参考时钟为t2-delta_t",
+    "relative_bias": "b = z2 - z1；校正方式2时减去b",
+    "uniform_output_hz": 10.0,
+    "random_seed": 2026
+  },
+  "questions": {
+    "Q1": {
+      "primary_type": "无噪声时序配准与轨迹重建",
+      "inputs": ["附件1.xlsx: 时间(s), X坐标(m), Y坐标(m)"],
+      "outputs": ["相对时间偏差delta_t", "10 Hz位置轨迹", "对齐与插值验证"],
+      "main_model": "异频速度互相关候选 + 全局位置MSE扫描 + 固定评价网格有界连续优化 + Cubic Spline重建",
+      "baseline": "精确相同坐标对的原始时间差众数与线性插值",
+      "alternatives": ["仅粗网格MSE：精度受步长限制", "DTW：允许非线性时间伸缩，与固定开机偏差不符"],
+      "assumptions": ["同一连续轨迹", "无随机噪声", "无空间系统偏差", "时间偏差固定", "不外推"],
+      "validation": ["合成偏差恢复", "700个精确坐标匹配的独立时差", "四插值对比", "重叠时长/粗步长/评价步长敏感性", "边界与10 Hz步长检查"],
+      "failure_conditions": ["最优点在搜索边界", "对齐RMSE大于1e-6 m", "共同采样坐标不一致", "输出非严格10 Hz"],
+      "fallback": "扩大搜索范围并以精确坐标匹配候选重新初始化"
+    },
+    "Q2": {
+      "primary_type": "含噪异步观测的相对时间/空间偏差辨识与状态融合",
+      "inputs": ["附件2.xlsx两种定位方式"],
+      "outputs": ["delta_t", "b_x,b_y及模长", "10 Hz融合位置轨迹", "噪声与创新诊断"],
+      "main_model": "偏差不敏感运动特征粗配准 + Huber剖面最小二乘联合估计delta_t和b + 偏差校正后的异步常加速度Kalman滤波与RTS平滑",
+      "baseline": "普通剖面最小二乘 + 等权校正轨迹平均",
+      "alternatives": ["单纯逆方差加权：忽略运动状态且方差分解可辨识性弱", "直接插值后KF：把伪观测重复计入"],
+      "assumptions": ["相对时间偏差固定", "相对空间偏差固定", "随机误差零均值", "短时运动可由常加速度状态及白噪声jerk近似"],
+      "parameters_frozen": {"huber_iterations": 4, "output_dt_s": 0.1, "gate_probability": 0.99, "seed": 2026},
+      "validation": ["已知偏差/噪声合成恢复", "普通与Huber估计对比", "校正前后RMSE和残差均值", "创新NIS与自相关", "过程噪声与门限敏感性"],
+      "failure_conditions": ["偏差与时间参数不可辨识", "最优点在边界", "残差仍有显著均值/趋势", "状态或协方差非有限"],
+      "fallback": "固定偏差改为慢变偏差状态，或退回稳健平滑样条融合并降低结论强度"
+    },
+    "Q3": {
+      "primary_type": "系统偏差假设检验驱动的鲁棒异步状态融合",
+      "inputs": ["附件3.xlsx两种实际定位方式"],
+      "outputs": ["系统偏差存在性判定", "统计量/置信区间与工程尺度", "10 Hz位置速度加速度状态"],
+      "main_model": "Huber剖面配准 + 二维HAC-Wald检验 + moving-block bootstrap + 固定性趋势诊断 + 检验驱动的普通/偏差增广异步CA-KF与RTS",
+      "baseline": "分轴均值t检验 + 固定偏差校正后的等权平滑",
+      "alternatives": ["只看p值：大样本下会放大微小偏差", "无条件偏差增广KF：增加不可辨识状态"],
+      "decision_rule": "alpha=0.05；同时报告偏差模长相对稳健残差尺度I_b，I_b>0.25视为具有工程意义；是否校正以统计证据、工程尺度和固定性诊断联合决定",
+      "parameters_frozen": {"alpha": 0.05, "bootstrap_replicates": 2000, "bootstrap_seed": 2026, "engineering_bias_index_threshold": 0.25, "gate_probability": 0.99},
+      "validation": ["合成偏差恢复和检验功效", "HAC与块Bootstrap交叉验证", "偏差随时间趋势", "创新NIS/自相关", "状态物理范围与超参数敏感性"],
+      "failure_conditions": ["HAC与Bootstrap结论冲突", "偏差明显随时间漂移", "滤波发散或速度加速度异常", "状态不确定性无法支撑Q4"],
+      "fallback": "使用慢变偏差随机游走；若仍不稳，输出稳健平滑轨迹并将Q4做情景鲁棒优化"
+    },
+    "Q4": {
+      "primary_type": "固定轨迹上的连续可行窗口识别与0-1任务调度优化",
+      "inputs": ["Q3 10 Hz状态与不确定性", "附件4.xlsx目标", "题面任务约束", "result.xlsx模板"],
+      "decision_variables": ["候选任务是否选择", "任务执行时刻", "准备区间", "拍照方向角"],
+      "hard_constraints": [
+        "结果不超过9行且按执行时间升序",
+        "射击距离5至30 m、速度不超过2 m/s、加速度不超过1.5 m/s^2，连续准备1.5 s",
+        "拍照距离10至40 m、速度不超过1.5 m/s、加速度不超过1.5 m/s^2，连续准备0.5 s",
+        "同一拍照目标被选照片的方向角两两至少相差60度",
+        "准备/执行区间不能与其他已选任务冲突",
+        "每个射击目标至多执行一次"
+      ],
+      "objective": "词典序：先最大化完成任务数；再最大化最小归一化约束裕度与拍照角度多样性，射击期望命中数按0.85乘射击次数报告",
+      "main_model": "10 Hz状态上连续窗口全点核验 + 候选去冗余 + SciPy HiGHS MILP精确求解 + 局部0.01 s连续时间复核",
+      "baseline": "按时间排序的最早可行贪心",
+      "alternatives": ["路径规划：轨迹已经固定，不符合题意", "遗传算法：规模可由MILP精确求解，无必要"],
+      "validation": ["逐任务约束余量", "准备区间全点可行", "MILP状态/gap", "与贪心对比", "轨迹位置速度加速度扰动下可行率", "result.xlsx格式和红字哈希/样式核验"],
+      "failure_conditions": ["无可行任务", "精确求解未收敛且无界", "模板红色说明或格式改变", "不确定性扰动导致推荐任务频繁失效"],
+      "fallback": "保留最大可行贪心解并报告上界；对边界任务施加安全裕度后重求"
+    }
+  },
+  "language_selection": {
+    "chosen": "python",
+    "runner_up": "matlab",
+    "comparison": {
+      "algorithm_coverage": {"python": 2, "matlab": 2, "note": "两者均覆盖插值、统计、KF和MILP"},
+      "solvers_numerics": {"python": 2, "matlab": 2, "note": "SciPy HiGHS与MATLAB Optimization Toolbox均可用"},
+      "data_figures": {"python": 2, "matlab": 2, "note": "两者均可生成出版图"},
+      "reference_figures": {"python": 1, "matlab": 2, "note": "流程图按技能要求统一MATLAB"},
+      "reproducibility": {"python": 2, "matlab": 1, "note": "Python依赖已在requirements记录，不依赖许可证"},
+      "team_proficiency": {"python": 2, "matlab": 1, "note": "仓库现有主实现为模块化Python"},
+      "performance": {"python": 2, "matlab": 2, "note": "本题数据规模均可在内存中求解"},
+      "existing_assets": {"python": 2, "matlab": 0, "note": "Q1至Q3已有Python实现骨架和合成测试"},
+      "delivery_constraints": {"python": 2, "matlab": 1, "note": "GitHub复现和附录代码统一Python更一致"}
+    },
+    "deciding_reason": "现有可解释Python资产覆盖主链且无需商业工具箱，重写MATLAB不会增加可验证价值",
+    "dropped_language_gap": "MATLAB路线需重写全部已审计模块并依赖许可证；仅保留为流程/参考图工具",
+    "data_figures_language": "python",
+    "reference_figures_language": "matlab",
+    "dual_delivery": false,
+    "runtime": "Python 3.12；MATLAB R2024b仅用于参考图",
+    "checked_at_utc": "2026-08-18T16:00:00Z"
+  },
+  "global_acceptance": [
+    "所有题面数值由真实运行产生",
+    "Q1至Q3统一时间与偏差符号",
+    "Q4所有选择逐条通过硬约束复算",
+    "正式图均有300 DPI PNG和可编辑SVG",
+    "论文、CSV、JSON、result.xlsx数值一致",
+    "唯一复现入口从仓库根目录运行"
+  ]
+}

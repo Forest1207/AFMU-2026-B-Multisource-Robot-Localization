@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "checks": {
+    "nine_rows": true,
+    "time_sorted": true,
+    "capacity_optimal": true,
+    "all_milp_stages_optimal": true,
+    "all_milp_gaps_zero": true,
+    "positive_margin": true,
+    "milp_margin_beats_greedy": true,
+    "robustness_high": true,
+    "preparation_intervals_disjoint": true,
+    "shooting_targets_unique": true,
+    "photography_angle_separation": true,
+    "continuous_001s_constraints": true,
+    "reported_metrics_recomputed": true,
+    "untouched_template_semantics": true,
+    "result_workbook_rows_match": true,
+    "no_formula_errors": true,
+    "figure_triplets_complete": true
+  }
+}

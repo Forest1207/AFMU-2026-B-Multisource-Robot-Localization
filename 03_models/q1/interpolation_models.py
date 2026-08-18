@@ -35,6 +35,12 @@ class ContinuousTrajectory:
             raise ValueError(
                 f"Interpolation query outside [{self.t_min}, {self.t_max}]."
             )
+        # Arithmetic such as ``t - delta_t`` can put a mathematically exact
+        # endpoint a few ulps outside the stored interval.  The explicit
+        # guard above still rejects genuine extrapolation; clipping only the
+        # accepted round-off neighbourhood keeps strict interpolators such as
+        # scipy.interpolate.interp1d from raising at a valid endpoint.
+        q = np.clip(q, self.t_min, self.t_max)
         x = np.asarray(self._fx(q), dtype=float)
         y = np.asarray(self._fy(q), dtype=float)
         return np.stack((x, y), axis=-1)

@@ -1,0 +1,52 @@
+{
+  "input": "D:\\MathModeling\\School modeling\\2026赛题\\2026_B题\\附件2.xlsx",
+  "input_sha256": "03031d2d633eabd8ef7cc530972bd738216cd6bb91858cb09cd44b70fe88df17",
+  "source_results": [
+    "parameters.json",
+    "trajectory_10hz.csv",
+    "innovations.csv",
+    "process_noise_tuning.csv"
+  ],
+  "figures": [
+    {
+      "stem": "objective_profile",
+      "formats": [
+        "png",
+        "svg",
+        "pdf"
+      ]
+    },
+    {
+      "stem": "calibration_comparison",
+      "formats": [
+        "png",
+        "svg",
+        "pdf"
+      ]
+    },
+    {
+      "stem": "fused_trajectory_10hz",
+      "formats": [
+        "png",
+        "svg",
+        "pdf"
+      ]
+    },
+    {
+      "stem": "innovation_diagnostics",
+      "formats": [
+        "png",
+        "svg",
+        "pdf"
+      ]
+    },
+    {
+      "stem": "process_noise_tuning",
+      "formats": [
+        "png",
+        "svg",
+        "pdf"
+      ]
+    }
+  ]
+}

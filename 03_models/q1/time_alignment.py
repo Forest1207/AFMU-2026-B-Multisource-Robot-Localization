@@ -153,17 +153,35 @@ def _refine_around_seed(
             min_overlap_seconds=min_overlap_seconds,
         )
 
-    result = minimize_scalar(
-        lambda d: alignment_loss(
-            float(d),
+    # Freeze one evaluation grid for the whole local bracket.  If the grid
+    # were rebuilt from the candidate-dependent overlap start, tiny changes in
+    # ``delta_t`` would also shift every evaluation timestamp.  That makes the
+    # numerical objective slightly non-smooth and can move a noiseless optimum
+    # by about 1e-6 s.  The interval below is valid for every d in [lo, hi].
+    fixed_start = max(traj1.t_min, traj2.t_min + hi)
+    fixed_end = min(traj1.t_max, traj2.t_max + lo)
+    if fixed_end - fixed_start < min_overlap_seconds:
+        return seed, alignment_loss(
+            seed,
             traj1,
             traj2,
             eval_dt=eval_dt,
             min_overlap_seconds=min_overlap_seconds,
-        ).mse,
+        )
+
+    eval_time = np.arange(fixed_start, fixed_end + 0.5 * eval_dt, eval_dt)
+    eval_time = eval_time[eval_time <= fixed_end + 1e-12]
+    position1 = traj1.evaluate(eval_time)
+
+    def fixed_grid_mse(delta_t: float) -> float:
+        position2 = traj2.evaluate(eval_time - float(delta_t))
+        return float(np.mean(np.sum((position1 - position2) ** 2, axis=1)))
+
+    result = minimize_scalar(
+        fixed_grid_mse,
         bounds=(lo, hi),
         method="bounded",
-        options={"xatol": xatol},
+        options={"xatol": xatol, "maxiter": 1000},
     )
     dt = float(result.x)
     return dt, alignment_loss(

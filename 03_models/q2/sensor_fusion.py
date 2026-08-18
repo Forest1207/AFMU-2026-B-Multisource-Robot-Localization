@@ -16,6 +16,40 @@ class FusionResult:
     var2: np.ndarray
 
 
+def robust_third_difference_covariance(
+    time: np.ndarray,
+    xy: np.ndarray,
+    variance_floor: float = 1e-6,
+    spacing_rtol: float = 1e-6,
+) -> np.ndarray:
+    """Estimate one sensor's position-noise covariance from third differences.
+
+    A constant-acceleration trajectory has zero third finite difference on an
+    equally spaced local window.  For independent measurement noise with
+    variance ``sigma^2``, ``[-1, 3, -3, 1]`` has variance ``20*sigma^2``.
+    The MAD scale makes the estimate resistant to isolated jumps.  Only local
+    four-point windows with nominal spacing are used, so a removed/late sample
+    cannot contaminate the finite-difference identity.
+    """
+    t = np.asarray(time, dtype=float).reshape(-1)
+    p = np.asarray(xy, dtype=float)
+    if p.shape != (t.size, 2) or t.size < 8:
+        raise ValueError("time/xy must contain at least eight 2-D samples.")
+    dt = np.diff(t)
+    if np.any(dt <= 0):
+        raise ValueError("time must be strictly increasing.")
+    nominal = float(np.median(dt))
+    good_step = np.isclose(dt, nominal, rtol=spacing_rtol, atol=1e-10)
+    good_window = good_step[:-2] & good_step[1:-1] & good_step[2:]
+    third = np.diff(p, n=3, axis=0)[good_window]
+    if third.shape[0] < 5:
+        raise ValueError("Too few equally spaced windows for noise estimation.")
+    centered = third - np.median(third, axis=0, keepdims=True)
+    sigma_third = 1.4826 * np.median(np.abs(centered), axis=0)
+    variance = np.maximum((sigma_third**2) / 20.0, variance_floor)
+    return np.diag(variance)
+
+
 def estimate_axis_variances(
     xy1: np.ndarray,
     xy2: np.ndarray,

@@ -1,1 +1,135 @@
-{}
+{
+  "input_workbook": "D:\\MathModeling\\School modeling\\2026赛题\\2026_B题\\附件3.xlsx",
+  "input_sha256": "6348d12985fcabc238095ae026a4891ea28195ef5112b7788beb4bf94bd9b199",
+  "sheet1": "方式1(4Hz)",
+  "sheet2": "方式2(5Hz)",
+  "stream1_rows": 1381,
+  "stream2_rows": 1621,
+  "coarse_time_offset_s": -368.82,
+  "coarse_alignment_method": "elapsed centered-position correlation",
+  "time_offset_s": -367.87761939367795,
+  "time_offset_sign_convention": "stream2 timestamp maps to reference time as t2_corrected = t2 - time_offset",
+  "profile_bias_x_m": -0.15177514026395128,
+  "profile_bias_y_m": -0.1503301777580156,
+  "alignment_rmse_m": 6.363350292357846,
+  "alignment_overlap_n": 2910,
+  "wald": {
+    "bias": [
+      -0.13373106138487773,
+      -0.15706880609228016
+    ],
+    "cov_mean": [
+      [
+        0.020303502734251324,
+        0.001455029719283304
+      ],
+      [
+        0.001455029719283304,
+        0.01804137220288954
+      ]
+    ],
+    "wald_stat": 2.0935072489498983,
+    "p_value": 0.35107562444113766,
+    "alpha": 0.05,
+    "reject_null": false,
+    "bias_norm": 0.20628767928885194,
+    "noise_scale": 3.0300438609728975,
+    "effect_index": 0.06808075683188836,
+    "practical_threshold": 0.25,
+    "practically_significant": false,
+    "hac_lag": 8,
+    "n": 3000
+  },
+  "bootstrap": {
+    "point_bias": [
+      -0.13373106138487773,
+      -0.15706880609228016
+    ],
+    "ci_low": [
+      -0.41328885208037447,
+      -0.42805159552196326
+    ],
+    "ci_high": [
+      0.13847012921114488,
+      0.1196832835055535
+    ],
+    "norm_ci": [
+      0.04586742694595279,
+      0.5031008734628997
+    ],
+    "alpha": 0.05,
+    "block_length": 14,
+    "n_boot": 2000
+  },
+  "bootstrap_supports_zero_bias": true,
+  "bias_decision_diagnostics_consistent": true,
+  "trend": {
+    "slope": [
+      -0.0014674844924484958,
+      0.0001489418369855103
+    ],
+    "slope_se": [
+      0.0016657732109159461,
+      0.0014978975266218908
+    ],
+    "p_value": [
+      0.37833787025203314,
+      0.9207937444356802
+    ],
+    "alpha_axis": 0.025,
+    "significant_axis": [
+      false,
+      false
+    ],
+    "drifting": false,
+    "hac_lag": 8
+  },
+  "bias_state_enabled": false,
+  "bias_drifting": false,
+  "bias_random_walk_var": 1e-08,
+  "selected_jerk_spectral_density": 3.1622776601683795,
+  "R1": [
+    [
+      16.0645256046598,
+      0.0
+    ],
+    [
+      0.0,
+      18.20671523713824
+    ]
+  ],
+  "R2": [
+    [
+      7.239912378721452,
+      0.0
+    ],
+    [
+      0.0,
+      8.939247890846845
+    ]
+  ],
+  "mean_nis": 2.012679963192312,
+  "p95_nis": 5.959010043881812,
+  "effective_mean_nis": 1.995735617723727,
+  "downweighted_measurement_fraction": 0.010326449033977348,
+  "mean_abs_lag1_whitened_innovation": 0.02741553783727222,
+  "median_position_std_m": 0.9605777977286425,
+  "max_position_std_m": 3.459302751155244,
+  "filtered_covariance_min_eigenvalue": 0.2973739935900556,
+  "smoothed_covariance_min_eigenvalue": 0.2715035969479902,
+  "output_covariance_min_eigenvalue": 0.27150388260352387,
+  "output_rows": 3691,
+  "output_start_s": 445.00761939367794,
+  "output_end_s": 814.0076193937618,
+  "output_dt_s": 0.1,
+  "output_finite": true,
+  "output_csv": "05_results\\q3\\trajectory_10hz.csv",
+  "innovation_csv": "05_results\\q3\\innovations.csv",
+  "tuning_csv": "05_results\\q3\\process_noise_tuning.csv",
+  "runtime": {
+    "python": "3.12.13",
+    "numpy": "2.5.2",
+    "pandas": "3.0.5",
+    "scipy": "1.18.0"
+  }
+}

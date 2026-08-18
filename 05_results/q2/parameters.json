@@ -1,1 +1,103 @@
-{}
+{
+  "input_workbook": "D:\\MathModeling\\School modeling\\2026赛题\\2026_B题\\附件2.xlsx",
+  "input_sha256": "03031d2d633eabd8ef7cc530972bd738216cd6bb91858cb09cd44b70fe88df17",
+  "sheet1": "方式1(4Hz)",
+  "sheet2": "方式2(5Hz)",
+  "stream1_rows": 3000,
+  "stream2_rows": 3948,
+  "interpolation": "pchip",
+  "robust_iterations": 4,
+  "fine_search_half_width_s": 10.0,
+  "gate_probability": 0.99,
+  "coarse_time_offset_s": 52.72,
+  "time_offset_s": 50.17173202142149,
+  "time_offset_sign_convention": "t2_corrected = t2 - time_offset",
+  "relative_bias_definition": "bias = stream2 - stream1",
+  "bias_x_m": 3.4669983171406984,
+  "bias_y_m": -1.8332004634657162,
+  "bias_norm_m": 3.9218237173931407,
+  "robust_alignment_rmse_m": 1.452618134744414,
+  "ordinary_time_offset_s": 50.17060278892,
+  "ordinary_bias_x_m": 3.4731100671319064,
+  "ordinary_bias_y_m": -1.8327838376363152,
+  "ordinary_alignment_rmse_m": 1.452598290863307,
+  "overlap_samples_10hz": 6897,
+  "uncorrected_difference_mean_x_m": 3.4721609238801348,
+  "uncorrected_difference_mean_y_m": -1.8303452452524882,
+  "corrected_difference_mean_x_m": 0.005162606739436182,
+  "corrected_difference_mean_y_m": 0.002855218213228134,
+  "corrected_inter_sensor_rmse_m": 1.459179751550752,
+  "R1": [
+    [
+      0.6899105391693022,
+      0.0
+    ],
+    [
+      0.0,
+      0.7122826156681594
+    ]
+  ],
+  "R2": [
+    [
+      0.6500292886553656,
+      0.0
+    ],
+    [
+      0.0,
+      0.7755260908127707
+    ]
+  ],
+  "selected_jerk_spectral_density": 3.162277660168379e-08,
+  "mean_nis": 1.9646936791269902,
+  "p95_nis": 5.797997355358519,
+  "effective_mean_nis": 1.948065960003592,
+  "mean_abs_lag1_whitened_innovation": 0.015286609894553448,
+  "downweighted_measurement_fraction": 0.008923431203223949,
+  "innovation_diagnostics_by_sensor": {
+    "sensor1": {
+      "mean_x_m": -0.0009599420082707231,
+      "mean_y_m": 0.006641205825727101,
+      "hac_wald_stat": 0.20489206313350178,
+      "hac_p_value": 0.9026268617959972,
+      "hac_lag": 8,
+      "mean_effect_index": 0.007918369442531221,
+      "trend_slope_x_m_per_s": 0.00010569329088870586,
+      "trend_slope_y_m_per_s": -1.3040045213175323e-05,
+      "trend_p_x": 0.16301248164924587,
+      "trend_p_y": 0.8529091118608803,
+      "trend_span_effect_index": 0.09421999950767108
+    },
+    "sensor2": {
+      "mean_x_m": -0.01952364693164559,
+      "mean_y_m": 0.006873902387559323,
+      "hac_wald_stat": 2.1704296409758674,
+      "hac_p_value": 0.3378292054643542,
+      "hac_lag": 9,
+      "mean_effect_index": 0.024601287986394643,
+      "trend_slope_x_m_per_s": -5.4375967421036895e-05,
+      "trend_slope_y_m_per_s": -2.5515019983910938e-05,
+      "trend_p_x": 0.36264336167749345,
+      "trend_p_y": 0.677512808099942,
+      "trend_span_effect_index": 0.05635563642461427
+    }
+  },
+  "baseline_equal_average_roughness": 0.7944912596131098,
+  "main_rts_overlap_roughness": 8.64555141664553e-08,
+  "roughness_reduction_fraction": 0.9999998911812897,
+  "main_to_stream1_rmse_m": 1.0376560600237061,
+  "main_to_corrected_stream2_rmse_m": 1.0308215952635311,
+  "output_start_s": 102.0,
+  "output_end_s": 951.4999999999517,
+  "output_rows": 8496,
+  "output_dt_s": 0.1,
+  "output_finite": true,
+  "runtime": {
+    "python": "3.12.13",
+    "numpy": "2.5.2",
+    "pandas": "3.0.5",
+    "scipy": "1.18.0"
+  },
+  "output_csv": "05_results\\q2\\trajectory_10hz.csv",
+  "innovation_csv": "05_results\\q2\\innovations.csv",
+  "tuning_csv": "05_results\\q2\\process_noise_tuning.csv"
+}

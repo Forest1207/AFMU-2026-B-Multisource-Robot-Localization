@@ -41,12 +41,17 @@ def estimate_constant_bias(
     if weights is None:
         return np.mean(diff, axis=0)
 
-    w = np.asarray(weights, dtype=float).reshape(-1)
-    if w.shape[0] != a.shape[0]:
-        raise ValueError("weights must have shape (n,).")
+    w = np.asarray(weights, dtype=float)
+    if w.ndim == 1:
+        w = np.repeat(w[:, None], 2, axis=1)
+    if w.shape != a.shape:
+        raise ValueError("weights must have shape (n,) or (n, 2).")
     if np.any(~np.isfinite(w)) or np.any(w < 0) or np.sum(w) <= 0:
         raise ValueError("weights must be finite, non-negative, and sum to > 0.")
-    return np.average(diff, axis=0, weights=w)
+    denom = np.sum(w, axis=0)
+    if np.any(denom <= 0):
+        raise ValueError("Each coordinate must have positive total weight.")
+    return np.sum(w * diff, axis=0) / denom
 
 
 def residuals_after_bias(
@@ -61,23 +66,28 @@ def residuals_after_bias(
     return a - (b - beta)
 
 
-def huber_weights(residuals: np.ndarray, c: float = 1.345) -> np.ndarray:
-    """Compute robust Huber weights from 2-D residual magnitudes.
+def huber_weights(
+    residuals: np.ndarray,
+    scale: np.ndarray | None = None,
+    c: float = 1.345,
+) -> np.ndarray:
+    """Return standard component-wise Huber IRLS weights.
 
-    The robust scale is estimated by MAD.  These weights can be used in
-    an iteratively reweighted least-squares refinement.
+    ``w=1`` for ``|r_j/s_j|<=c`` and ``w=c/|r_j/s_j|`` otherwise.  The
+    result has shape ``(n, 2)``; small good residuals are never downweighted.
     """
     r = np.asarray(residuals, dtype=float)
     if r.ndim != 2 or r.shape[1] != 2:
         raise ValueError("residuals must have shape (n, 2).")
-    mag = np.linalg.norm(r, axis=1)
-    med = np.median(mag)
-    mad = np.median(np.abs(mag - med))
-    scale = 1.4826 * mad
-    if scale <= np.finfo(float).eps:
-        return np.ones_like(mag)
-
-    u = np.abs(mag - med) / scale
+    if scale is None:
+        centered = r - np.median(r, axis=0, keepdims=True)
+        s = 1.4826 * np.median(np.abs(centered), axis=0)
+        fallback = np.std(r, axis=0, ddof=1)
+        s = np.where(s > 1e-12, s, fallback)
+    else:
+        s = np.asarray(scale, dtype=float).reshape(2)
+    s = np.maximum(s, np.finfo(float).eps)
+    u = np.abs(r / s)
     w = np.ones_like(u)
     mask = u > c
     w[mask] = c / u[mask]

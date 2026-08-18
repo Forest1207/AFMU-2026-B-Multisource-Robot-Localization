@@ -1,1 +1,98 @@
-{}
+{
+  "time_offset_s": -198.4316999986374,
+  "loss": {
+    "mse": 7.250208151614922e-21,
+    "rmse": 8.514815412922891e-11,
+    "overlap_start": 270.4000000013626,
+    "overlap_end": 970.75,
+    "overlap_seconds": 700.3499999986374,
+    "n_eval": 14007
+  },
+  "feasible_bounds": [
+    -987.8317,
+    441.9183
+  ],
+  "coarse_best_offset_s": -198.33169999999996,
+  "coarse_best_mse": 3.890670493100179e-05,
+  "correlation_candidates": [
+    {
+      "rank": 1,
+      "lag_seconds": -264.5,
+      "offset_seconds": -512.3317,
+      "score": 0.9927729055427116,
+      "overlap_seconds": 535.5999999999999
+    },
+    {
+      "rank": 2,
+      "lag_seconds": 49.300000000000004,
+      "offset_seconds": -198.5317,
+      "score": 0.9854043900341862,
+      "overlap_seconds": 700.5
+    },
+    {
+      "rank": 3,
+      "lag_seconds": 363.1,
+      "offset_seconds": 115.26830000000001,
+      "score": 0.9596639809973891,
+      "overlap_seconds": 386.70000000000016
+    },
+    {
+      "rank": 4,
+      "lag_seconds": -578.2,
+      "offset_seconds": -826.0317,
+      "score": 0.9378406588037713,
+      "overlap_seconds": 221.89999999999998
+    },
+    {
+      "rank": 5,
+      "lag_seconds": 671.3000000000001,
+      "offset_seconds": 423.46830000000006,
+      "score": 0.816544721410293,
+      "overlap_seconds": 78.50000000000006
+    },
+    {
+      "rank": 6,
+      "lag_seconds": -740.0,
+      "offset_seconds": -987.8317,
+      "score": -0.8022293356745095,
+      "overlap_seconds": 60.09999999999996
+    }
+  ],
+  "boundary_distance_s": 640.3499999986374,
+  "sign_convention": "t2_aligned = t2 + time_offset_s",
+  "interpolation_method": "cubic",
+  "merge_diagnostics": {
+    "n_stream1": 3000,
+    "n_stream2": 4001,
+    "n_merged": 6301,
+    "duplicate_groups": 700,
+    "max_duplicate_disagreement_m": 0.0,
+    "max_time_gap_s": 0.25
+  },
+  "reported_time_offset_s": -198.4317,
+  "input": {
+    "filename": "附件1.xlsx",
+    "bytes": 278801,
+    "sha256": "eb9dbdefb6d566b7d4396d7d0ad09e816afb43146ae7ad5e13882a745a9ba577"
+  },
+  "output_hz": 10.0,
+  "runtime_versions": {
+    "python": "3.12.13",
+    "numpy": "2.5.2",
+    "pandas": "3.0.5",
+    "scipy": "1.18.0",
+    "matplotlib": "3.11.1"
+  },
+  "validation": {
+    "passed": true,
+    "output_step_max_error_s": 1.364186541508161e-13,
+    "output_finite": true,
+    "aligned_rmse_threshold_m": 1e-06,
+    "common_timestamp_groups": 700,
+    "common_timestamp_max_disagreement_m": 0.0,
+    "optimum_boundary_distance_s": 640.3499999986374,
+    "independent_exact_match_count": 700,
+    "independent_offset_s": -198.4317,
+    "independent_offset_error_s": 1.362593593512429e-09
+  }
+}

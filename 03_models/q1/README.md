@@ -63,6 +63,7 @@ J(\Delta t)
 python 03_models/q1/run_q1.py \
   --input 00_problem/attachments/附件1.xlsx \
   --output-dir 05_results/q1 \
+  --figure-dir 06_figures/q1 \
   --method cubic \
   --compare-interpolators
 ```
@@ -78,9 +79,14 @@ python 03_models/q1/run_q1.py \
 - `objective_scan.csv`：粗网格目标函数；
 - `interpolation_comparison.csv`：可选的插值模型比较；
 - `summary.md`：可直接用于论文结果整理的摘要；
-- `objective_scan.png`：`J(Δt)` 曲线；
-- `aligned_trajectory.png`：两类数据空间轨迹；
-- `alignment_residuals.png`：最优对齐后的 x/y 残差。
+- `figure_manifest.json`：正式图、权威数据和论文结论的映射。
+
+`06_figures/q1/` 同时保存 300 DPI PNG、可编辑 SVG 与矢量 PDF：
+
+- `objective_scan.*`：`J(Δt)` 曲线；
+- `aligned_trajectory.*`：两类数据空间轨迹；
+- `alignment_residuals.*`：最优对齐后的 x/y 残差；
+- `trajectory_10hz.*`：题目要求的 10 Hz 重建轨迹。
 
 ## 建议的科学性检查
 
@@ -98,3 +104,14 @@ python 03_models/q1/test_synthetic.py
 ```
 
 用于验证已知 `Δt` 能否被算法恢复。
+
+## 数值敏感性
+
+```bash
+python 03_models/q1/run_sensitivity.py \
+  --input 00_problem/attachments/附件1.xlsx \
+  --output 05_results/q1/sensitivity.csv
+```
+
+该脚本对最小重叠时长、全局粗搜索步长和精细评价步长做单因素扰动，
+并要求所有情景在题面时间精度下仍给出同一时间偏差。

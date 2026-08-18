@@ -23,7 +23,11 @@ if str(Q2_DIR) not in sys.path:
 from coarse_alignment import estimate_coarse_offset  # noqa: E402
 from joint_alignment import aligned_samples, estimate_joint_alignment  # noqa: E402
 
-from bias_test import analyze_bias  # noqa: E402
+from bias_test import (  # noqa: E402
+    analyze_bias,
+    moving_block_bootstrap_bias,
+    wald_bias_test,
+)
 from robust_fusion import (  # noqa: E402
     asynchronous_robust_kf,
     resample_smoothed_state,
@@ -107,6 +111,36 @@ def main() -> None:
     assert diag["wald"].reject_null
     assert diag["wald"].practically_significant
 
+    # Multi-seed Monte Carlo checks the test rather than forcing the sample
+    # mean to zero.  The process length matches the official aligned sample
+    # order of magnitude and retains AR(1) serial correlation.
+    trials = 100
+    null_rejections = 0
+    alternative_rejections = 0
+    bootstrap_joint_coverage = 0
+    for seed in range(trials):
+        local_rng = np.random.default_rng(9000 + seed)
+        null_noise = local_rng.normal(0.0, 0.08, size=(3000, 2))
+        for k in range(1, len(null_noise)):
+            null_noise[k] += 0.55 * null_noise[k - 1]
+        null_rejections += int(wald_bias_test(null_noise).reject_null)
+        alternative_rejections += int(wald_bias_test(
+            null_noise + np.array([0.03, -0.03])
+        ).reject_null)
+        if seed < 30:
+            interval = moving_block_bootstrap_bias(
+                null_noise, n_boot=300, block_length=14, seed=12000 + seed
+            )
+            bootstrap_joint_coverage += int(np.all(
+                (interval.ci_low <= 0.0) & (interval.ci_high >= 0.0)
+            ))
+    null_rate = null_rejections / trials
+    power = alternative_rejections / trials
+    coverage = bootstrap_joint_coverage / 30.0
+    assert null_rate <= 0.10, null_rate
+    assert power >= 0.90, power
+    assert coverage >= 0.80, coverage
+
     residual = (b - alignment.bias) - a
     R1, R2 = symmetric_measurement_covariances(residual)
     filt = asynchronous_robust_kf(
@@ -135,8 +169,13 @@ def main() -> None:
     print(f"true dt={dt_true:.4f}, estimated dt={alignment.dt:.4f}")
     print(f"true bias={bias_true}, estimated bias={alignment.bias}")
     print(f"Wald p={diag['wald'].p_value:.3e}")
+    print(f"Monte Carlo null rejection={null_rate:.3f}, power={power:.3f}")
+    print(f"bootstrap joint coverage={coverage:.3f}")
     print(f"downweighted fraction={np.mean(filt.r_scale > 1.0):.3f}")
 
 
 if __name__ == "__main__":
+    import sys
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
     main()

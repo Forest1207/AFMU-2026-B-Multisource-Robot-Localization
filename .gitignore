@@ -28,3 +28,13 @@ Thumbs.db
 # Generated caches
 .cache/
 outputs/
+
+# Local review and rendering scratch files
+.work/paper-render/
+.work/latex-build-current/
+.work/manual-main*.pdf
+.work/final-paper.txt
+.work/p25.txt
+.work/paper-extract.txt
+.work/problem.txt
+.work/q2_current.csv

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import sys
+
 import numpy as np
 
 from data_loader import TrajectorySamples
@@ -16,7 +18,30 @@ def true_position(t: np.ndarray) -> np.ndarray:
     return np.column_stack((x, y))
 
 
+def check_endpoint_roundoff() -> None:
+    """Valid endpoint queries remain valid after floating-point arithmetic."""
+    t = np.arange(10.0, 12.01, 0.25)
+    samples = TrajectorySamples("endpoint-test", t, true_position(t), 4.0)
+    trajectory = build_trajectory(samples, "linear")
+
+    query = np.array([samples.start - 5e-14, samples.end + 5e-14])
+    actual = trajectory.evaluate(query)
+    expected = samples.xy[[0, -1]]
+    if not np.allclose(actual, expected, rtol=0.0, atol=1e-12):
+        raise AssertionError("Endpoint round-off clipping changed coordinates.")
+
+    try:
+        trajectory.evaluate(samples.start - 1e-6)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("A genuine extrapolation query was not rejected.")
+
+
 def main() -> None:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+    check_endpoint_roundoff()
     true_dt = -3.7317
 
     t1 = np.arange(20.0, 180.0, 0.25)
@@ -43,10 +68,10 @@ def main() -> None:
     )
 
     error = abs(result.time_offset_s - true_dt)
-    print(f"true Δt={true_dt:.6f}s, estimated={result.time_offset_s:.9f}s")
-    print(f"absolute error={error:.3e}s, RMSE={result.loss.rmse:.3e}m")
     if error > 0.01:
         raise AssertionError("Synthetic time-offset recovery failed.")
+    print(f"true Δt={true_dt:.6f}s, estimated={result.time_offset_s:.9f}s")
+    print(f"absolute error={error:.3e}s, RMSE={result.loss.rmse:.3e}m")
 
 
 if __name__ == "__main__":

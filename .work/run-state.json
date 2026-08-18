@@ -1,0 +1,275 @@
+{
+  "schema_version": 1,
+  "mode": "full",
+  "stage": "complete",
+  "competition": null,
+  "year": null,
+  "problem_id": null,
+  "created_at_utc": "2026-08-18T16:37:50.640849+00:00",
+  "updated_at_utc": "2026-08-18T18:30:46.978297+00:00",
+  "assumptions": [],
+  "open_issues": [],
+  "decisions": [
+    {
+      "at_utc": "2026-08-18T16:57:42.252873+00:00",
+      "type": "model_user_approval",
+      "detail": "当前用户目标明确预先授权按模型合同连续实施，无需停在模型确认点"
+    }
+  ],
+  "artifacts": {
+    "model-contract": {
+      "path": ".work\\model-contract.json",
+      "sha256": "0d3694b8b405212d332983af7b09c3b20dfcba5dd5378fa3c12671112328a411",
+      "bytes": 10227,
+      "purpose": "四问可执行模型合同",
+      "recorded_at_utc": "2026-08-18T16:57:30.816677+00:00"
+    },
+    "literature-evidence": {
+      "path": "evidence\\sources.md",
+      "sha256": "c56f91722373063656f98b054bf4a89bca50024857922ee4c27455d52334a84b",
+      "bytes": 3830,
+      "purpose": "原始文献及适用边界",
+      "recorded_at_utc": "2026-08-18T16:57:31.011340+00:00"
+    },
+    "q1-parameters": {
+      "path": "05_results\\q1\\parameters.json",
+      "sha256": "a739d3982fde8ca9b08630eb4cea50296ecd6052fc4dc7f00eebfa01f1c0bfe4",
+      "bytes": 2725,
+      "purpose": "Q1正式参数",
+      "recorded_at_utc": "2026-08-18T17:03:40.450761+00:00"
+    },
+    "q1-trajectory": {
+      "path": "05_results\\q1\\trajectory_10hz.csv",
+      "sha256": "bcb12cf62a04b34e6de5c565bf00dc9c843ea1c0a498b475f470648f9fc94f8c",
+      "bytes": 403670,
+      "purpose": "Q1正式10Hz轨迹",
+      "recorded_at_utc": "2026-08-18T17:03:40.736275+00:00"
+    },
+    "q2-parameters": {
+      "path": "05_results\\q2\\parameters.json",
+      "sha256": "e97ca25832fa6bf51e702d73dad58126a2294ef98d52c180e1f2eee2cf606b46",
+      "bytes": 3602,
+      "purpose": "Q2正式参数",
+      "recorded_at_utc": "2026-08-18T17:41:11.725034+00:00"
+    },
+    "q2-trajectory": {
+      "path": "05_results\\q2\\trajectory_10hz.csv",
+      "sha256": "106a3b92cf7b3936740350cfdba26adb134e254d33ed3eff07da6537ec713aaf",
+      "bytes": 1550716,
+      "purpose": "Q2正式10Hz融合轨迹",
+      "recorded_at_utc": "2026-08-18T17:41:11.942196+00:00"
+    },
+    "q3-parameters": {
+      "path": "05_results\\q3\\parameters.json",
+      "sha256": "fcfa6f2ef069dc15f858dc5be461da175bf4a256ec1d4a7d79dd90fa8e695210",
+      "bytes": 3598,
+      "purpose": "Q3正式偏差判定与融合参数",
+      "recorded_at_utc": "2026-08-18T18:04:40.645603+00:00"
+    },
+    "q3-trajectory": {
+      "path": "05_results\\q3\\trajectory_10hz.csv",
+      "sha256": "c82ce532a56c5f05df3f2efd34d91175b337989f4d12e98a21398a266612b481",
+      "bytes": 778568,
+      "purpose": "Q3正式10Hz轨迹及位置不确定性",
+      "recorded_at_utc": "2026-08-18T18:04:40.844414+00:00"
+    },
+    "q4-parameters": {
+      "path": "05_results\\q4\\parameters.json",
+      "sha256": "e665f2930f88833c5620e7a484244a584cd4db1696c0de17af15e5a5168e629b",
+      "bytes": 2511,
+      "purpose": "Q4正式调度参数与稳健性结果",
+      "recorded_at_utc": "2026-08-18T18:11:48.572148+00:00"
+    },
+    "q4-result-workbook": {
+      "path": "05_results\\q4\\result.xlsx",
+      "sha256": "e64897b706f0dcd8c7a2db264a67b8210ac4673affed3fbb663ca3266868da1f",
+      "bytes": 5710,
+      "purpose": "仅填B2:E10的结果工作簿副本",
+      "recorded_at_utc": "2026-08-18T18:11:48.768420+00:00"
+    },
+    "final-paper": {
+      "path": "08_delivery\\B题-完整论文.pdf",
+      "sha256": "624a37c75fe8356ad9c2f4b8f174b7bee13ebe74dc9c94058b7577f1f788edc7",
+      "bytes": 1143873,
+      "purpose": "25页最终LaTeX论文PDF",
+      "recorded_at_utc": "2026-08-18T18:30:33.199650+00:00"
+    },
+    "final-score": {
+      "path": "evidence\\final_score.md",
+      "sha256": "2c30744f3abd5ca8fc647ee877b42833d75d6cf6ad76548466159a1b1f1b7bf3",
+      "bytes": 1432,
+      "purpose": "交付前100分制自评",
+      "recorded_at_utc": "2026-08-18T18:30:33.392230+00:00"
+    }
+  },
+  "gates": {
+    "I1": {
+      "status": "PASS",
+      "evidence": [
+        "题目分析报告.md"
+      ],
+      "at_utc": "2026-08-18T16:57:41.690040+00:00"
+    },
+    "R1": {
+      "status": "PASS",
+      "evidence": [
+        "evidence\\sources.md"
+      ],
+      "at_utc": "2026-08-18T16:57:41.877267+00:00"
+    },
+    "M1": {
+      "status": "PASS",
+      "evidence": [
+        "evidence\\gates\\M1_model_gate.md"
+      ],
+      "at_utc": "2026-08-18T16:57:42.059302+00:00"
+    },
+    "M1-approval": {
+      "status": "PASS",
+      "evidence": [
+        "evidence\\gates\\M1_model_gate.md"
+      ],
+      "at_utc": "2026-08-18T16:57:42.252873+00:00"
+    },
+    "P1-Q1": {
+      "status": "PASS",
+      "evidence": [
+        "evidence\\gates\\P1_q1.md"
+      ],
+      "at_utc": "2026-08-18T17:03:40.268933+00:00"
+    },
+    "P1-Q2": {
+      "status": "PASS",
+      "evidence": [
+        "evidence\\gates\\P1_q2.md"
+      ],
+      "at_utc": "2026-08-18T17:41:12.136106+00:00"
+    },
+    "P1-Q3": {
+      "status": "PASS",
+      "evidence": [
+        "evidence\\gates\\P1_q3.md"
+      ],
+      "at_utc": "2026-08-18T18:04:41.040578+00:00"
+    },
+    "P1-Q4": {
+      "status": "PASS",
+      "evidence": [
+        "evidence\\gates\\P1_q4.md"
+      ],
+      "at_utc": "2026-08-18T18:11:48.966247+00:00"
+    },
+    "W1": {
+      "status": "PASS",
+      "evidence": [
+        "evidence\\gates\\W1_paper_gate.md"
+      ],
+      "at_utc": "2026-08-18T18:30:33.972597+00:00"
+    },
+    "PK1": {
+      "status": "PASS",
+      "evidence": [
+        "08_delivery\\B题-完整论文.pdf"
+      ],
+      "at_utc": "2026-08-18T18:30:46.978297+00:00"
+    }
+  },
+  "history": [
+    {
+      "at_utc": "2026-08-18T16:37:50.640849+00:00",
+      "event": "init",
+      "stage": "intake"
+    },
+    {
+      "at_utc": "2026-08-18T16:57:41.690040+00:00",
+      "event": "advance",
+      "from": "intake",
+      "to": "parse",
+      "gate": "I1",
+      "gate_status": "PASS",
+      "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T16:57:41.877267+00:00",
+      "event": "advance",
+      "from": "parse",
+      "to": "research",
+      "gate": "R1",
+      "gate_status": "PASS",
+      "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T16:57:42.059302+00:00",
+      "event": "advance",
+      "from": "research",
+      "to": "model",
+      "gate": "M1",
+      "gate_status": "PASS",
+      "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T16:57:42.252873+00:00",
+      "event": "advance",
+      "from": "model",
+      "to": "prototype",
+      "gate": "M1-approval",
+      "gate_status": "PASS",
+      "user_approval": "当前用户目标明确预先授权按模型合同连续实施，无需停在模型确认点"
+    },
+    {
+      "at_utc": "2026-08-18T17:03:40.268933+00:00",
+      "event": "advance",
+      "from": "prototype",
+      "to": "solve",
+      "gate": "P1-Q1",
+      "gate_status": "PASS",
+      "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T17:41:12.136106+00:00",
+      "event": "advance",
+      "from": "solve",
+      "to": "solve",
+      "gate": "P1-Q2",
+      "gate_status": "PASS",
+      "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T18:04:41.040578+00:00",
+      "event": "advance",
+      "from": "solve",
+      "to": "solve",
+      "gate": "P1-Q3",
+      "gate_status": "PASS",
+      "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T18:11:48.966247+00:00",
+      "event": "advance",
+      "from": "solve",
+      "to": "validate",
+      "gate": "P1-Q4",
+      "gate_status": "PASS",
+      "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T18:30:33.972597+00:00",
+      "event": "advance",
+      "from": "validate",
+      "to": "package",
+      "gate": "W1",
+      "gate_status": "PASS",
+      "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T18:30:46.978297+00:00",
+      "event": "advance",
+      "from": "package",
+      "to": "complete",
+      "gate": "PK1",
+      "gate_status": "PASS",
+      "user_approval": null
+    }
+  ],
+  "next_action": "已完成并同步交付"
+}

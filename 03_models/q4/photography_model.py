@@ -1,77 +1,28 @@
-"""Photography feasibility and angle-aware candidate generation for Q4."""
+"""Photography-task constants, margins and circular-angle distance."""
 
 from __future__ import annotations
 
-from collections import defaultdict
-
 import numpy as np
 
-from candidate_generator import TaskCandidate, normalized_margin
-from feasible_windows import PhotographyRules, photography_feasible_mask, true_segments
-from target_geometry import TargetGeometry
-from trajectory_state import TrajectoryState
+TASK_NAME = "拍照"
+PREPARATION_S = 0.5
+DISTANCE_MIN_M = 10.0
+DISTANCE_MAX_M = 40.0
+SPEED_MAX_MPS = 1.5
+ACCELERATION_MAX_MPS2 = 1.5
+MIN_ANGLE_SEPARATION_DEG = 60.0
 
 
-def build_photography_candidates(
-    state: TrajectoryState,
-    geometry: TargetGeometry,
-    fs: float = 10.0,
-    rules: PhotographyRules = PhotographyRules(),
-    require_full_lead_window: bool = True,
-    angle_bin_deg: float = 10.0,
-) -> tuple[list[TaskCandidate], object]:
-    if geometry.target.task_type != "photo":
-        raise ValueError("target is not a photography target")
-    if angle_bin_deg <= 0:
-        raise ValueError("angle_bin_deg must be positive")
+def normalized_margin(distance: np.ndarray, speed: np.ndarray,
+                      acceleration: np.ndarray) -> np.ndarray:
+    return np.minimum.reduce([
+        (distance - DISTANCE_MIN_M) / (DISTANCE_MAX_M - DISTANCE_MIN_M),
+        (DISTANCE_MAX_M - distance) / (DISTANCE_MAX_M - DISTANCE_MIN_M),
+        (SPEED_MAX_MPS - speed) / SPEED_MAX_MPS,
+        (ACCELERATION_MAX_MPS2 - acceleration) / ACCELERATION_MAX_MPS2,
+    ])
 
-    mask = photography_feasible_mask(
-        geometry.distance,
-        state.speed,
-        state.acceleration,
-        fs=fs,
-        rules=rules,
-        require_full_lead_window=require_full_lead_window,
-    )
 
-    selected: set[int] = set()
-    for start, end in true_segments(mask):
-        idx = np.arange(start, end + 1, dtype=int)
-        selected.update([int(start), int(end)])
-        bins: dict[int, list[int]] = defaultdict(list)
-        for j in idx:
-            bins[int(np.floor(geometry.bearing_deg[j] / angle_bin_deg))].append(int(j))
-        for members in bins.values():
-            best_idx = max(
-                members,
-                key=lambda j: normalized_margin(
-                    geometry.distance[j], state.speed[j], state.acceleration[j],
-                    rules.min_distance, rules.max_distance,
-                    rules.max_speed, rules.max_acceleration,
-                ),
-            )
-            selected.add(best_idx)
-
-    candidates: list[TaskCandidate] = []
-    for idx in sorted(selected):
-        q = normalized_margin(
-            geometry.distance[idx], state.speed[idx], state.acceleration[idx],
-            rules.min_distance, rules.max_distance,
-            rules.max_speed, rules.max_acceleration,
-        )
-        t = float(state.time[idx])
-        candidates.append(TaskCandidate(
-            uid=f"P:{geometry.target.target_id}:{idx}",
-            target_id=geometry.target.target_id,
-            task_type="photo",
-            index=int(idx),
-            time=t,
-            distance=float(geometry.distance[idx]),
-            speed=float(state.speed[idx]),
-            acceleration=float(state.acceleration[idx]),
-            bearing_deg=float(geometry.bearing_deg[idx]),
-            quality=q,
-            resource_start=t - rules.lead_time,
-            resource_end=t,
-        ))
-    return candidates, mask
+def circular_separation_deg(angle_a: float, angle_b: float) -> float:
+    raw = abs(float(angle_a) - float(angle_b)) % 360.0
+    return min(raw, 360.0 - raw)

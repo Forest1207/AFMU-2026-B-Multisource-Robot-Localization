@@ -1,0 +1,96 @@
+{
+  "trajectory": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\05_results\\q3\\trajectory_10hz.csv",
+  "trajectory_sha256": "c82ce532a56c5f05df3f2efd34d91175b337989f4d12e98a21398a266612b481",
+  "targets_workbook": "D:\\MathModeling\\School modeling\\2026赛题\\2026_B题\\附件4.xlsx",
+  "targets_sha256": "fa3594cba0f492654450dc0d4ea14101d411b57f25245093e6307d2bd06cd55b",
+  "target_counts": {
+    "shooting": 18,
+    "photography": 18
+  },
+  "candidate_count": 1255,
+  "candidate_count_by_task": {
+    "射击": 595,
+    "拍照": 660
+  },
+  "maximum_task_count": 9,
+  "selected_task_count": 9,
+  "shooting_count": 4,
+  "photography_count": 5,
+  "expected_shooting_hits": 3.4,
+  "minimum_normalized_margin": 0.42407476289854246,
+  "greedy_task_count": 9,
+  "greedy_minimum_margin": 0.10104220695747006,
+  "milp": {
+    "stage1_status": 0,
+    "stage2_status": 0,
+    "stage3_status": 0,
+    "stage1_gap": 0.0,
+    "stage2_gap": 0.0,
+    "stage3_gap": 0.0,
+    "capacity_upper_bound": 9
+  },
+  "continuous_recheck_step_s": 0.01,
+  "robustness_scenarios": {
+    "moderate": {
+      "trials": 500,
+      "seed": 2026,
+      "position_std_scale": 0.5,
+      "speed_acceleration_relative_sd": 0.05,
+      "per_task_feasible_rate": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "whole_schedule_feasible_rate": 1.0
+    },
+    "standard": {
+      "trials": 500,
+      "seed": 2027,
+      "position_std_scale": 1.0,
+      "speed_acceleration_relative_sd": 0.05,
+      "per_task_feasible_rate": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "whole_schedule_feasible_rate": 1.0
+    },
+    "severe": {
+      "trials": 500,
+      "seed": 2028,
+      "position_std_scale": 1.5,
+      "speed_acceleration_relative_sd": 0.1,
+      "per_task_feasible_rate": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "whole_schedule_feasible_rate": 1.0
+    }
+  },
+  "result_workbook": {
+    "template_sha256": "e79789ba98fbaaf16ab02f25e39e384804dd654c598a23475f4d977c705c9d34",
+    "output_sha256": "e64897b706f0dcd8c7a2db264a67b8210ac4673affed3fbb663ca3266868da1f",
+    "untouched_snapshot_equal": true,
+    "writable_cells": "B2:E10",
+    "filled_rows": 9
+  }
+}
