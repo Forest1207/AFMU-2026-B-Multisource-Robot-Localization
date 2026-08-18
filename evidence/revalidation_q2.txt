@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "checks": {
+    "required_columns": true,
+    "all_finite": true,
+    "strict_time": true,
+    "ten_hz": true,
+    "row_count_matches": true,
+    "offset_inside_search": true,
+    "corrected_mean_small": true,
+    "nis_consistent": true,
+    "whitened_innovation_lag1_small": true,
+    "selected_q_not_boundary": true,
+    "sensitivity_offset_spread_small": true,
+    "sensor1_innovation_mean_engineering_small": true,
+    "sensor1_innovation_trend_engineering_small": true,
+    "sensor2_innovation_mean_engineering_small": true,
+    "sensor2_innovation_trend_engineering_small": true,
+    "figure_triplets_complete": true
+  }
+}

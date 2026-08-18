@@ -94,67 +94,130 @@
       "bound_at": "2026-08-18T18:20:02.701219+00:00"
     },
     {
-      "source": "paper_assets/q3/bias_confidence_interval.pdf",
-      "destination": "figures/q3/bias_confidence_interval.pdf",
-      "sha256": "cd380c8fb4bff9e69164dca52e6492daae578b90ac6150547bca39a99d55150a",
+      "source": "paper_assets/paper/technical_route.pdf",
+      "destination": "figures/paper/technical_route.pdf",
+      "sha256": "a804c3e97c5cb8a20f7e0252ca5394e37deb37b69b2640eabc7db027055f85af",
       "hash_mode": "content",
-      "bound_at": "2026-08-18T18:20:02.969143+00:00"
+      "bound_at": "2026-08-18T18:56:18.790084+00:00"
     },
     {
-      "source": "paper_assets/q3/bias_time_series.pdf",
-      "destination": "figures/q3/bias_time_series.pdf",
-      "sha256": "87d79392f9b85fb69667c793c7141c4a11869f5e98693c7d1bb2a216f45387bb",
+      "source": "paper_assets/paper/subproblem_flow.pdf",
+      "destination": "figures/paper/subproblem_flow.pdf",
+      "sha256": "8f6b828ac860082b779fb62d0dd8f2a3bd3351bf6f958552bb432844c50e490b",
       "hash_mode": "content",
-      "bound_at": "2026-08-18T18:20:03.248443+00:00"
+      "bound_at": "2026-08-18T18:56:19.094910+00:00"
     },
     {
-      "source": "paper_assets/q3/fused_trajectory_uncertainty.pdf",
-      "destination": "figures/q3/fused_trajectory_uncertainty.pdf",
-      "sha256": "b6bfc6cfbc0f79c4d3631f3ce4d135adb07c2b8d9aaf47e2cb3906c67699dd64",
+      "source": "paper_assets/paper/model_comparison.pdf",
+      "destination": "figures/paper/model_comparison.pdf",
+      "sha256": "433b39a9ddbdd54be9aba7891f295bbd081f34f3da6a13c30417eddd04f03e27",
       "hash_mode": "content",
-      "bound_at": "2026-08-18T18:20:03.542388+00:00"
+      "bound_at": "2026-08-18T18:56:19.385750+00:00"
     },
     {
-      "source": "paper_assets/q3/process_noise_tuning.pdf",
-      "destination": "figures/q3/process_noise_tuning.pdf",
-      "sha256": "e5234b6f3206f093495a2488d0bde8d18cc02b4a7d5980581c77f58b28baf58f",
+      "source": "paper_assets/paper/candidate_margin_cdf.pdf",
+      "destination": "figures/paper/candidate_margin_cdf.pdf",
+      "sha256": "39e587e414ba3dee4e68a9a76f88055b6ff4df4a17d0749354b5959113b434a6",
       "hash_mode": "content",
-      "bound_at": "2026-08-18T18:20:03.815641+00:00"
-    },
-    {
-      "source": "paper_assets/q4/candidate_feasibility_map.pdf",
-      "destination": "figures/q4/candidate_feasibility_map.pdf",
-      "sha256": "c567f9265b42157cc754955820517934cd0e21cc91d9bead32de2c65417d0113",
-      "hash_mode": "content",
-      "bound_at": "2026-08-18T18:20:04.085241+00:00"
-    },
-    {
-      "source": "paper_assets/q4/constraint_margins.pdf",
-      "destination": "figures/q4/constraint_margins.pdf",
-      "sha256": "9d3a3f1c447569478e2a65b69fbe9596b3e32e1cbb5cc6bb30b8c789920bf400",
-      "hash_mode": "content",
-      "bound_at": "2026-08-18T18:20:04.362339+00:00"
-    },
-    {
-      "source": "paper_assets/q4/optimized_schedule_timeline.pdf",
-      "destination": "figures/q4/optimized_schedule_timeline.pdf",
-      "sha256": "9ce9e9e2a10da83bd1df3f3c0f8ac7f3ed00d77276195506f12e735183104333",
-      "hash_mode": "content",
-      "bound_at": "2026-08-18T18:20:04.638640+00:00"
-    },
-    {
-      "source": "paper_assets/q4/trajectory_targets_schedule.pdf",
-      "destination": "figures/q4/trajectory_targets_schedule.pdf",
-      "sha256": "b00811ef08d8dc2ce793e5f205fb85abc2004d5c031d927a158bbfa24b95daea",
-      "hash_mode": "content",
-      "bound_at": "2026-08-18T18:20:04.912303+00:00"
+      "bound_at": "2026-08-18T18:56:19.680606+00:00"
     },
     {
       "source": "骨架使用说明.md",
       "destination": "骨架使用说明.md",
-      "sha256": "f79e595fc1ad7deab33858dea21468f2b42066fcc08182d3a7489719269091ef",
+      "sha256": "29e968fa31fe107bca63f149af0dab9717f39cd997971af9067aca751b68620e",
       "hash_mode": "content",
-      "bound_at": "2026-08-18T18:27:35.129824+00:00"
+      "bound_at": "2026-08-18T18:56:19.942016+00:00"
+    },
+    {
+      "source": "paper_assets/template/.github/workflows/build-latex-doc.yaml",
+      "destination": ".github/workflows/build-latex-doc.yaml",
+      "sha256": "74c4d99aabd667215b828bd6034a877cfca90f916bc158d98aa202bb60b7b31f",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:56:48.462259+00:00"
+    },
+    {
+      "source": "paper_assets/template/.gitignore",
+      "destination": ".gitignore",
+      "sha256": "6bf25d454e0894ee71650cf7d8d34ce6fa9df02c8978b95041f5f98cfa55ea53",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:56:48.723060+00:00"
+    },
+    {
+      "source": "paper_assets/template/latexmkrc",
+      "destination": "latexmkrc",
+      "sha256": "d82a4c6d9c2f604c14de0f20d7ee92bb035db409a70dbc3a204d89aa054b6f21",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:56:48.982151+00:00"
+    },
+    {
+      "source": "paper_assets/template/LICENSE.txt",
+      "destination": "LICENSE.txt",
+      "sha256": "92fb9e067cabc6b2a0818345248650e6814fb3ca173a4791aec54d16f2ca96ec",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:56:49.252427+00:00"
+    },
+    {
+      "source": "paper_assets/template/README.md",
+      "destination": "README.md",
+      "sha256": "d92a851d5f1dc721d3f1fa28e691afbbd9c71dbaa290b033341a3da577759f9c",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T18:56:49.518967+00:00"
+    },
+    {
+      "source": "paper_assets/q3/bias_confidence_interval.pdf",
+      "destination": "figures/q3/bias_confidence_interval.pdf",
+      "sha256": "94003abc14e3a051f0da8e17a3f4f891e6af9ad11c06a86192fad909bb444bee",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T19:03:15.073510+00:00"
+    },
+    {
+      "source": "paper_assets/q3/bias_time_series.pdf",
+      "destination": "figures/q3/bias_time_series.pdf",
+      "sha256": "1d48bd78d6ca3f913503817e4a2e4a0b4c358a640b2df2eeb303b532adb9a77a",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T19:03:15.388683+00:00"
+    },
+    {
+      "source": "paper_assets/q3/fused_trajectory_uncertainty.pdf",
+      "destination": "figures/q3/fused_trajectory_uncertainty.pdf",
+      "sha256": "e9814bf9efbcf985ad3cf1f0682cb2d0465b0083a9866750cf7cb675b2c6ff81",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T19:03:15.715707+00:00"
+    },
+    {
+      "source": "paper_assets/q3/process_noise_tuning.pdf",
+      "destination": "figures/q3/process_noise_tuning.pdf",
+      "sha256": "6a95d62aad068a068b20a9dbf2e767ecc0f7ac5bbc588a8feec9753905c632b8",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T19:03:16.032774+00:00"
+    },
+    {
+      "source": "paper_assets/q4/trajectory_targets_schedule.pdf",
+      "destination": "figures/q4/trajectory_targets_schedule.pdf",
+      "sha256": "0d7af019884cf494cbee49649b6152aef71c0d4c91a45c1223602255b9077ac8",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T19:03:16.312599+00:00"
+    },
+    {
+      "source": "paper_assets/q4/candidate_feasibility_map.pdf",
+      "destination": "figures/q4/candidate_feasibility_map.pdf",
+      "sha256": "8d4c34bde8b7b26db1f8cacc95693d71511ba8f7183394f5d7cef7cf1ca2199d",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T19:03:16.620519+00:00"
+    },
+    {
+      "source": "paper_assets/q4/optimized_schedule_timeline.pdf",
+      "destination": "figures/q4/optimized_schedule_timeline.pdf",
+      "sha256": "f6a732ec88115568b8c24046e53de96bb04dfda113b79cb897e028e3764ed080",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T19:03:16.943796+00:00"
+    },
+    {
+      "source": "paper_assets/q4/constraint_margins.pdf",
+      "destination": "figures/q4/constraint_margins.pdf",
+      "sha256": "4797e7ada300b4245b39e556b4e39d722135a6cad308e93e67fb19ec8247dd40",
+      "hash_mode": "content",
+      "bound_at": "2026-08-18T19:03:17.245547+00:00"
     }
   ],
   "created_at": "2026-08-18T11:14:25.745138+00:00"

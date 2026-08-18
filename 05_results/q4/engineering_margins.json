@@ -1,0 +1,24 @@
+{
+  "source": "05_results/q4/optimized_schedule.csv",
+  "continuous_recheck_step_s": 0.01,
+  "selected_task_count": 9,
+  "minimum_normalized_margin": 0.42407476289854246,
+  "minimum_intertask_gap_s": 0.10,
+  "shooting": {
+    "minimum_distance_m": 15.652601408183978,
+    "maximum_distance_m": 18.43696530702983,
+    "maximum_speed_mps": 1.0254162116403862,
+    "maximum_acceleration_mps2": 0.8105810809717428
+  },
+  "photography": {
+    "minimum_distance_m": 23.257373776675074,
+    "maximum_distance_m": 27.277757113043727,
+    "maximum_speed_mps": 0.8288716804757277,
+    "maximum_acceleration_mps2": 0.8548438004863452
+  },
+  "uncertainty_check": {
+    "scenarios": ["moderate", "standard", "severe"],
+    "trials_per_scenario": 500,
+    "whole_schedule_feasible_rate": [1.0, 1.0, 1.0]
+  }
+}

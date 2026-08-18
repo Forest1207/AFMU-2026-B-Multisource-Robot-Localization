@@ -6,17 +6,17 @@
 的两设备绝对时间区间不直接重叠，故先分别将时间重置为各自的经过时间，对中心化二维位置特征作相关分析，得到粗时间偏差。随后沿用问题二的固定公共评价网格和标准逐轴
 Huber 剖面目标作连续细化。以方式 1 为参考时钟，定义
 
-\[
+\begin{equation}
 t_{2,\mathrm{ref}}=t_2-\Delta t,
 \qquad
 \mathbf d_k=\mathbf z_2(t_k+\Delta t)-\mathbf z_1(t_k).
-\]
+\end{equation}
 
 所得粗值为 \(-368.82\) s，正式估计为
 
-\[
+\begin{equation}
 \boxed{\widehat{\Delta t}\approx-367.88\ \mathrm{s}}.
-\]
+\end{equation}
 
 由于 \(t_{2,\mathrm{ref}}=t_2-(-367.88)=t_2+367.88\)，方式 2
 设备时钟比方式 1 参考时钟落后约 367.88 s；映射时其时间戳整体增加约
@@ -32,19 +32,19 @@ t_{2,\mathrm{ref}}=t_2-\Delta t,
 长期协方差估计样本均值的协方差
 \(\widehat{\boldsymbol\Sigma}_{\bar d}\)，检验
 
-\[
+\begin{equation}
 H_0:\mathbf b=\mathbf 0,
 \qquad
 W=\bar{\mathbf d}^{\mathsf T}
 \widehat{\boldsymbol\Sigma}_{\bar d}^{-1}\bar{\mathbf d}
 \mathop{\sim}_{H_0}\chi_2^2.
-\]
+\end{equation}
 
 同时定义工程效应指数
 
-\[
+\begin{equation}
 E_b=\frac{\|\bar{\mathbf d}\|_2}{s_r},
-\]
+\end{equation}
 
 其中 \(s_r\) 是二维残差模长的 MAD 稳健尺度。仅当 \(p<0.05\) 且
 \(E_b\ge0.25\)
@@ -53,19 +53,19 @@ bootstrap 构造逐轴置信区间，并用 HAC 回归检验偏差趋势。
 
 实算普通均值为
 
-\[
+\begin{equation}
 \bar{\mathbf d}=(-0.134,-0.157)^{\mathsf T}\ \mathrm{m},
 \qquad \|\bar{\mathbf d}\|_2=0.206\ \mathrm{m}.
-\]
+\end{equation}
 
 HAC-Wald 统计量为 2.094，\(p=0.3511\)，故在 5\% 水平不拒绝
 \(H_0\)；工程效应指数为 0.0681，也低于阈值 0.25。2000 次、块长 14
 的移动块 bootstrap 给出
 
-\[
+\begin{equation}
 b_x\in[-0.413,0.138]\ \mathrm{m},\qquad
 b_y\in[-0.428,0.120]\ \mathrm{m},
-\]
+\end{equation}
 
 两轴区间均覆盖零。x、y 方向 HAC 趋势检验 p 值分别为 0.378 和
 0.921，亦未检出漂移。将 HAC 阶数/块长改为
@@ -78,31 +78,31 @@ b_y\in[-0.428,0.120]\ \mathrm{m},
 
 在不启用偏差状态的分支中，采用六维常加速度状态
 
-\[
+\begin{equation}
 \mathbf x=(x,y,v_x,v_y,a_x,a_y)^{\mathsf T},
-\]
+\end{equation}
 
 在 4 Hz 与 5 Hz
 原始观测的校正事件时刻逐次更新，不把插值点重复当作观测。两设备测量协方差由各自位置三阶差分的
 MAD 尺度估计为
 
-\[
+\begin{equation}
 \mathbf R_1=\operatorname{diag}(16.06,18.21),\qquad
 \mathbf R_2=\operatorname{diag}(7.24,8.94)\quad(\mathrm m^2).
-\]
+\end{equation}
 
 过程噪声调参阶段关闭门控反馈。对每个候选 jerk 谱密度 \(q\)，使用门控前
 \(\mathbf S_{0,k}\) 计算二维 NIS，并令
 
-\[
+\begin{equation}
 \mathbf e_k=\operatorname{chol}(\mathbf S_{0,k})^{-1}\boldsymbol\nu_k,
-\]
+\end{equation}
 
 以
 
-\[
+\begin{equation}
 S(q)=|\overline{\mathrm{NIS}}-2|+2\overline{|r_1(\mathbf e)|}
-\]
+\end{equation}
 
 选择参数，其中 \(r_1\) 为分设备、分坐标的 Pearson lag-1 相关。得到
 \(q=3.1623\)，位于候选网格内部。固定该值后运行 99\% NIS 稳健门控和 RTS
@@ -132,8 +132,8 @@ m，偏差判定不变。上述偏差置信区间是在正式时间配准值给�
 86.7\%。由此说明配准与偏差参数在已知真值试验中可回收，同时也如实保留有限样本下的
 I 类错误与覆盖边界。
 
-偏差置信区间、残差时序、融合轨迹不确定性及过程噪声调参结果见
-图\ref{fig:q3-bias-ci}至图\ref{fig:q3-tuning}。
+偏差置信区间见图\ref{fig:q3-bias-ci}，残差时序见图\ref{fig:q3-bias-series}，
+融合轨迹不确定性见图\ref{fig:q3-trajectory}，过程噪声调参结果见图\ref{fig:q3-tuning}。
 
 \begin{figure}[htbp]
   \centering

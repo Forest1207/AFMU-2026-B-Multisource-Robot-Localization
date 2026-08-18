@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "mode": "full",
-  "stage": "complete",
+  "stage": "package",
   "competition": null,
   "year": null,
   "problem_id": null,
   "created_at_utc": "2026-08-18T16:37:50.640849+00:00",
-  "updated_at_utc": "2026-08-18T18:30:46.978297+00:00",
+  "updated_at_utc": "2026-08-18T19:16:18.947132+00:00",
   "assumptions": [],
   "open_issues": [],
   "decisions": [
@@ -89,17 +89,31 @@
     },
     "final-paper": {
       "path": "08_delivery\\B题-完整论文.pdf",
-      "sha256": "624a37c75fe8356ad9c2f4b8f174b7bee13ebe74dc9c94058b7577f1f788edc7",
-      "bytes": 1143873,
-      "purpose": "25页最终LaTeX论文PDF",
-      "recorded_at_utc": "2026-08-18T18:30:33.199650+00:00"
+      "sha256": "6b6df8e7552a164f3049f8d93b2abd59cacb8d2ceee264a3d5caf5d8daba23ba",
+      "bytes": 1838568,
+      "purpose": "27页严格验证最终LaTeX论文PDF",
+      "recorded_at_utc": "2026-08-18T19:14:16.562034+00:00"
     },
     "final-score": {
       "path": "evidence\\final_score.md",
-      "sha256": "2c30744f3abd5ca8fc647ee877b42833d75d6cf6ad76548466159a1b1f1b7bf3",
-      "bytes": 1432,
-      "purpose": "交付前100分制自评",
-      "recorded_at_utc": "2026-08-18T18:30:33.392230+00:00"
+      "sha256": "17a14b7bf5558d55ca0e941bfae0e43be0802003092aa43942a327c157e47939",
+      "bytes": 1625,
+      "purpose": "严格门禁后的100分制自评",
+      "recorded_at_utc": "2026-08-18T19:14:16.783523+00:00"
+    },
+    "claim-evidence-matrix": {
+      "path": "evidence\\claim_evidence_matrix.md",
+      "sha256": "9ba6454dda070e78724c8e39c81c4722d5100213782962bc9558b63d1632600e",
+      "bytes": 3955,
+      "purpose": "最终论文主张与正式证据映射",
+      "recorded_at_utc": "2026-08-18T19:16:18.726078+00:00"
+    },
+    "pdf-visual-qa": {
+      "path": "evidence\\pdf_visual_qa.md",
+      "sha256": "56924f16fe4aedd14b1d063dc1ce26d7ab23993dc3949d02430577e8f523f3a8",
+      "bytes": 1459,
+      "purpose": "27页正式PDF逐页视觉检查记录",
+      "recorded_at_utc": "2026-08-18T19:16:18.947132+00:00"
     }
   },
   "gates": {
@@ -162,9 +176,10 @@
     "W1": {
       "status": "PASS",
       "evidence": [
-        "evidence\\gates\\W1_paper_gate.md"
+        "evidence\\gates\\W1_paper_gate.md",
+        "evidence\\claim_evidence_matrix.md"
       ],
-      "at_utc": "2026-08-18T18:30:33.972597+00:00"
+      "at_utc": "2026-08-18T19:14:16.111109+00:00"
     },
     "PK1": {
       "status": "PASS",
@@ -172,6 +187,24 @@
         "08_delivery\\B题-完整论文.pdf"
       ],
       "at_utc": "2026-08-18T18:30:46.978297+00:00"
+    },
+    "P1-FINAL": {
+      "status": "PASS",
+      "evidence": [
+        "evidence\\revalidation_q1.txt",
+        "evidence\\revalidation_q2.txt",
+        "evidence\\revalidation_q3.txt",
+        "evidence\\revalidation_q4.txt"
+      ],
+      "at_utc": "2026-08-18T19:14:15.894695+00:00"
+    },
+    "W2": {
+      "status": "PASS",
+      "evidence": [
+        "evidence\\gates\\W2_package_gate.md",
+        "evidence\\latex_validation.json"
+      ],
+      "at_utc": "2026-08-18T19:14:16.329624+00:00"
     }
   },
   "history": [
@@ -269,7 +302,34 @@
       "gate": "PK1",
       "gate_status": "PASS",
       "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T19:14:15.894695+00:00",
+      "event": "advance",
+      "from": "complete",
+      "to": "evidence",
+      "gate": "P1-FINAL",
+      "gate_status": "PASS",
+      "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T19:14:16.111109+00:00",
+      "event": "advance",
+      "from": "evidence",
+      "to": "write",
+      "gate": "W1",
+      "gate_status": "PASS",
+      "user_approval": null
+    },
+    {
+      "at_utc": "2026-08-18T19:14:16.329624+00:00",
+      "event": "advance",
+      "from": "write",
+      "to": "package",
+      "gate": "W2",
+      "gate_status": "PASS",
+      "user_approval": null
     }
   ],
-  "next_action": "已完成并同步交付"
+  "next_action": "同步交付并核验哈希"
 }

@@ -18,7 +18,7 @@ def save(fig: plt.Figure, path: str | Path) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(p, dpi=300, bbox_inches="tight")
     fig.savefig(p.with_suffix(".svg"), bbox_inches="tight")
-    fig.savefig(p.with_suffix(".pdf"), bbox_inches="tight")
+    fig.savefig(p.with_suffix(".pdf"), dpi=600, bbox_inches="tight")
     plt.close(fig)
 
 

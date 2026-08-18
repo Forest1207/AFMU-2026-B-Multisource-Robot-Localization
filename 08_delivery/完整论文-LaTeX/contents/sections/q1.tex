@@ -23,46 +23,46 @@ B。
 
 连续轨迹比较 Linear、Cubic Spline、PCHIP 和 Akima
 四种插值。最终以对齐后的 跨传感器位置 RMSE
-为主判据，并兼顾无噪声轨迹的连续可导性，选择 Cubic Spline。
+为主判据，并兼顾无噪声轨迹的连续可导性，选择 Cubic Spline；其中 PCHIP 的保形性质及其使用边界参照分段三次插值理论\cite{fritsch1980}。
 
 \subsection{时间偏差模型}\label{ux65f6ux95f4ux504fux5deeux6a21ux578b}
 
 记两种定位数据为
 
-\[
+\begin{equation}
 D_m=\{(t_i^{(m)},x_i^{(m)},y_i^{(m)})\},\qquad m=1,2,
-\]
+\end{equation}
 
 并分别建立连续二维轨迹 \(\mathbf r_m(t)\)。定义方式 2 的校正时间为
 
-\[
+\begin{equation}
 t_{2,\mathrm{aligned}}=t_2+\Delta t.
-\]
+\end{equation}
 
 因此 \(\Delta t<0\) 表示方式 2 的时间戳需要整体向前平移。对候选偏差
 \(\Delta t\)，公共有效区间为
 
-\[
+\begin{equation}
 \Omega(\Delta t)=
 \left[
 \max(t_{1,\min},t_{2,\min}+\Delta t),
 \min(t_{1,\max},t_{2,\max}+\Delta t)
 \right].
-\]
+\end{equation}
 
 在公共评价时刻 \(\{t_k\}\) 上定义位置均方误差
 
-\[
+\begin{equation}
 J(\Delta t)=\frac{1}{N}
 \sum_{k=1}^{N}
 \left\|\mathbf r_1(t_k)-\mathbf r_2(t_k-\Delta t)\right\|_2^2,
-\]
+\end{equation}
 
 从而得到
 
-\[
+\begin{equation}
 \Delta t^*=\arg\min_{\Delta t}J(\Delta t).
-\]
+\end{equation}
 
 程序先在 0.1 s 公共网格上计算二维速度特征互相关，保留多个相关峰；随后在
 全部可行偏差范围内以 0.5 s 步长扫描位置
@@ -77,9 +77,9 @@ MSE，最后在最优候选附近用有界标量
 同一真实时刻，则先检查坐标差，再取均值保留一个节点。对合并后的 6301
 个唯一 时刻建立 Cubic Spline，并在
 
-\[
+\begin{equation}
 t_n=221.0+0.1n,\qquad n=0,1,\ldots,8494
-\]
+\end{equation}
 
 上输出 10 Hz 轨迹。输出区间为 \([221.0,1070.4]\)
 s，仅覆盖至少一种原始观测 支持的时间区间，不进行外推。
@@ -89,15 +89,15 @@ s，仅覆盖至少一种原始观测 支持的时间区间，不进行外推。
 采用符号约定
 \(t_{2,\mathrm{aligned}}=t_2+\Delta t\)，连续优化得到原始估计
 
-\[
+\begin{equation}
 \Delta t^*=-198.4316999986\ \mathrm{s}.
-\]
+\end{equation}
 
 考虑输入时间戳的显示精度，正式报告为
 
-\[
+\begin{equation}
 \boxed{\Delta t^*=-198.4317\ \mathrm{s}}.
-\]
+\end{equation}
 
 即方式 2 的时间轴需整体向前平移 198.4317 s。对齐公共区间长 700.35 s，
 位置 RMSE 为 \(8.51\times10^{-11}\) m。最终 10 Hz 结果共 8495 行，完整数据见附录所列结果文件。
@@ -122,6 +122,7 @@ s，排除了边界伪最优。
 \(-198.4317\) s；这也说明互相关只能用于候选生成，最终必须由位置误差确定。
 对齐残差的量级为 \(10^{-10}\) m，支持无噪声一致性结论；
 图\ref{fig:q1-aligned}和图\ref{fig:q1-trajectory}分别给出校正效果与完整重建轨迹。
+四种插值的误差数量级比较见图\ref{fig:q1-model-comparison}。
 
 \subsection{局限与后续接口}\label{ux5c40ux9650ux4e0eux540eux7eedux63a5ux53e3}
 
@@ -148,4 +149,10 @@ s，排除了边界伪最优。
   \includegraphics[width=.84\textwidth]{q1/trajectory_10hz.pdf}
   \caption{问题一重建的10 Hz完整轨迹}
   \label{fig:q1-trajectory}
+\end{figure}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.78\textwidth]{paper/model_comparison.pdf}
+  \caption{问题一四种插值模型的跨设备位置RMSE比较}
+  \label{fig:q1-model-comparison}
 \end{figure}

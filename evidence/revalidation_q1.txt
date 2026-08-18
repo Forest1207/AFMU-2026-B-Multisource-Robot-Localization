@@ -1,0 +1,15 @@
+true Δt=-3.731700s, estimated=-3.731700000s
+absolute error=2.199e-10s, RMSE=5.872e-10m
+
+{
+  "passed": true,
+  "output_step_max_error_s": 1.364186541508161E-13,
+  "output_finite": true,
+  "aligned_rmse_threshold_m": 1E-06,
+  "common_timestamp_groups": 700,
+  "common_timestamp_max_disagreement_m": 0.0,
+  "optimum_boundary_distance_s": 640.3499999986374,
+  "independent_exact_match_count": 700,
+  "independent_offset_s": -198.4317,
+  "independent_offset_error_s": 1.362593593512429E-09
+}

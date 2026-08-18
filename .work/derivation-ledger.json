@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "models": [
+    {
+      "model_id": "q1_time_alignment",
+      "question": "问题一",
+      "model_type": "algorithmic",
+      "reality_mapping": "把两台设备不同开机时刻造成的固定时钟平移映射为单一标量时间偏差，并在共同支持域上比较同一真实轨迹。",
+      "variables": [
+        {"symbol": "Delta t", "meaning": "方式2时间戳的加性校正量", "unit": "s", "kind": "scalar"},
+        {"symbol": "r_m(t)", "meaning": "第m种定位方式的连续二维轨迹", "unit": "m", "kind": "vector"},
+        {"symbol": "J(Delta t)", "meaning": "固定评价网格上的跨设备位置均方误差", "unit": "m^2", "kind": "scalar"}
+      ],
+      "assumptions": [
+        {"statement": "两设备观测同一连续轨迹且仅有固定时间平移", "condition": "题面说明附件1无噪声且开机不同步", "error_scale": "700组同刻坐标最大差为0 m"},
+        {"statement": "仅在观测支持域内插值，不做外推", "condition": "10 Hz网格端点均落在至少一条原始轨迹支持区间", "error_scale": "最大观测间隙0.25 s"}
+      ],
+      "derivation_steps": [
+        {"step": 1, "input": "两设备时间戳与坐标", "operation": "定义加性时间修正并求共同有效区间", "output_equation": 1, "purpose": "统一时钟与比较域"},
+        {"step": 2, "input": "共同评价网格上的两条插值轨迹", "operation": "最小化二维位置均方误差", "output_equation": 2, "purpose": "估计固定时间偏差"}
+      ],
+      "algorithm_steps": [
+        {"step": 1, "action": "速度互相关生成多个候选并在全可行域作0.5 s扫描", "purpose": "覆盖周期轨迹的多个低谷", "failure_condition": "全局最低点落在搜索边界"},
+        {"step": 2, "action": "在固定评价网格上进行有界连续优化并合并同刻节点", "purpose": "获得高精度偏差和10 Hz轨迹", "failure_condition": "共同采样坐标不一致或输出步长非0.1 s"}
+      ],
+      "hard_constraints": [],
+      "data_pipeline": {"preprocessing": ["时间戳排序", "重复与缺失检查"], "feature_selection": "二维速度仅用于候选生成", "parameter_selection": "全域扫描后局部连续优化", "evaluation_metrics": ["位置RMSE", "精确坐标匹配数", "10 Hz步长误差"]},
+      "numerical_example": {"inputs": "700组精确同坐标观测", "calculation": "逐组计算t1-t2并取唯一差值", "result": "Delta t=-198.4317 s"},
+      "validation": ["连续优化与700组精确坐标时差独立一致", "四种插值和8个边界/网格情景结论一致", "合成偏差恢复误差2.20e-10 s"],
+      "evidence_paths": ["05_results/q1/parameters.json", "05_results/q1/interpolation_comparison.csv", "05_results/q1/sensitivity.csv"],
+      "ambiguity": "周期轨迹可能产生多个相关峰，粗互相关峰不等于最终位置误差全局最小值。",
+      "cross_validation": {
+        "methods": [
+          {"name": "连续位置目标优化", "principle": "固定公共网格最小化二维位置MSE", "result": "-198.4316999986 s", "evidence": "05_results/q1/parameters.json"},
+          {"name": "精确坐标配对", "principle": "对700个重复物理位置直接计算原始时间差", "result": "唯一差值-198.4317 s", "evidence": "05_results/q1/interpolation_comparison.csv"}
+        ],
+        "comparison_metric": "时间偏差绝对差",
+        "result": "按输入显示精度差为0 s",
+        "difference_reason": "连续优化保留浮点尾数，坐标配对受输入小数位限制",
+        "selection": "采用连续优化机器值计算，正式结果按输入精度报告"
+      },
+      "sensitivity_fallback": null
+    },
+    {
+      "model_id": "q2_robust_async_fusion",
+      "question": "问题二",
+      "model_type": "statistical",
+      "reality_mapping": "把设备2相对设备1的固定时钟偏移与二维空间偏差作为标定参数，把两条异步含噪观测流作为同一六维运动状态的事件观测。",
+      "variables": [
+        {"symbol": "Delta t", "meaning": "方式2设备时刻相对参考时钟的偏移", "unit": "s", "kind": "scalar"},
+        {"symbol": "b", "meaning": "方式2减方式1的固定二维相对偏差", "unit": "m", "kind": "vector"},
+        {"symbol": "x", "meaning": "位置、速度和加速度组成的六维状态", "unit": "mixed", "kind": "state_vector"},
+        {"symbol": "q", "meaning": "白噪声jerk谱密度", "unit": "m^2/s^5", "kind": "parameter"}
+      ],
+      "assumptions": [
+        {"statement": "相对时间与空间偏差在记录期内固定", "condition": "校正后分设备残差均值、趋势和创新诊断均低于工程阈值", "error_scale": "时间敏感范围约0.10 s"},
+        {"statement": "短时运动可由常加速度状态和白噪声jerk近似", "condition": "事件间隔不超过原始4/5 Hz采样尺度", "error_scale": "q乘0.1或10时轨迹RMS变化0.0654/0.0346 m"}
+      ],
+      "derivation_steps": [
+        {"step": 1, "input": "固定公共网格上的两流差值", "operation": "逐轴Huber IRLS剖面估计偏差并最小化稳健目标", "output_equation": 5, "purpose": "联合辨识时间与空间偏差"},
+        {"step": 2, "input": "校正后的异步原始事件", "operation": "常加速度Kalman递推与RTS后向平滑", "output_equation": 8, "purpose": "输出10 Hz融合状态"}
+      ],
+      "algorithm_steps": [
+        {"step": 1, "action": "在冻结稳健尺度的固定评价网格上扫描和细化Delta t", "purpose": "保证候选目标可比", "failure_condition": "最优点触及搜索边界或标定参数不可辨识"},
+        {"step": 2, "action": "按校正事件时刻异步更新并以门控前白化创新选q", "purpose": "避免插值伪观测和门控反馈", "failure_condition": "协方差非PSD或创新均值/趋势超工程阈值"}
+      ],
+      "hard_constraints": [],
+      "data_pipeline": {"preprocessing": ["时间排序", "设备标签保留", "方式2坐标减相对偏差"], "feature_selection": "二维位置用于更新，三阶差分用于分设备噪声估计", "parameter_selection": "冻结尺度Huber搜索；门控关闭时以NIS与白化创新相关选择q", "evaluation_metrics": ["校正差值RMSE", "pre-gate NIS", "白化创新lag-1", "状态协方差PSD"]},
+      "numerical_example": {"inputs": "附件2的3000与3948个有效事件", "calculation": "Huber剖面标定后执行6948次异步更新", "result": "Delta t=50.17 s，b=(3.47,-1.83) m，输出8496个10 Hz状态"},
+      "validation": ["普通最小二乘与标准Huber结果接近", "离群点合成试验Huber联合误差0.0286低于普通估计0.2238", "关门控调参仍选择q=3.162e-8"],
+      "evidence_paths": ["05_results/q2/parameters.json", "05_results/q2/validation.json", "05_results/q2/sensitivity.csv"],
+      "ambiguity": "无外部真值时只能识别两设备相对空间差，不能分解为任一设备的绝对误差。",
+      "cross_validation": {
+        "methods": [
+          {"name": "标准Huber剖面估计", "principle": "逐轴稳健损失降低大残差影响", "result": "Delta t=50.1717 s，b=(3.4670,-1.8332) m", "evidence": "05_results/q2/parameters.json"},
+          {"name": "普通剖面最小二乘", "principle": "所有残差等权平方和", "result": "Delta t=50.1706 s，b约(3.4731,-1.8328) m", "evidence": "05_results/q2/sensitivity.csv"}
+        ],
+        "comparison_metric": "时间偏差与二维偏差差异",
+        "result": "主值差约0.0011 s，空间结论不变",
+        "difference_reason": "Huber仅对少量大残差降权",
+        "selection": "采用Huber主值并用普通估计作稳定性对照"
+      },
+      "sensitivity_fallback": null
+    },
+    {
+      "model_id": "q3_test_driven_fusion",
+      "question": "问题三",
+      "model_type": "statistical",
+      "reality_mapping": "先把两设备对齐后的相对位置差视为相关时间序列，再由统计显著性、工程尺度和固定性诊断共同决定是否在融合状态中启用偏差。",
+      "variables": [
+        {"symbol": "W", "meaning": "二维HAC-Wald统计量", "unit": "1", "kind": "statistic"},
+        {"symbol": "E_b", "meaning": "相对偏差模长与稳健残差尺度之比", "unit": "1", "kind": "index"},
+        {"symbol": "Sigma_bar_d", "meaning": "相关残差均值的HAC协方差", "unit": "m^2", "kind": "matrix"},
+        {"symbol": "x", "meaning": "选择分支后的六维运动状态", "unit": "mixed", "kind": "state_vector"}
+      ],
+      "assumptions": [
+        {"statement": "对齐后残差在局部可视为弱平稳相关序列", "condition": "HAC带宽、移动块长度和趋势诊断同时报告", "error_scale": "HAC情景p值范围0.305至0.373"},
+        {"statement": "10 Hz非事件状态可由前一RTS事件短时传播近似", "condition": "最大传播间隔不超过0.208 s", "error_scale": "模型内位置合成标准差中位0.961 m、最大3.459 m"}
+      ],
+      "derivation_steps": [
+        {"step": 1, "input": "配准后的二维相对差序列", "operation": "HAC协方差下的二维Wald检验与工程效应归一化", "output_equation": 11, "purpose": "判定偏差是否值得建模"},
+        {"step": 2, "input": "判定结果与异步观测事件", "operation": "选择普通或偏差增广状态并执行KF/RTS", "output_equation": 13, "purpose": "在证据支持的复杂度下融合"}
+      ],
+      "algorithm_steps": [
+        {"step": 1, "action": "Huber配准后同时运行HAC-Wald、moving-block bootstrap与HAC趋势检验", "purpose": "区分统计证据、工程尺度和固定性", "failure_condition": "Wald与bootstrap结论冲突时立即报错"},
+        {"step": 2, "action": "依据联合判据选择状态维度并进行异步滤波平滑", "purpose": "避免无条件增加偏差状态", "failure_condition": "滤波协方差非PSD或状态物理量异常"}
+      ],
+      "hard_constraints": [],
+      "data_pipeline": {"preprocessing": ["经过时间粗配准", "固定公共网格Huber细配准"], "feature_selection": "二维相对残差用于偏差检验；原始位置事件用于状态更新", "parameter_selection": "alpha=0.05、工程阈值0.25；门控关闭时以NIS与白化相关选择q", "evaluation_metrics": ["Wald p值", "bootstrap置信区间", "工程效应指数", "趋势p值", "协方差最小特征值"]},
+      "numerical_example": {"inputs": "偏差均值(-0.134,-0.157) m与HAC协方差", "calculation": "计算W=2.094并与chi-square(2)比较，同时计算E_b", "result": "p=0.3511，E_b=0.0681，正式分支不启用偏差状态"},
+      "validation": ["HAC与移动块bootstrap结论一致", "100个AR(1)零偏差样本经验拒绝率8%，预设偏差功效100%", "30次bootstrap双轴联合覆盖率86.7%"],
+      "evidence_paths": ["05_results/q3/parameters.json", "05_results/q3/validation.json", "05_results/q3/sensitivity.csv"],
+      "ambiguity": "偏差置信区间条件于固定配准值，且未把配准不确定性嵌入每次bootstrap重估。",
+      "cross_validation": {
+        "methods": [
+          {"name": "HAC-Wald联合检验", "principle": "Newey-West长期协方差修正时间相关", "result": "p=0.3511，不拒绝零相对偏差", "evidence": "05_results/q3/validation.json"},
+          {"name": "移动块bootstrap", "principle": "按连续时间块重采样以保留局部相关", "result": "两轴95%区间均覆盖0", "evidence": "05_results/q3/sensitivity.csv"}
+        ],
+        "comparison_metric": "是否拒绝零偏差与区间是否覆盖零",
+        "result": "两条独立推断路线结论一致",
+        "difference_reason": "HAC依赖渐近二阶矩，bootstrap依赖块重采样的经验分布",
+        "selection": "以HAC-Wald为主判、bootstrap为复核，并叠加工程阈值和趋势诊断"
+      },
+      "sensitivity_fallback": null
+    },
+    {
+      "model_id": "q4_lexicographic_milp",
+      "question": "问题四",
+      "model_type": "optimization",
+      "reality_mapping": "把固定轨迹上的连续射击/拍照可行窗口离散为经0.01 s复核的候选任务，把单机器人资源、目标唯一性、角度分离和九行容量映射为0-1冲突约束。",
+      "variables": [
+        {"symbol": "x_c", "meaning": "候选任务c是否选择", "unit": "1", "kind": "binary"},
+        {"symbol": "m_c", "meaning": "候选准备窗最小归一化约束裕度", "unit": "1", "kind": "parameter"},
+        {"symbol": "z", "meaning": "所选任务中的最小裕度", "unit": "1", "kind": "continuous"},
+        {"symbol": "theta_j", "meaning": "机器人相对拍照目标的方向角", "unit": "degree", "kind": "angle"}
+      ],
+      "assumptions": [
+        {"statement": "单机器人任务准备与执行占用同一资源，闭区间互斥并留0.01 s数值间隔", "condition": "题面未明示并行资源，因此作为建模约定单独披露", "error_scale": "正式最小相邻间隔0.10 s"},
+        {"statement": "同一射击目标至多计一次完成", "condition": "避免重复射击造成无意义任务计数", "error_scale": "正式四次射击目标均不同"}
+      ],
+      "derivation_steps": [
+        {"step": 1, "input": "Q3的10 Hz状态、目标坐标和准备时长", "operation": "在完整准备窗上计算距离、速度、加速度的最小归一化裕度", "output_equation": 14, "purpose": "构造连续可行候选"},
+        {"step": 2, "input": "1255个经0.01 s复核的候选与冲突关系", "operation": "按任务数、最小裕度、总裕度与角度多样性三级词典序求解", "output_equation": 15, "purpose": "给出可证明达到容量上界的稳健日程"}
+      ],
+      "algorithm_steps": [
+        {"step": 1, "action": "10 Hz全准备窗筛选、连续段压缩并用PCHIP在0.01 s网格复核", "purpose": "得到有限且连续可行的候选集", "failure_condition": "任一候选在加密网格出现负裕度"},
+        {"step": 2, "action": "构造时间、射击唯一性和拍照角度冲突后运行三阶段HiGHS MILP", "purpose": "先达最大任务数再提高安全裕度", "failure_condition": "求解状态非最优、MIP gap非0或舍入后复核失败"}
+      ],
+      "objective": "词典序最大化任务数、最小归一化裕度和总裕度/拍照角度多样性",
+      "constraints": ["射击/拍照全准备窗距离速度加速度约束", "准备执行区间互斥", "同一射击目标至多一次", "同目标拍照角差至少60度", "结果不超过9行"],
+      "hard_constraints": ["shoot_distance_lower", "shoot_distance_upper", "shoot_speed_upper", "shoot_acceleration_upper", "photo_distance_lower", "photo_distance_upper", "photo_speed_upper", "photo_acceleration_upper", "intertask_gap_lower"],
+      "physical_goal": "在固定轨迹和任务安全边界下尽可能多完成有效射击与拍照任务，并避免靠近约束边界的脆弱安排。",
+      "optimized_goal": "先最大化完成任务数，再最大化所选任务的最小归一化裕度，最后提高总裕度和拍照角度多样性。",
+      "goal_relationship": "第一级目标直接等于完成任务数；第二、三级目标在任务数固定后选择离物理约束边界更远的同等数量方案，不牺牲主目标。",
+      "direct_physical_objective_trial": {"objective": "仅最大化完成任务数", "result": "达到模板容量上界9项，stage1 MIP gap为0", "comparison": "词典序最终方案仍保持9项，并把最小裕度从贪心0.1010提高到0.4241", "evidence": "05_results/q4/parameters.json"},
+      "tradeoff_evidence": "05_results/q4/parameters.json",
+      "data_pipeline": {"preprocessing": ["读取Q3状态与不确定性", "目标坐标和任务类型核验"], "feature_selection": "位置、速度、加速度、目标距离和拍照方向角", "parameter_selection": "候选压缩间隔与0.01 s连续复核固定后求解", "evaluation_metrics": ["任务数", "最小归一化裕度", "MIP gap", "扰动可行率"]},
+      "numerical_example": {"inputs": "1255个候选、9行容量与所有冲突边", "calculation": "三阶段MILP固定前一级最优值后继续优化", "result": "9项任务、最小裕度0.4241、三阶段gap均为0"},
+      "validation": ["独立MILP证明严格高于0.4240747629的裕度时至多8项", "0.001 s全准备窗加密复核全部满足", "三档各500次扰动整套方案可行率100%"],
+      "evidence_paths": ["05_results/q4/parameters.json", "05_results/q4/validation.json", "05_results/q4/optimized_schedule.csv", "05_results/q4/engineering_margins.json"],
+      "ambiguity": "候选压缩可能影响次级裕度最优性，但不影响九行容量下任务数达到全局上界；次级结论限定在连续复核后的候选集。",
+      "cross_validation": {
+        "methods": [
+          {"name": "三阶段MILP", "principle": "显式0-1冲突约束与词典序全局求解", "result": "9项，最小裕度0.4241，gap=0", "evidence": "05_results/q4/parameters.json"},
+          {"name": "0.001秒连续复核与严格裕度上界试验", "principle": "加密完整准备窗并提高最小裕度下界重新判定容量", "result": "正式九项全可行；严格高于正式裕度时最多8项", "evidence": "05_results/q4/validation.json"}
+        ],
+        "comparison_metric": "任务数、最小裕度和连续约束可行性",
+        "result": "优化解与独立复核一致",
+        "difference_reason": "MILP在压缩候选上证明离散最优，加密复核检验连续时间可行性",
+        "selection": "交付MILP日程并以加密复核限定其连续安全边界"
+      },
+      "sensitivity_fallback": null
+    }
+  ],
+  "sensitivity": {
+    "parameter": [
+      {"name": "问题二过程噪声谱密度q", "levels": [-0.9, 0.0, 9.0], "result_summary": "q乘0.1和10时轨迹RMS分别变化0.0654 m和0.0346 m", "evidence": "05_results/q2/sensitivity.csv", "range_exception": {"reason": "q跨13个数量级调参，按对数倍数扰动比±20%更能识别状态平滑边界", "feasible_levels": [0.1, 1.0, 10.0], "evidence": "05_results/q2/sensitivity.csv"}},
+      {"name": "问题三过程噪声谱密度q", "levels": [-0.9, 0.0, 9.0], "result_summary": "q乘0.1和10时轨迹RMS分别变化0.391 m和0.456 m，偏差判定不变", "evidence": "05_results/q3/sensitivity.csv", "range_exception": {"reason": "状态噪声参数使用数量级扫描，十倍扰动覆盖的物理不确定性显著大于±20%", "feasible_levels": [0.1, 1.0, 10.0], "evidence": "05_results/q3/sensitivity.csv"}}
+    ],
+    "model_variants": [
+      {"name": "问题一四种插值模型", "result_summary": "四种方法时间偏差一致，跨设备RMSE从8.51e-11 m至4.76e-6 m", "evidence": "05_results/q1/interpolation_comparison.csv"},
+      {"name": "问题二普通与Huber剖面模型", "result_summary": "两者主参数接近，含离群点合成数据中Huber联合误差更低", "evidence": "05_results/q2/sensitivity.csv"}
+    ],
+    "boundary_variants": [
+      {"name": "问题三HAC带宽与块长度边界", "result_summary": "三组边界口径p值0.305、0.351、0.373，均不拒绝零偏差", "evidence": "05_results/q3/sensitivity.csv"},
+      {"name": "问题四候选窗口与连续复核边界", "result_summary": "1255个候选经0.01 s筛选，正式九项再以0.001 s全窗复核通过", "evidence": "05_results/q4/feasible_tasks.csv"}
+    ],
+    "conclusions": "时间配准主结论对插值、搜索与统计窗口稳定；融合轨迹对q存在可量化但不改变工程判断的变化；任务方案在0.001 s复核和三档扰动内保持可行。结论只在固定时钟偏移、状态空间近似和所声明单机器人资源约定下成立。"
+  },
+  "engineering_margins": [
+    {"constraint_id": "shoot_distance_lower", "constraint": "射击准备窗距离下界", "constraint_type": "lower", "limit": 5.0, "actual": 15.652601408183978, "unit": "m", "margin_percent": 213.05202816367956, "evidence": "05_results/q4/engineering_margins.json", "uncertainty_discussion": "三档各500次扰动中整套方案可行率均为100%，但不解释为真实命中概率。"},
+    {"constraint_id": "shoot_distance_upper", "constraint": "射击准备窗距离上界", "constraint_type": "upper", "limit": 30.0, "actual": 18.43696530702983, "unit": "m", "margin_percent": 38.54344897656724, "evidence": "05_results/q4/engineering_margins.json", "uncertainty_discussion": "最不利实际值由全部射击准备窗0.01 s复核取得。"},
+    {"constraint_id": "shoot_speed_upper", "constraint": "射击准备窗速度上界", "constraint_type": "upper", "limit": 2.0, "actual": 1.0254162116403862, "unit": "m/s", "margin_percent": 48.72918941798069, "evidence": "05_results/q4/engineering_margins.json", "uncertainty_discussion": "严重情景使用10%速度相对扰动，整套方案仍全部可行。"},
+    {"constraint_id": "shoot_acceleration_upper", "constraint": "射击准备窗加速度上界", "constraint_type": "upper", "limit": 1.5, "actual": 0.8105810809717428, "unit": "m/s^2", "margin_percent": 45.96126126855048, "evidence": "05_results/q4/engineering_margins.json", "uncertainty_discussion": "严重情景使用10%加速度相对扰动，整套方案仍全部可行。"},
+    {"constraint_id": "photo_distance_lower", "constraint": "拍照准备窗距离下界", "constraint_type": "lower", "limit": 10.0, "actual": 23.257373776675074, "unit": "m", "margin_percent": 132.57373776675074, "evidence": "05_results/q4/engineering_margins.json", "uncertainty_discussion": "最不利实际值由全部拍照准备窗0.01 s复核取得。"},
+    {"constraint_id": "photo_distance_upper", "constraint": "拍照准备窗距离上界", "constraint_type": "upper", "limit": 40.0, "actual": 27.277757113043727, "unit": "m", "margin_percent": 31.80560721739068, "evidence": "05_results/q4/engineering_margins.json", "uncertainty_discussion": "位置扰动采用问题三模型标准差的0.5、1.0、1.5倍三档压力情景。"},
+    {"constraint_id": "photo_speed_upper", "constraint": "拍照准备窗速度上界", "constraint_type": "upper", "limit": 1.5, "actual": 0.8288716804757277, "unit": "m/s", "margin_percent": 44.74188796828482, "evidence": "05_results/q4/engineering_margins.json", "uncertainty_discussion": "严重情景使用10%速度相对扰动，九项仍全可行。"},
+    {"constraint_id": "photo_acceleration_upper", "constraint": "拍照准备窗加速度上界", "constraint_type": "upper", "limit": 1.5, "actual": 0.8548438004863452, "unit": "m/s^2", "margin_percent": 43.01041330091032, "evidence": "05_results/q4/engineering_margins.json", "uncertainty_discussion": "严重情景使用10%加速度相对扰动，九项仍全可行。"},
+    {"constraint_id": "intertask_gap_lower", "constraint": "相邻任务资源间隔下界", "constraint_type": "lower", "limit": 0.01, "actual": 0.10, "unit": "s", "margin_percent": 900.0, "evidence": "05_results/q4/engineering_margins.json", "uncertainty_discussion": "正式时刻保留两位小数后再次按0.001 s复核，最小间隔仍为0.10 s。"}
+  ],
+  "required_visuals": [
+    {"type": "technical_route", "file": "06_figures/paper/technical_route.png", "data_source": ".work/model-contract.json", "claim": "四问形成配准、融合、判定、调度的单向证据链"},
+    {"type": "subproblem_flow", "file": "06_figures/paper/subproblem_flow.png", "data_source": ".work/model-contract.json", "claim": "前问输出通过统一时钟与10 Hz状态契约进入后问"},
+    {"type": "model_comparison", "file": "06_figures/paper/model_comparison.png", "data_source": "05_results/q1/interpolation_comparison.csv", "claim": "Cubic Spline在无噪声对齐数据上跨设备RMSE最低"},
+    {"type": "cumulative_distribution", "file": "06_figures/paper/candidate_margin_cdf.png", "data_source": "05_results/q4/feasible_tasks.csv", "claim": "最终所选任务最小裕度位于候选分布高分位区域"}
+  ],
+  "figure_manifest": [
+    {"file": "06_figures/paper/technical_route.png", "question": "总体", "data_source": ".work/model-contract.json", "claim": "展示四问统一技术路线", "analysis_anchor": "图1技术路线证据"},
+    {"file": "06_figures/paper/subproblem_flow.png", "question": "总体", "data_source": ".work/model-contract.json", "claim": "展示子问题依赖与共享接口", "analysis_anchor": "图2子问题依赖证据"},
+    {"file": "06_figures/q1/objective_scan.png", "question": "问题一", "data_source": "05_results/q1/objective_scan.csv", "claim": "全域扫描识别周期轨迹的全局最低盆地", "analysis_anchor": "图3全域目标证据"},
+    {"file": "06_figures/paper/model_comparison.png", "question": "问题一", "data_source": "05_results/q1/interpolation_comparison.csv", "claim": "比较四种插值的跨设备RMSE", "analysis_anchor": "图4插值对比证据"},
+    {"file": "06_figures/q2/objective_profile.png", "question": "问题二", "data_source": "05_results/q2/parameters.json", "claim": "Huber剖面目标在50.17 s附近达到内部最小", "analysis_anchor": "图5稳健标定证据"},
+    {"file": "06_figures/q2/fused_trajectory_10hz.png", "question": "问题二", "data_source": "05_results/q2/trajectory_10hz.csv", "claim": "给出校正后10 Hz融合轨迹", "analysis_anchor": "图6含噪融合证据"},
+    {"file": "06_figures/q3/bias_confidence_interval.png", "question": "问题三", "data_source": "05_results/q3/parameters.json", "claim": "两轴bootstrap区间均覆盖零", "analysis_anchor": "图7偏差判定证据"},
+    {"file": "06_figures/q3/fused_trajectory_uncertainty.png", "question": "问题三", "data_source": "05_results/q3/trajectory_10hz.csv", "claim": "展示实际数据融合轨迹及模型内不确定性", "analysis_anchor": "图8状态不确定性证据"},
+    {"file": "06_figures/q4/trajectory_targets_schedule.png", "question": "问题四", "data_source": "05_results/q4/optimized_schedule.csv", "claim": "把九项日程映射到固定轨迹和目标位置", "analysis_anchor": "图9轨迹任务证据"},
+    {"file": "06_figures/q4/constraint_margins.png", "question": "问题四", "data_source": "05_results/q4/optimized_schedule.csv", "claim": "逐任务显示约束裕度", "analysis_anchor": "图10工程裕度证据"},
+    {"file": "06_figures/paper/candidate_margin_cdf.png", "question": "问题四", "data_source": "05_results/q4/feasible_tasks.csv", "claim": "比较射击与拍照候选裕度经验分布", "analysis_anchor": "图11候选分布证据"},
+    {"file": "06_figures/q4/optimized_schedule_timeline.png", "question": "问题四", "data_source": "05_results/q4/optimized_schedule.csv", "claim": "显示准备执行区间互斥和最小间隔", "analysis_anchor": "图12调度时间证据"}
+  ]
+}

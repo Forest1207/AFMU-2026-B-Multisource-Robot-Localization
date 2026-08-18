@@ -1,0 +1,50 @@
+[
+  {
+    "question": "问题一",
+    "initial_option": "仅在粗网格上最小化位置均方误差",
+    "observed_problem": "周期轨迹产生多个局部低谷，粗网格会把最终精度限制在扫描步长，并可能把候选峰误当作最终解。",
+    "evidence": [
+      "05_results/q1/objective_scan.csv",
+      "05_results/q1/interpolation_comparison.csv"
+    ],
+    "alternatives": ["动态时间规整", "互相关候选加固定网格连续优化"],
+    "final_choice": "互相关只生成候选，再用全域扫描和固定评价网格连续优化精估时间偏差",
+    "reason": "最终点距搜索边界至少100.35 s，且700个精确同坐标匹配给出相同时间差，避免了网格精度和非线性时间伸缩带来的含义偏移。"
+  },
+  {
+    "question": "问题二",
+    "initial_option": "普通剖面最小二乘估计时间偏差和二维空间偏差",
+    "observed_problem": "真实观测含随机噪声和少量大残差，普通平方损失对离群点敏感；同时逐候选重估尺度会破坏目标可比性。",
+    "evidence": [
+      "05_results/q2/parameters.json",
+      "05_results/q2/sensitivity.csv"
+    ],
+    "alternatives": ["普通最小二乘", "标准逐轴Huber剖面目标"],
+    "final_choice": "固定公共网格与冻结尺度下的标准逐轴Huber剖面估计",
+    "reason": "普通与Huber主结论接近，而含粗大离群点合成试验中Huber联合参数误差更小；固定尺度又保证所有时间候选使用可比目标。"
+  },
+  {
+    "question": "问题三",
+    "initial_option": "无条件把相对偏差作为滤波状态并进行校正",
+    "observed_problem": "HAC-Wald的p值为0.3511，工程效应指数仅0.0681，移动块bootstrap两轴区间均覆盖零；强行增广会增加不可辨识状态。",
+    "evidence": [
+      "05_results/q3/validation.json",
+      "05_results/q3/sensitivity.csv"
+    ],
+    "alternatives": ["始终启用常量偏差", "显著性与工程阈值驱动的选择性偏差状态"],
+    "final_choice": "正式分支不启用偏差状态，但保留慢变偏差回退接口",
+    "reason": "统计检验、工程尺度、bootstrap与趋势诊断方向一致；敏感性情景下偏差存在性判定不变。"
+  },
+  {
+    "question": "问题四",
+    "initial_option": "按时间排序选取最早可行任务的贪心调度",
+    "observed_problem": "贪心虽能填满9行，但最小归一化裕度仅0.1010，对约束边界更敏感。",
+    "evidence": [
+      "05_results/q4/parameters.json",
+      "05_results/q4/optimized_schedule.csv"
+    ],
+    "alternatives": ["最早可行贪心", "候选压缩后的词典序MILP"],
+    "final_choice": "先最大化任务数，再最大化最小裕度并兼顾拍照角度多样性",
+    "reason": "MILP同样达到模板上界9项，但最小裕度提高到0.4241，约为贪心的4.20倍；三阶段状态均最优且MIP gap为0。"
+  }
+]

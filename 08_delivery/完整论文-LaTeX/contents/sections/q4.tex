@@ -6,28 +6,28 @@
 \(\mathbf p(t)=(x(t),y(t))^{\mathsf T}\)、速度模 \(v(t)\)、加速度模
 \(a(t)\)，目标 \(j\) 的坐标为 \(\mathbf g_j\)，则距离为
 
-\[
+\begin{equation}
 d_j(t)=\|\mathbf p(t)-\mathbf g_j\|_2.
-\]
+\end{equation}
 
 射击任务在执行前连续 1.5 s 内须满足
 
-\[
+\begin{equation}
 5\le d_j(t)\le30,\qquad v(t)\le2,\qquad a(t)\le1.5;
-\]
+\end{equation}
 
 每个射击目标至多执行一次，单次命中概率为 0.85。拍照任务在执行前连续 0.5
 s 内须满足
 
-\[
+\begin{equation}
 10\le d_j(t)\le40,\qquad v(t)\le1.5,\qquad a(t)\le1.5.
-\]
+\end{equation}
 
 机器人相对拍照目标的方向角定义为
 
-\[
+\begin{equation}
 \theta_j(t)=\operatorname{atan2}(y(t)-y_j,x(t)-x_j)\pmod {360^\circ},
-\]
+\end{equation}
 
 同一目标两次拍照的圆周角距离不得小于
 \(60^\circ\)。题面未明示单机器人能否并行准备，也未规定同一射击目标是否可重复计数。为使``完成目标''具有明确工程含义，本文作两条建模假设：机器人只有一套任务执行资源，任意两项已选任务的准备/执行闭区间不得相交，并额外留出
@@ -40,7 +40,7 @@ s 内须满足
 状态上，对每个可能执行时刻向前检查完整准备窗的全部采样点。对距离下界、距离上界、速度和加速度分别归一化，候选
 \(c\) 的最小裕度定义为
 
-\[
+\begin{equation}
 m_c=\min_{t\in[t_c-L_c,t_c]}
 \left\{
 \frac{d-d_{\min}}{d_{\max}-d_{\min}},
@@ -48,7 +48,7 @@ m_c=\min_{t\in[t_c-L_c,t_c]}
 \frac{v_{\max}-v}{v_{\max}},
 \frac{a_{\max}-a}{a_{\max}}
 \right\}.
-\]
+\end{equation}
 
 在每个连续可行段内保留定时间隔点、局部高裕度点；拍照任务另按 30°
 方向角箱保留高裕度点。随后用 PCHIP 连续状态在 0.01 s
@@ -62,45 +62,46 @@ m_c=\min_{t\in[t_c-L_c,t_c]}
 \(\mathcal S_j\)，以及同一拍照目标且角差不足 60° 的候选对
 \((c,d)\in\mathcal A\)，约束为
 
-\[
+\begin{equation}
 x_c+x_d\le1\quad((c,d)\in\mathcal T\cup\mathcal A),
 \qquad
 \sum_{c\in\mathcal S_j}x_c\le1,
 \qquad
 \sum_cx_c\le9.
-\]
+\end{equation}
 
 第一级目标为
 
-\[
+\begin{equation}
 \max\sum_cx_c.
-\]
+\end{equation}
 
 固定最优任务数 \(N^*\) 后，引入最小裕度 \(z\)，以充分大的 \(M\) 施加
 
-\[
+\begin{equation}
 z\le m_c+M(1-x_c),\qquad \max z.
-\]
+\end{equation}
 
 最后固定 \(N^*\) 和
 \(z^*\)，最大化总裕度；对可同时选择的同目标拍照对增加 AND
 辅助变量及按圆周角差归一化的多样性奖励，射击的 0.85
 期望命中仅作为很小的同级择优项。三个阶段均由 HiGHS 返回最优状态且 MIP
 gap 为
-0。由于九行是不可突破的题面输出上界，找到九项可行任务也证明了任务数量已达全局上界；裕度和多样性的最优性针对经连续验证的压缩候选集。
+0。求解器的线性优化实现背景参见文献\cite{huangfu2018}，但本文的最优性结论只依据实际求解状态、零 gap 与独立复核。由于九行是不可突破的题面输出上界，找到九项可行任务也证明了任务数量已达全局上界；裕度和多样性的最优性针对经连续验证的压缩候选集。
 
 \subsection{优化结果}\label{ux4f18ux5316ux7ed3ux679c}
 
-正式方案如下表所示。输出时刻按模板保留两位小数，并在舍入后再次进行 0.01
+正式方案见表\ref{tab:q4-schedule}。输出时刻按模板保留两位小数，并在舍入后再次进行 0.01
 s 全准备窗复核。
 
-\begin{longtable}[]{@{}rccrr@{}}
-\toprule\noalign{}
+\begin{table}[htbp]
+\centering
+\caption{问题四正式九项任务日程}
+\label{tab:q4-schedule}
+\begin{tabular}{rccrr}
+\toprule
 序号 & 目标编号 & 任务 & 开始准备时刻/s & 任务执行时刻/s \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
+\midrule
 1 & S05 & 射击 & 450.31 & 451.81 \\
 2 & P04 & 拍照 & 454.61 & 455.11 \\
 3 & P09 & 拍照 & 455.21 & 455.71 \\
@@ -110,13 +111,15 @@ s 全准备窗复核。
 7 & P03 & 拍照 & 493.21 & 493.71 \\
 8 & S11 & 射击 & 509.31 & 510.81 \\
 9 & S10 & 射击 & 525.51 & 527.01 \\
-\end{longtable}
+\bottomrule
+\end{tabular}
+\end{table}
 
 方案含 4 次射击、5 次拍照，射击期望命中数为
 
-\[
+\begin{equation}
 E(N_{\mathrm{hit}})=4\times0.85=3.40.
-\]
+\end{equation}
 
 五次拍照分属五个不同目标，因此同目标角差约束自动满足。正式方案最小归一化约束裕度为
 0.4241；最早可行贪心基线虽同样完成九项，但最小裕度仅 0.1010，MILP
@@ -134,8 +137,9 @@ E(N_{\mathrm{hit}})=4\times0.85=3.40.
 
 最终将九行结果写入 \texttt{result.xlsx} 副本的 B2:E10。A 列序号、H:L
 红色说明和范例、其余单元格值及样式均经语义快照核对保持不变；原始模板未被覆盖。
-轨迹与目标位置、候选可行性、优化日程及约束裕度依次见
-图\ref{fig:q4-layout}至图\ref{fig:q4-margins}。
+轨迹与目标位置见图\ref{fig:q4-layout}，候选可行性见图\ref{fig:q4-candidates}，
+优化日程见图\ref{fig:q4-timeline}，约束裕度见图\ref{fig:q4-margins}。
+全部1255个候选的裕度经验分布见图\ref{fig:q4-margin-cdf}。
 
 \begin{figure}[htbp]
   \centering
@@ -160,4 +164,10 @@ E(N_{\mathrm{hit}})=4\times0.85=3.40.
   \includegraphics[width=.90\textwidth]{q4/constraint_margins.pdf}
   \caption{问题四所选任务的归一化约束裕度}
   \label{fig:q4-margins}
+\end{figure}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.78\textwidth]{paper/candidate_margin_cdf.pdf}
+  \caption{问题四射击与拍照候选裕度的经验累积分布}
+  \label{fig:q4-margin-cdf}
 \end{figure}
