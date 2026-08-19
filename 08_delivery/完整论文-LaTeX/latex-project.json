@@ -215,9 +215,9 @@
     {
       "source": "骨架使用说明.md",
       "destination": "骨架使用说明.md",
-      "sha256": "8d08a36ffecefe33ddacece3031eae4ae8ac5537fe4fe2a0c96eb4dfff5dda70",
+      "sha256": "dbb0a491295109ed54e7bde1fd46ae3095bc1ec68002cb4f5d90bf1971382ad2",
       "hash_mode": "content",
-      "bound_at": "2026-08-18T23:39:21.548709+00:00"
+      "bound_at": "2026-08-19T00:16:18.464945+00:00"
     }
   ],
   "created_at": "2026-08-18T11:14:25.745138+00:00"

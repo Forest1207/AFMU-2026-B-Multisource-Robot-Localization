@@ -15,5 +15,5 @@
 | C-Q4-01 | 在结果模板最多 9 行的交付口径下，三阶段 MILP 完成 9 项任务，三阶段求解间隙均为 0。 | `05_results/q4/parameters.json`、`05_results/q4/optimized_schedule.csv` | 独立 MILP 上界证明及复核见 `evidence/gates/P1_q4.md`；最优性限定于明确的候选与建模约定。 |
 | C-Q4-02 | 最终日程包含 4 次射击、5 次拍照；最小归一化安全裕度 `0.4241`，高于贪心基线 `0.1010`。 | `05_results/q4/engineering_margins.json`、`06_figures/q4/constraint_margins.*` | `evidence/revalidation_q4.txt` 在 0.001 s 加密网格上复核全部题设约束。 |
 | C-Q4-03 | moderate、standard、severe 三种扰动情景各 500 次；整套日程可行率均不低于 95%。 | `05_results/q4/parameters.json` | 扰动尺度与评价口径在论文中显式披露，不外推为任意现实噪声下的保证。 |
-| C-PAPER-01 | 正式 PDF 共29页，其中正文含参考文献27页、附录2页；含40个编号公式、19幅图、5张表和8条参考文献。全文只有一个第五章，5.1至5.5连续。 | `evidence/latex_validation.json` | XeLaTeX安全构建零警告，字体嵌入、交叉引用、匿名性、页数和图像分辨率均通过。 |
-| C-PAPER-02 | 摘要页、问题重述、统一第五章、九项结果表、参考文献和附录均无裁切、遮挡、乱码或空白页。 | `evidence/pdf_visual_qa.md` | 29页逐页视觉检查；渲染图为临时QA中间件，不纳入提交包。 |
+| C-PAPER-01 | 正式PDF共27页，不设置附录；含40个编号公式、19幅图、3张正文表和8条参考文献。全文只有一个第五章，5.1至5.5连续。 | `evidence/latex_validation.json` | XeLaTeX安全构建零警告，字体嵌入、交叉引用、匿名性、页数和图像分辨率均通过。 |
+| C-PAPER-02 | 摘要页、问题重述、统一第五章、四个算法伪代码块、九项结果表和参考文献均无裁切、遮挡、乱码或空白页。 | `evidence/pdf_visual_qa.md` | 27页逐页渲染检查；渲染图为临时QA中间件，不纳入提交包。 |

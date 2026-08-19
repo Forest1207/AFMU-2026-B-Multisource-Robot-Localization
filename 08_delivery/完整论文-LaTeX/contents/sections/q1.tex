@@ -105,14 +105,17 @@ s，仅覆盖至少一种原始观测 支持的时间区间，不进行外推。
 
 \subsubsection{算法实现}\label{sec:q1-algorithm}
 
-模型一的计算过程归纳如下：
-\begin{enumerate}
-  \item 分别构造两路二维连续轨迹，并由速度特征互相关生成多个时间偏差候选；
-  \item 按式\eqref{eq:q1-overlap}确定全可行域，在固定公共网格上扫描式\eqref{eq:q1-objective}；
-  \item 在全局最优低谷附近进行有界连续细化，得到式\eqref{eq:q1-optimum}的数值解；
-  \item 按式\eqref{eq:q1-time-map}校正方式2时间戳，核验并合并同时刻观测；
-  \item 对唯一节点建立三次样条，并按式\eqref{eq:q1-grid}输出10 Hz轨迹。
+\begin{pseudocodeblock}{算法1\quad 无噪声时间配准与10 Hz轨迹重建}
+{\heiti 输入：}两路无噪声定位序列 \(D_1,D_2\)，目标输出频率10 Hz。\par
+{\heiti 输出：}时间校正量 \(\Delta t^*\) 与10 Hz二维位置轨迹。\par
+\begin{enumerate}[label={\heiti 步骤~\arabic*:},leftmargin=5.5em,itemsep=1pt,topsep=3pt]
+  \item 分别构造两路连续轨迹，由速度特征互相关生成时间偏差候选集；
+  \item 按式\eqref{eq:q1-overlap}确定可行域，在固定公共网格上计算式\eqref{eq:q1-objective}；
+  \item 取全域扫描的最低谷，在其邻域内连续优化，得到式\eqref{eq:q1-optimum}的数值解；
+  \item 按式\eqref{eq:q1-time-map}校正方式2时间戳；若两路观测对应同一时刻，则核验坐标后合并；
+  \item 对全部唯一时刻建立三次样条，按式\eqref{eq:q1-grid}生成10 Hz轨迹并返回结果。
 \end{enumerate}
+\end{pseudocodeblock}
 
 \subsubsection{结果分析}\label{sec:q1-results}
 
@@ -132,7 +135,7 @@ s，仅覆盖至少一种原始观测 支持的时间区间，不进行外推。
 \end{equation}
 
 即方式 2 的时间轴需整体向前平移 198.4317 s。对齐公共区间长 700.35 s，
-位置 RMSE 为 \(8.51\times10^{-11}\) m。最终 10 Hz 结果共 8495 行，完整数据见附录所列结果文件。
+位置 RMSE 为 \(8.51\times10^{-11}\) m。最终 10 Hz 结果共 8495 行。
 
 图\ref{fig:q1-aligned}显示校正后两路观测在公共区间内重合；图\ref{fig:q1-trajectory}给出在原始观测支持域内重建的完整10 Hz轨迹。两图共同说明式\eqref{eq:q1-time-map}只调整时间坐标，没有改变任何原始位置观测。
 

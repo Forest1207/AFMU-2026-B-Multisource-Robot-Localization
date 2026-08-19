@@ -1,5 +1,5 @@
 {
-  "ok": true,
+  "ok": false,
   "paper": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\07_paper\\final_paper.md",
   "project_root": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization",
   "strict": true,
@@ -55,9 +55,9 @@
       "fc7132ac322ba6818661777bbbb52b2053b9b598f5c57a7d8115b27cb7ab6ad5"
     ],
     "numbered_result_tables": 0,
-    "chinese_characters": 5851,
+    "chinese_characters": 5553,
     "question_markers": 0,
-    "template_sequence_words": 1,
+    "template_sequence_words": 3,
     "references": 8,
     "plain_text_math": 0,
     "human_phrases": 0,
@@ -111,9 +111,15 @@
     "benchmark_samples": 1,
     "benchmark_forbidden_terms": 8,
     "final_docx_checked": true,
-    "final_docx_characters": 9115,
+    "final_docx_characters": 9501,
     "final_docx_plain_text_math": 0,
-    "final_docx_headings": 49
+    "final_docx_headings": 48
   },
-  "issues": []
+  "issues": [
+    {
+      "severity": "FAIL",
+      "code": "missing_required_section",
+      "message": "缺少必需章节：附录"
+    }
+  ]
 }

@@ -169,13 +169,17 @@ S(q)=|\overline{\mathrm{NIS}}-2|+2\,\overline{|\rho_1(\nu)|}
 
 \subsubsection{算法实现}\label{sec:q2-algorithm}
 
-\begin{enumerate}
-  \item 生成粗时间候选，并在统一公共网格上最小化式\eqref{eq:q2-huber-objective}；
-  \item 逐轴执行式\eqref{eq:q2-huber-weights}与式\eqref{eq:q2-irls-bias}，连续细化时间偏差；
-  \item 由位置三阶差分估计测量协方差，在关闭门控反馈时按式\eqref{eq:q2-process-score}选择过程噪声；
-  \item 按参考时钟排序原始事件，逐事件预测、更新并施加99\% NIS稳健门控；
-  \item 对事件状态执行RTS后向平滑，并在公共支持域输出10 Hz状态。
+\begin{pseudocodeblock}{算法2\quad 稳健时空标定与异步融合}
+{\heiti 输入：}两路含噪定位序列，Huber阈值 \(c=1.345\)，过程噪声候选集。\par
+{\heiti 输出：}时间偏差、二维相对偏差及10 Hz融合状态。\par
+\begin{enumerate}[label={\heiti 步骤~\arabic*:},leftmargin=5.5em,itemsep=1pt,topsep=3pt]
+  \item 生成粗时间候选，在固定公共网格上逐轴执行式\eqref{eq:q2-huber-weights}和式\eqref{eq:q2-irls-bias}；
+  \item 连续最小化式\eqref{eq:q2-huber-objective}，得到时间偏差与相对空间偏差；
+  \item 由位置三阶差分估计测量协方差；关闭门控反馈，按式\eqref{eq:q2-process-score}选取过程噪声；
+  \item 按校正时刻合并并排序原始事件；对每个事件先预测，再计算NIS；若NIS越过99\%门限，则放大测量协方差后更新，否则直接更新；
+  \item 完成全部事件更新后执行RTS后向平滑，在公共支持域内按0.1 s步长输出状态并返回结果。
 \end{enumerate}
+\end{pseudocodeblock}
 
 \subsubsection{结果分析}\label{sec:q2-results}
 
@@ -211,7 +215,7 @@ S(q)=|\overline{\mathrm{NIS}}-2|+2\,\overline{|\rho_1(\nu)|}
 s 和 0.01 m 报告。将正式过程噪声乘 10 或乘 0.1 后，轨迹 RMS 变化分别为
 0.0346 m 和 0.0654 m。将门控概率从 0.99 改为 0.975 或 0.995 时，轨迹 RMS
 变化仅为 0.00334 m 和 0.00153
-m。由此保留正式参数，并在附录中提供完整敏感性表。创新均值、趋势、白化相关和门控前NIS诊断见图\ref{fig:q2-innovations}；各诊断量均在既定工程阈值内，说明过程噪声选择没有依赖门控反馈形成自洽循环。
+m。由此保留正式参数。创新均值、趋势、白化相关和门控前NIS诊断见图\ref{fig:q2-innovations}；各诊断量均在既定工程阈值内，说明过程噪声选择没有依赖门控反馈形成自洽循环。
 
 \begin{figure}[htbp]
   \centering

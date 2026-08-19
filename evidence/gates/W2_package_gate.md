@@ -10,16 +10,16 @@
 
 ## 自动验证
 
-- `evidence/latex_validation.json`：本轮严格复验后保持 `passed=true`；29页，正文含参考文献27页、附录2页，40个编号公式、19幅图、5张表、8条引用。
+- `evidence/latex_validation.json`：`passed=true`；全文27页、无附录，40个编号公式、19幅图、3张正文表、8条引用。
 - XeLaTeX 连续两遍正常退出；无缺失文件、未定义命令、重复标签、未解析交叉引用、字体缺失、Overfull/Underfull 或空白页。
 - A4、25 mm 边距、摘要首页、无目录、无承诺书和编号页、页脚连续页码、无队伍/姓名/学校/教师信息。
 - 最低栅格图分辨率 730 dpi，高于 300 dpi 门槛；其余主要图件为矢量 PDF。
-- `evidence/paper_content_audit.json`：严格内容审计 `ok=true`。
+- `evidence/paper_content_audit.json`：公式、图表、文献、模型与验证项目均通过；`ok=false`仅因通用审计器硬编码要求附录。正式论文按用户要求取消附录，该结构例外已在W1记录，不影响LaTeX与PDF门禁。
 - Q1–Q4 最新合成测试与正式验证均通过，见 `evidence/revalidation_q1.txt` 至 `revalidation_q4.txt`。
 
 ## 人工视觉检查
 
-使用 Poppler 将正式 PDF 全部29页渲染为PNG并逐页检查，重点复核第五章起始页、5.2至5.5标题、长公式、19幅图、5张表、九行日程和附录；检查记录见 `evidence/pdf_visual_qa.md`，临时渲染图不纳入提交包。
+使用Poppler将正式PDF全部27页渲染检查，重点复核第五章起始页、四个算法伪代码块、长公式、19幅图、九行日程和参考文献末页；检查记录见 `evidence/pdf_visual_qa.md`，临时渲染图不纳入提交包。
 
 ## DOCX 审计副本边界
 

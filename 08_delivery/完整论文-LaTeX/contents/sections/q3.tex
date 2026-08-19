@@ -88,14 +88,17 @@ b_y\in[-0.428,0.120]\ \mathrm{m},
 
 \subsubsection{算法实现}\label{sec:q3-algorithm}
 
-模型三按以下判定分支实现：
-\begin{enumerate}
-  \item 粗估并连续细化时间偏差，按式\eqref{eq:q3-time-map-residual}形成相对残差；
-  \item 计算式\eqref{eq:q3-wald}的HAC-Wald统计量、式\eqref{eq:q3-engineering-effect}的工程效应以及移动块Bootstrap区间；
-  \item 只有统计显著、工程效应达到阈值且偏差无显著趋势时，才启用偏差状态；
-  \item 依据分支选择状态维度，在关闭门控反馈时选择过程噪声；
-  \item 按校正事件时刻执行异步Kalman滤波、99\% NIS门控与RTS后向平滑，并输出10 Hz状态。
+\begin{pseudocodeblock}{算法3\quad 偏差检验驱动的选择性融合}
+{\heiti 输入：}两路实际定位序列，显著性水平0.05，工程效应阈值0.25。\par
+{\heiti 输出：}偏差存在性判定、所选状态模型及10 Hz融合状态。\par
+\begin{enumerate}[label={\heiti 步骤~\arabic*:},leftmargin=5.5em,itemsep=1pt,topsep=3pt]
+  \item 粗估并连续细化时间偏差，按式\eqref{eq:q3-time-map-residual}形成同步相对残差；
+  \item 计算HAC-Wald统计量、工程效应指数、移动块Bootstrap区间及HAC趋势检验；
+  \item 若 \(p<0.05\) 且 \(E_b\ge0.25\)，则在无显著趋势时启用常量偏差状态、在存在趋势时启用随机游走偏差状态；否则采用六维无偏差状态；
+  \item 在关闭门控反馈时选择过程噪声，随后按校正事件时刻执行异步Kalman滤波和99\% NIS门控；
+  \item 执行RTS后向平滑，以0.1 s步长生成轨迹，输出判定结果、状态及模型内标准差。
 \end{enumerate}
+\end{pseudocodeblock}
 
 \noindent\textbf{选择性异步融合模型。}
 

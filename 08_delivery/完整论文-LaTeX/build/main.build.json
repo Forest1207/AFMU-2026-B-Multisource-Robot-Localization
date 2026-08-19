@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
-  "created_at": "2026-08-18T23:39:38.675154+00:00",
+  "created_at": "2026-08-19T00:16:38.355705+00:00",
   "passed": true,
   "main_tex": "main.tex",
   "project_root": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX",
-  "source_sha256": "188a0034f7ca6364d8eef6ba8a464e59dbe9e264fe8e8fef05a224e4f8f6f1b4",
-  "compiled_source_sha256": "188a0034f7ca6364d8eef6ba8a464e59dbe9e264fe8e8fef05a224e4f8f6f1b4",
-  "post_build_source_sha256": "188a0034f7ca6364d8eef6ba8a464e59dbe9e264fe8e8fef05a224e4f8f6f1b4",
-  "pdf_sha256": "164e0afb5c7b1230fa7eb8ea88f51521428c7eb0eaa63f3e2f89def13f35fe1e",
-  "project_manifest_sha256": "83adba1dadaab9493d203070cb746b5fca969cfbd10b64ae71a94de5cdaa61ea",
+  "source_sha256": "ad7d2937b8dd86f24201ed73fc406d1b4fc4ec3fe94a1f2ef033574e8b4c5d00",
+  "compiled_source_sha256": "ad7d2937b8dd86f24201ed73fc406d1b4fc4ec3fe94a1f2ef033574e8b4c5d00",
+  "post_build_source_sha256": "ad7d2937b8dd86f24201ed73fc406d1b4fc4ec3fe94a1f2ef033574e8b4c5d00",
+  "pdf_sha256": "faeb683ee90d314f55a830f710f0b415ff2c156cb5670ae7d18591718f7043a6",
+  "project_manifest_sha256": "ff25deded772ad4e22709310deff6629e0a5e25fcb0c1bf3c19bdf6918ac7bed",
   "engine": "xelatex",
   "tools": {
     "latexmk": {
@@ -32,7 +32,7 @@
       ],
       "cwd": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX",
       "returncode": 0,
-      "duration_seconds": 4.5
+      "duration_seconds": 5.0
     },
     {
       "command": [
@@ -45,7 +45,7 @@
       ],
       "cwd": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\完整论文-LaTeX",
       "returncode": 0,
-      "duration_seconds": 3.797
+      "duration_seconds": 4.453
     }
   ],
   "warnings": [],

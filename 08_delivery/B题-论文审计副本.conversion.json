@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
-  "created_at": "2026-08-18T23:38:05.917974+00:00",
+  "created_at": "2026-08-19T00:17:21.629435+00:00",
   "source_format": "markdown",
   "source": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\07_paper\\final_paper.md",
   "source_files": [
     "final_paper.md"
   ],
-  "source_sha256": "6eb3c572bedbdae6103b60b7ceae13bac30d6a39e0bcbd0d89dae0c1212a8f75",
+  "source_sha256": "fb550e644423bb6f04159a86638569c9fc58bb3b95b6916bc128d2ec8d7f25dd",
   "project_files": [
     "final_paper.md"
   ],
-  "project_sha256": "6eb3c572bedbdae6103b60b7ceae13bac30d6a39e0bcbd0d89dae0c1212a8f75",
+  "project_sha256": "fb550e644423bb6f04159a86638569c9fc58bb3b95b6916bc128d2ec8d7f25dd",
   "output": "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\B题-论文审计副本.docx",
-  "output_sha256": "6cd7ae73268cf07a6811374d631e4dc35d59ad4eb35048a628da028bafae9ac4",
+  "output_sha256": "038fd5ab36dbf908f70106fe4003274d5c0eec69eb914b17c27671b4b0308b7a",
   "template": null,
   "template_sha256": null,
   "pandoc": {
@@ -27,13 +27,13 @@
     "docx",
     "--standalone",
     "--citeproc",
-    "C:\\Users\\王艺骏\\AppData\\Local\\Temp\\tmpqvf_9xpw.md",
+    "C:\\Users\\王艺骏\\AppData\\Local\\Temp\\tmptloaqotf.md",
     "--output",
-    "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\tmpgcip7qnl.docx",
+    "D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\08_delivery\\tmp9u8sieph.docx",
     "--resource-path=D:\\MathModeling\\AFMU-2026-B-Multisource-Robot-Localization\\07_paper"
   ],
   "returncode": 0,
-  "duration_seconds": 1.688,
+  "duration_seconds": 1.515,
   "warnings": [],
   "allowed_warnings": [],
   "warning_override": {
