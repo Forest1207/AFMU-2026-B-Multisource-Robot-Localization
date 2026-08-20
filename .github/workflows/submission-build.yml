@@ -44,7 +44,21 @@ jobs:
             texlive-fonts-recommended
 
       - name: Build formal paper
+        id: paper
         run: python scripts/build_paper.py
+
+      - name: Print concise LaTeX diagnostics
+        if: failure() && steps.paper.outcome == 'failure'
+        shell: bash
+        run: |
+          echo '=== concise LaTeX diagnostics ==='
+          if [ -f 07_paper/latex/main.log ]; then
+            grep -n -E '^!|LaTeX Error|Package .* Error|Undefined control sequence|Missing \$|Fatal error|Emergency stop|fontspec error|Extra alignment tab|Misplaced|Runaway argument' 07_paper/latex/main.log || true
+            echo '=== last 120 lines of main.log ==='
+            tail -n 120 07_paper/latex/main.log
+          else
+            echo 'main.log not found'
+          fi
 
       - name: Build and verify submission ZIP
         run: python scripts/package_submission.py --skip-paper-build
