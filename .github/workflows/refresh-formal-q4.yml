@@ -1,5 +1,6 @@
 name: refresh-formal-q4
 
+# Reusable formal-data refresh. Editing this workflow intentionally triggers one run.
 on:
   workflow_dispatch:
   push:
