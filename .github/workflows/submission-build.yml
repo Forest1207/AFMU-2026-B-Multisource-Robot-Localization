@@ -40,7 +40,8 @@ jobs:
             latexmk \
             texlive-xetex \
             texlive-lang-chinese \
-            texlive-latex-extra
+            texlive-latex-extra \
+            texlive-fonts-recommended
 
       - name: Build formal paper
         run: python scripts/build_paper.py
