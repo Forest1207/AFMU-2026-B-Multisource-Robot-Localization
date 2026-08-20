@@ -1,0 +1,4 @@
+interface:
+  display_name: "数模论文章节精修"
+  short_description: "统一精修数学建模论文分问的推导、结果、图表与LaTeX版式"
+  default_prompt: "使用 $math-paper-question-refiner 按既定标准精修指定分问的模型推导、结果分析和图表排版。"

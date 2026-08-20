@@ -23,17 +23,29 @@
 \renewcommand*{\baselinestretch}{1.38}
 \graphicspath{{figures/}}
 
-% 统一伪代码块，使用正常中文排版并支持跨页。
+% 统一伪代码块：ruled 风格，支持中文与跨页。
 \usepackage[most]{tcolorbox}
 \newtcolorbox{pseudocodeblock}[1]{
-  enhanced,breakable,
-  colback=black!3,colframe=black!65,
-  boxrule=.5pt,arc=0pt,
-  left=8pt,right=8pt,top=6pt,bottom=6pt,
-  before skip=6pt,after skip=6pt,
-  title={#1},fonttitle=\heiti\normalsize,fontupper=\small,coltitle=black,
-  attach boxed title to top left={xshift=8pt,yshift=-2mm},
-  boxed title style={colback=white,colframe=black!65,boxrule=.5pt,arc=0pt}
+  enhanced,
+  colback=white,colframe=white,colbacktitle=white,coltitle=black,
+  boxrule=0pt,arc=0pt,
+  left=0pt,right=0pt,top=3pt,bottom=3pt,
+  before skip=8pt,after skip=8pt,
+  title={#1},fonttitle=\normalfont\normalsize,fontupper=\small,
+  toptitle=2pt,bottomtitle=2pt,titlerule=.5pt,
+  borderline north={.7pt}{0pt}{black},
+  borderline south={.7pt}{0pt}{black}
+}
+
+\newcounter{pseudocodeline}
+\newenvironment{pseudocodelines}{%
+  \setcounter{pseudocodeline}{0}%
+  \par\small\setlength{\parindent}{0pt}%
+}{\par}
+\newcommand{\pseudostep}[2][0em]{%
+  \refstepcounter{pseudocodeline}%
+  \noindent\makebox[2.2em][r]{\scriptsize\thepseudocodeline:}%
+  \hspace{.8em}\hspace{#1}#2\par
 }
 
 % 图表题注直接使用黑体，避免宋体粗体回退。

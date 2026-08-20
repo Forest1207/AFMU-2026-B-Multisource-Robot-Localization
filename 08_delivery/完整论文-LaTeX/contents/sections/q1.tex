@@ -1,185 +1,348 @@
-\subsection{模型一的建立与求解：无噪声时间配准与10 Hz轨迹重建}\label{sec:model-q1}
+\subsection{模型一的建立与求解}\label{sec:model-q1}
 
 \subsubsection{模型一的建立}\label{sec:q1-establishment}
 
-\noindent\textbf{（1）模型目标、输入输出与证据边界。}
+\noindent\textbf{（1）真实轨迹采样模型}
 
-附件 1 给出同一机器人轨迹的两组无噪声采样：方式 1 为 4 Hz，方式 2 为 5
-Hz。两台设备开机先后不同，故设备时间轴之间存在固定偏差。本问需要估计该
-偏差，并在不外推的前提下生成 10 Hz 二维位置轨迹。
-
-数据审计表明，方式 1、方式 2 分别有 3000、4001 个有效观测，采样间隔严格
-为 0.25 s、0.20
-s，无缺失和重复时间戳。由于题面明确无噪声，本问不进行滤波、
-平滑或异常值删除。
-
-\noindent\textbf{（2）方法选择与无噪声边界。}
-
-方案 A 直接在粗网格上最小化位置误差，简单但最终精度受网格步长限制；方案
-B
-先用异频统一网格上的速度互相关产生候选，再以全局位置误差扫描和有界连续优化
-精估时间偏差，可同时防止周期轨迹的伪相关峰；方案 C
-采用动态时间规整允许非线性
-时间伸缩，但题面只存在固定开机偏差，额外自由度会改变问题含义。因此选择方案
-B。
-
-连续轨迹比较 Linear、Cubic Spline、PCHIP 和 Akima
-四种插值。最终以对齐后的 跨传感器位置 RMSE
-为主判据，并兼顾无噪声轨迹的连续可导性，选择 Cubic Spline；其中 PCHIP 的保形性质及其使用边界参照分段三次插值理论\cite{fritsch1980}。
-
-\noindent\textbf{（3）时间映射与位置误差目标。}
-
-记两种定位数据为
+设机器人在统一物理时间轴上的真实二维轨迹为
+\(\mathbf r^{\star}(t)=(x^{\star}(t),y^{\star}(t))^{\mathsf T}\)。两种定位方式
+仅具有不同的设备时间原点，其观测坐标均来自同一条真实轨迹。记第 \(m\) 种方式的
+设备时钟偏移为 \(\delta_m\)，并以方式 1 的时间轴为基准，即
+\(\delta_1=0\)、\(\delta_2=\Delta t<0\)，则第 \(i\) 个观测满足
 
 \begin{equation}
-D_m=\{(t_i^{(m)},x_i^{(m)},y_i^{(m)})\},\qquad m=1,2,
-\label{eq:q1-data}
+\mathbf p_i^{(m)}=
+\begin{pmatrix}x_i^{(m)}\\y_i^{(m)}\end{pmatrix}
+=\mathbf r^{\star}\!\left(t_i^{(m)}+\delta_m\right),
+\qquad m=1,2.
+\label{eq:q1-true-sampling}
 \end{equation}
 
-并分别建立连续二维轨迹 \(\mathbf r_m(t)\)。定义方式 2 的校正时间为
+因此两组定位数据可统一写成真实轨迹在各自采样时刻上的采样集合
 
 \begin{equation}
-t_{2,\mathrm{aligned}}=t_2+\Delta t.
+D_m=\left\{\left(t_i^{(m)},\mathbf p_i^{(m)}\right)\right\}_{i=1}^{n_m}
+=\left\{\left(t_i^{(m)},
+\mathbf r^{\star}(t_i^{(m)}+\delta_m)\right)\right\}_{i=1}^{n_m}.
+\label{eq:q1-sampling-set}
+\end{equation}
+
+式\eqref{eq:q1-true-sampling}中不含随机误差项，故时间对齐的核心是辨识
+\(\Delta t\)，而不是估计或滤除位置噪声。
+
+\noindent\textbf{（2）连续轨迹重建}
+
+由于两种方式的采样时刻不同，先分别根据离散观测构造连续坐标函数。记第 \(m\) 种
+方式在第 \(i\) 个采样点的某一坐标分量为 \(z_i^{(m)}\)，其中
+\(z\in\{x,y\}\)。在区间 \([t_i^{(m)},t_{i+1}^{(m)}]\) 上构造三次多项式
+
+\begin{equation}
+S_{m,z,i}(t)=a_{m,z,i}+b_{m,z,i}\tau+c_{m,z,i}\tau^2+d_{m,z,i}\tau^3,
+\qquad \tau=t-t_i^{(m)}.
+\label{eq:q1-spline-piece}
+\end{equation}
+
+各段满足节点插值条件及二阶光滑连接条件
+
+\begin{equation}
+S_{m,z}(t_i^{(m)})=z_i^{(m)},\qquad
+S_{m,z,i-1}^{(q)}(t_i^{(m)})=S_{m,z,i}^{(q)}(t_i^{(m)}),
+\quad q=0,1,2,
+\label{eq:q1-spline-conditions}
+\end{equation}
+
+并在两端采用 not-a-knot 条件。由此得到连续二维轨迹
+
+\begin{equation}
+\mathbf r_m(t)=\bigl(S_{m,x}(t),S_{m,y}(t)\bigr)^{\mathsf T},
+\qquad m=1,2.
+\label{eq:q1-continuous-trajectory}
+\end{equation}
+
+后续时间对齐与轨迹重建均采用式\eqref{eq:q1-continuous-trajectory}定义的连续轨迹。
+
+\noindent\textbf{（3）时间映射与位置误差目标}
+
+将\emph{加到方式 2 原始时间戳上的校正量}定义为 \(\Delta t\)，即
+
+\begin{equation}
+t_{2,\mathrm{aligned}}=t_2+\Delta t,
+\qquad
+\Delta t:=t_{2,\mathrm{aligned}}-t_2<0.
 \label{eq:q1-time-map}
 \end{equation}
 
-因此 \(\Delta t<0\) 表示方式 2 的时间戳需要整体向前平移。对候选偏差
-\(\Delta t\)，公共有效区间为
+因此 \(|\Delta t|\) 表示方式 2 时间轴向前平移的时长。参考时刻 \(t\) 在
+方式 2 原始时间轴上对应 \(t-\Delta t\)。对任一候选校正量 \(\delta\)，两条
+连续轨迹的公共有效区间为
 
 \begin{equation}
-\Omega(\Delta t)=
+\Omega(\delta)=
 \left[
-\max(t_{1,\min},t_{2,\min}+\Delta t),
-\min(t_{1,\max},t_{2,\max}+\Delta t)
+\max(t_{1,\min},t_{2,\min}+\delta),
+\min(t_{1,\max},t_{2,\max}+\delta)
 \right].
 \label{eq:q1-overlap}
+\end{equation}
+
+要求公共区间长度不小于给定阈值 \(T_{\min}\)，从而定义可行域
+
+\begin{equation}
+\mathcal D=\left\{\delta:\ |\Omega(\delta)|\ge T_{\min}\right\}
+=\left[\delta_{\min},\delta_{\max}\right],
+\label{eq:q1-feasible-domain}
+\end{equation}
+
+其中
+
+\begin{equation}
+\delta_{\min}=t_{1,\min}-t_{2,\max}+T_{\min},\qquad
+\delta_{\max}=t_{1,\max}-t_{2,\min}-T_{\min}.
+\label{eq:q1-feasible-bounds}
 \end{equation}
 
 在公共评价时刻 \(\{t_k\}\) 上定义位置均方误差
 
 \begin{equation}
-J(\Delta t)=\frac{1}{N}
-\sum_{k=1}^{N}
-\left\|\mathbf r_1(t_k)-\mathbf r_2(t_k-\Delta t)\right\|_2^2,
+J(\delta)=\frac{1}{N(\delta)}
+\sum_{k=1}^{N(\delta)}
+\left\|\mathbf r_1(t_k)-\mathbf r_2(t_k-\delta)\right\|_2^2,
+\qquad t_k\in\Omega(\delta),
 \label{eq:q1-objective}
 \end{equation}
 
 从而得到
 
 \begin{equation}
-\Delta t^*=\arg\min_{\Delta t}J(\Delta t).
+\Delta t^*=\underset{\delta\in\mathcal D}{\arg\min}\ J(\delta).
 \label{eq:q1-optimum}
 \end{equation}
 
 \subsubsection{模型一的求解}\label{sec:q1-solution}
 
-求解时先在 0.1 s 公共网格上计算二维速度特征互相关，保留多个相关峰；随后在
-全部可行偏差范围内以 0.5 s 步长扫描位置
-MSE，最后在最优候选附近用有界标量
-优化精细求解。精细优化使用固定评价网格，避免候选偏差改变公共区间起点所造成的
-数值非光滑。
+\noindent\textbf{（1）速度特征归一化互相关}
 
-\noindent\textbf{（1）同时刻观测合并与10 Hz重建。}
+为消除原始采样频率不同造成的数组长度差异，先按
+
+\begin{equation}
+u_j=jh_c,\qquad h_c>0,
+\label{eq:q1-corr-grid}
+\end{equation}
+
+分别在两台设备各自的相对时间轴上重采样。以二阶中心差分近似速度特征
+
+\begin{equation}
+\mathbf v_{m,j}=\frac{\mathbf r_m(t_{m,\min}+u_j+h_c)
+-\mathbf r_m(t_{m,\min}+u_j-h_c)}{2h_c},
+\label{eq:q1-velocity-feature}
+\end{equation}
+
+端点处采用相应的二阶单边差分。为使两个方向的速度分量具有可比尺度，对
+\(c\in\{x,y\}\) 作标准化
+
+\begin{equation}
+z_{m,c,j}=\frac{v_{m,c,j}-\bar v_{m,c}}{s_{m,c}},
+\label{eq:q1-standardized-velocity}
+\end{equation}
+
+并定义离散滞后 \(\ell\) 下的二维归一化互相关系数
+
+\begin{equation}
+\rho(\ell)=\frac{1}{2N_\ell}
+\sum_{c\in\{x,y\}}\ \sum_{j\in I_\ell}
+z_{1,c,j}\,z_{2,c,j-\ell},
+\label{eq:q1-ncc}
+\end{equation}
+
+其中 \(I_\ell\) 为两序列在该滞后下的重叠索引集，\(N_\ell=|I_\ell|\)。滞后量
+与时间校正候选之间满足
+
+\begin{equation}
+\delta_\ell=t_{1,\min}+\ell h_c-t_{2,\min}.
+\label{eq:q1-lag-offset}
+\end{equation}
+
+仅保留重叠时长不少于 \(T_{\min}\) 的局部相关峰，并按峰间距不少于
+\(L_{\min}\) 的条件选取相关系数较大的前 \(K\) 个候选，构成集合
+\(\mathcal C\)。互相关最大值不直接作为最终结果，以免周期性运动产生伪峰。
+
+\noindent\textbf{（2）全域扫描与 Brent 精细搜索}
+
+在式\eqref{eq:q1-feasible-domain}给出的全可行域内，以粗搜索步长 \(h_g>0\)
+构造网格
+
+\begin{equation}
+\mathcal D_g=\left\{\delta_{\min}+jh_g:
+j=0,1,\ldots,
+\left\lfloor\frac{\delta_{\max}-\delta_{\min}}{h_g}\right\rfloor\right\},
+\qquad
+\delta_0=\underset{\delta\in\mathcal D_g}{\arg\min}\ J(\delta).
+\label{eq:q1-coarse-seed}
+\end{equation}
+
+随后给定局部搜索半径 \(w>0\)，在区间
+
+\begin{equation}
+[a,b]=\left[\max(\delta_{\min},\delta_0-w),
+\min(\delta_{\max},\delta_0+w)\right]
+\label{eq:q1-brent-bracket}
+\end{equation}
+
+内采用有界 Brent 法精修。为避免
+候选校正量改变评价网格而引入数值非光滑，固定所有候选均有效的区间
+
+\begin{equation}
+\Omega_B=
+\left[
+\max(t_{1,\min},t_{2,\min}+b),
+\min(t_{1,\max},t_{2,\max}+a)
+\right],
+\label{eq:q1-brent-overlap}
+\end{equation}
+
+并以精细评价步长 \(h_f>0\) 生成固定评价网格。Brent 法在抛物线插值与黄金分割
+步之间自适应切换，最终求解
+
+\begin{equation}
+\Delta t^*=\underset{\delta\in[a,b]}{\arg\min}\
+\frac{1}{N_B}\sum_{t_k\in\Omega_B}
+\left\|\mathbf r_1(t_k)-\mathbf r_2(t_k-\delta)\right\|_2^2,
+\label{eq:q1-brent-objective}
+\end{equation}
+
+当搜索区间宽度不超过给定容差 \(\varepsilon_t>0\) 时终止迭代。
+
+\noindent\textbf{（3）同时刻观测合并与10 Hz重建}
 
 对方式 2 时间戳施加 \(\Delta t^*\)
 后，将两组观测合并、排序。若两个观测落在
-同一真实时刻，则先检查坐标差，再取均值保留一个节点。对合并后的 6301
-个唯一 时刻建立 Cubic Spline，并在
+同一真实时刻，则先检查坐标差，再按
 
 \begin{equation}
-t_n=221.0+0.1n,\qquad n=0,1,\ldots,8494
+\bar{\mathbf r}(\tau)=\frac{1}{|I_\tau|}
+\sum_{(m,i)\in I_\tau}\mathbf r_i^{(m)},
+\qquad
+I_\tau=\{(m,i):t_{i,\mathrm{aligned}}^{(m)}=\tau\}
+\label{eq:q1-merge-duplicate}
+\end{equation}
+
+合并为一个节点。对合并后的唯一时刻序列建立三次样条，记其有效时间边界为
+
+\begin{equation}
+t_{\min}^{\mathrm{out}}=\min(t_{1,\min},t_{2,\min}+\Delta t^*),\qquad
+t_{\max}^{\mathrm{out}}=\max(t_{1,\max},t_{2,\max}+\Delta t^*).
+\label{eq:q1-output-domain}
+\end{equation}
+
+令 10 Hz 输出步长为 \(h_o=0.1\ \mathrm{s}\)，并记
+\(N_o=\left\lfloor(t_{\max}^{\mathrm{out}}-t_{\min}^{\mathrm{out}})/h_o\right\rfloor\)，
+则输出网格为
+
+\begin{equation}
+t_n=t_{\min}^{\mathrm{out}}+nh_o,\qquad n=0,1,\ldots,N_o.
 \label{eq:q1-grid}
 \end{equation}
 
-上输出 10 Hz 轨迹。输出区间为 \([221.0,1070.4]\)
-s，仅覆盖至少一种原始观测 支持的时间区间，不进行外推。
-
-图\ref{fig:q1-objective}表明周期轨迹会形成多个局部低谷，因此互相关只用于候选生成，最终偏差必须由式\eqref{eq:q1-objective}在全可行域内确定。
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=.88\textwidth]{q1/objective_scan.pdf}
-  \caption{模型一全可行域时间偏差目标函数扫描}
-  \label{fig:q1-objective}
-\end{figure}
-
 \subsubsection{算法实现}\label{sec:q1-algorithm}
 
-\begin{pseudocodeblock}{算法1\quad 无噪声时间配准与10 Hz轨迹重建}
-{\heiti 输入：}两路无噪声定位序列 \(D_1,D_2\)，目标输出频率10 Hz。\par
-{\heiti 输出：}时间校正量 \(\Delta t^*\) 与10 Hz二维位置轨迹。\par
-\begin{enumerate}[label={\heiti 步骤~\arabic*:},leftmargin=5.5em,itemsep=1pt,topsep=3pt]
-  \item 分别构造两路连续轨迹，由速度特征互相关生成时间偏差候选集；
-  \item 按式\eqref{eq:q1-overlap}确定可行域，在固定公共网格上计算式\eqref{eq:q1-objective}；
-  \item 取全域扫描的最低谷，在其邻域内连续优化，得到式\eqref{eq:q1-optimum}的数值解；
-  \item 按式\eqref{eq:q1-time-map}校正方式2时间戳；若两路观测对应同一时刻，则核验坐标后合并；
-  \item 对全部唯一时刻建立三次样条，按式\eqref{eq:q1-grid}生成10 Hz轨迹并返回结果。
-\end{enumerate}
+\begin{pseudocodeblock}{\textbf{Algorithm 1}\quad 无噪声时间配准与10 Hz轨迹重建}
+\noindent\textbf{Require:}\quad 两路定位序列 \(D_1,D_2\)，参数 \(T_{\min},h_c,h_g,h_f,h_o,w,\varepsilon_t\)\par
+\noindent\textbf{Ensure:}\quad 负时间校正量 \(\Delta t^*\) 与10 Hz二维位置轨迹 \(\widehat{\mathbf r}(t_n)\)\par
+\medskip
+\begin{pseudocodelines}
+\pseudostep{按式\eqref{eq:q1-spline-piece}--\eqref{eq:q1-continuous-trajectory}构造连续轨迹 \(\mathbf r_1(t),\mathbf r_2(t)\)}
+\pseudostep{在步长为 \(h_c\) 的网格上计算并标准化二维速度特征}
+\pseudostep{由式\eqref{eq:q1-ncc}计算互相关峰，生成候选集合 \(\mathcal C\)}
+\pseudostep{\textbf{for} 每个候选校正量 \(\delta\in\mathcal C\) \textbf{do}}
+\pseudostep[2em]{按式\eqref{eq:q1-overlap}计算公共有效区间 \(\Omega(\delta)\)}
+\pseudostep[2em]{按式\eqref{eq:q1-objective}计算位置均方误差 \(J(\delta)\)}
+\pseudostep{\textbf{end for}}
+\pseudostep{在网格 \(\mathcal D_g\) 上扫描 \(J(\delta)\)，选择最小值点 \(\delta_0\) 作为初值}
+\pseudostep{按式\eqref{eq:q1-brent-bracket}构造 \([a,b]\)，用 Brent 法求得 \(\Delta t^*\)}
+\pseudostep{按式\eqref{eq:q1-time-map}校正方式2时间戳，并按式\eqref{eq:q1-merge-duplicate}合并同刻观测}
+\pseudostep{按式\eqref{eq:q1-grid}生成时刻 \(t_n\)，重建轨迹 \(\widehat{\mathbf r}(t_n)\)}
+\pseudostep{\textbf{return} \(\Delta t^*,\{\widehat{\mathbf r}(t_n)\}_{n=0}^{N_o}\)}
+\end{pseudocodelines}
 \end{pseudocodeblock}
 
 \subsubsection{结果分析}\label{sec:q1-results}
 
-采用符号约定
-\(t_{2,\mathrm{aligned}}=t_2+\Delta t\)，连续优化得到原始估计
+当公共区间长度阈值取 \(T_{\min}=60\ \mathrm{s}\) 时，式
+\eqref{eq:q1-feasible-bounds}对应的时间校正量可行域为
+
+\begin{equation}
+\mathcal D=[-987.8317,\,441.9183]\ \mathrm{s}.
+\label{eq:q1-numerical-domain}
+\end{equation}
+
+速度特征以 \(h_c=0.1\ \mathrm{s}\) 重采样，互相关峰经重叠时长和峰间距约束后
+保留 8 个候选。以 \(h_g=0.5\ \mathrm{s}\) 扫描式
+\eqref{eq:q1-objective}，位置误差最小的粗搜索点为
+
+\begin{equation}
+\delta_0=-198.3317\ \mathrm{s},
+\label{eq:q1-numerical-coarse}
+\end{equation}
+
+Brent 搜索区间取 \([-199.3317,-197.3317]\ \mathrm{s}\)，固定评价网格步长为
+\(h_f=0.05\ \mathrm{s}\)，横坐标终止容差为 \(10^{-10}\ \mathrm{s}\)。连续优化值为
 
 \begin{equation}
 \Delta t^*=-198.4316999986\ \mathrm{s}.
 \label{eq:q1-raw-offset}
 \end{equation}
 
-考虑输入时间戳的显示精度，正式报告为
+输入时间戳保留 4 位小数，故时间校正量取
 
 \begin{equation}
 \boxed{\Delta t^*=-198.4317\ \mathrm{s}}.
 \label{eq:q1-reported-offset}
 \end{equation}
 
-即方式 2 的时间轴需整体向前平移 198.4317 s。对齐公共区间长 700.35 s，
-位置 RMSE 为 \(8.51\times10^{-11}\) m。最终 10 Hz 结果共 8495 行。
+图\ref{fig:q1-objective}同时展示最优邻域内的速度互相关与位置均方误差。互相关峰
+与误差谷值均位于 \(-198.43\ \mathrm{s}\) 附近，与式
+\eqref{eq:q1-reported-offset}一致。图中按保留两位小数的偏差绘制，因而标注的 RMSE
+为 \(6.6\times10^{-8}\ \mathrm{m}\)；采用式\eqref{eq:q1-raw-offset}中的未舍入偏差时，
+位置误差为
 
-图\ref{fig:q1-aligned}显示校正后两路观测在公共区间内重合；图\ref{fig:q1-trajectory}给出在原始观测支持域内重建的完整10 Hz轨迹。两图共同说明式\eqref{eq:q1-time-map}只调整时间坐标，没有改变任何原始位置观测。
+\begin{equation}
+\operatorname{RMSE}=\sqrt{J(\Delta t^*)}
+=8.51\times10^{-11}\ \mathrm{m}
+\label{eq:q1-rmse}
+\end{equation}
 
-\begin{figure}[htbp]
+\begin{figure}[!htbp]
   \centering
-  \includegraphics[width=.88\textwidth]{q1/aligned_trajectory.pdf}
-  \caption{模型一时间校正后的两路定位轨迹（公共区间700.35 s）}
+  \includegraphics[width=.88\textwidth]{q1/fig_q1_objective.pdf}
+  \caption{模型一速度互相关与时间对齐目标函数}
+  \label{fig:q1-objective}
+\end{figure}
+
+\clearpage
+
+式\eqref{eq:q1-reported-offset}表示方式 2 的时间轴向前平移 198.4317 s。校正后的
+公共区间长度为 700.35 s。图\ref{fig:q1-aligned}中，校正前两路曲线具有明显的相位差，
+校正后公共区间内的曲线重合。
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=.88\textwidth]{q1/fig_q1_raw_align.pdf}
+  \caption{模型一时间校正前后的两路定位轨迹对比}
   \label{fig:q1-aligned}
 \end{figure}
-\begin{figure}[htbp]
+
+\clearpage
+
+时间校正后，两路原始观测包含 700 个直接同刻点，坐标最大差异为 0；合并后共有
+6301 个唯一时刻。在 \([221.0,1070.4]\ \mathrm{s}\) 上重建 8495 个 10 Hz 轨迹点。
+图\ref{fig:q1-trajectory}以颜色表示时间，并在上侧和右侧给出坐标边际分布，轨迹的
+空间范围与采样密度由此可见。
+
+\begin{figure}[!htbp]
   \centering
-  \includegraphics[width=.84\textwidth]{q1/trajectory_10hz.pdf}
-  \caption{模型一在221.0--1070.4 s内重建的10 Hz完整轨迹}
+  \includegraphics[width=.84\textwidth]{q1/fig_q1_traj10hz.pdf}
+  \caption{模型一公共可靠区间内的10 Hz重建轨迹}
   \label{fig:q1-trajectory}
 \end{figure}
 
-\subsubsection{模型检验与稳健性}\label{sec:q1-validation}
-
-四种插值模型均给出相同的报告偏差。其对齐 RMSE 分别为：Linear
-\(4.76\times10^{-6}\) m、Cubic Spline \(8.51\times10^{-11}\) m、PCHIP
-\(2.53\times10^{-7}\) m、Akima \(9.91\times10^{-9}\) m，Cubic Spline
-最优。
-
-正确偏差下共有 700 组两设备共同采样时刻，最大坐标不一致量为
-0，构成不依赖 插值评价网格的独立核验。合成数据测试中，预设偏差
-\(-3.7317\) s 的恢复误差为 \(2.20\times10^{-10}\) s。
-
-进一步改变最小重叠时长、粗搜索步长和精细评价步长，共运行 8
-个预设情景；原始 时间偏差估计的极差仅为 \(3.56\times10^{-9}\)
-s，所有情景按输入精度均报告 \(-198.4317\) s。最优点距搜索边界至少 100.35
-s，排除了边界伪最优。
-
-四种插值的误差数量级比较见图\ref{fig:q1-model-comparison}。图中四种方法给出的时间偏差一致，而三次样条的跨设备位置RMSE最低，说明方法选择由无噪声轨迹的局部曲率表达能力决定，并未改变时间偏差结论。
-
-\noindent\textbf{适用边界。}
-
-本模型依赖``固定时间偏差、无空间系统偏差、无随机噪声''三个题面条件。若设备时钟
-存在漂移或测量含噪，直接插值会低估不确定性，因此问题二、三需改用偏差辨识和
-统计融合。问题一输出的符号约定、公共区间处理和 10 Hz
-数据契约将作为后续各问的统一基准。
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=.78\textwidth]{paper/model_comparison.pdf}
-  \caption{模型一四种插值方法的跨设备位置RMSE比较}
-  \label{fig:q1-model-comparison}
-\end{figure}
+\clearpage
