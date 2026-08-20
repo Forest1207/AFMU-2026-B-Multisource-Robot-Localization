@@ -78,18 +78,32 @@ def _segments(indices: np.ndarray) -> list[np.ndarray]:
 
 
 def _compress_indices(indices: np.ndarray, margin: np.ndarray, angle: np.ndarray,
-                      task: str, stride: int = 10) -> np.ndarray:
+                      task: str, photo_angle_bin_deg: float = 5.0) -> np.ndarray:
+    """Reference-style candidate compression.
+
+    Shooting keeps each feasible segment's first, last and highest-margin time.
+    Photography keeps the best candidate in every 5-degree bearing bin plus
+    segment endpoints.  The 5-degree bin is deliberately much finer than the
+    60-degree photo-separation constraint so compression does not erase useful
+    angular alternatives near a bin boundary.
+    """
     chosen: set[int] = set()
-    for segment in _segments(indices):
-        chosen.update(map(int, segment[::stride]))
-        chosen.add(int(segment[-1]))
-        top = segment[np.argsort(margin[segment])[-min(5, segment.size):]]
-        chosen.update(map(int, top))
-        if task == photo.TASK_NAME:
-            bins = np.floor(angle[segment] / 30.0).astype(int)
-            for angle_bin in np.unique(bins):
-                members = segment[bins == angle_bin]
-                chosen.add(int(members[np.argmax(margin[members])]))
+    segments = _segments(indices)
+    if task == shoot.TASK_NAME:
+        for segment in segments:
+            chosen.add(int(segment[0]))
+            chosen.add(int(segment[-1]))
+            chosen.add(int(segment[np.argmax(margin[segment])]))
+    elif task == photo.TASK_NAME:
+        bins = np.floor((angle[indices] % 360.0) / photo_angle_bin_deg).astype(int)
+        for angle_bin in np.unique(bins):
+            members = indices[bins == angle_bin]
+            chosen.add(int(members[np.argmax(margin[members])]))
+        for segment in segments:
+            chosen.add(int(segment[0]))
+            chosen.add(int(segment[-1]))
+    else:
+        raise ValueError(f"Unknown task: {task}")
     return np.array(sorted(chosen), dtype=int)
 
 
@@ -118,7 +132,8 @@ def _continuous_metrics(trajectory: TrajectoryState, target: Target,
 
 
 def generate_candidates(trajectory: TrajectoryState, targets: list[Target],
-                        fine_step_s: float = 0.01) -> list[Candidate]:
+                        fine_step_s: float = 0.01,
+                        photo_angle_bin_deg: float = 5.0) -> list[Candidate]:
     frame = trajectory.frame
     time = trajectory.time
     candidates: list[Candidate] = []
@@ -139,7 +154,10 @@ def generate_candidates(trajectory: TrajectoryState, targets: list[Target],
             start_index = end_index - window_points + 1
             rolling_min[end_index] = float(np.min(point_margin[start_index:end_index + 1]))
         feasible = np.where(rolling_min >= -1e-12)[0]
-        compressed = _compress_indices(feasible, rolling_min, angle, target.task)
+        compressed = _compress_indices(
+            feasible, rolling_min, angle, target.task,
+            photo_angle_bin_deg=photo_angle_bin_deg,
+        )
         for end_index in compressed:
             end = float(time[end_index])
             start = end - preparation
