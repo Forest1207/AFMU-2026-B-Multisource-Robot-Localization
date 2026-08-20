@@ -102,7 +102,8 @@ def main() -> None:
         for row in ws.iter_rows() for cell in row
     )
     stems = ["trajectory_targets_schedule", "candidate_feasibility_map",
-             "optimized_schedule_timeline", "constraint_margins"]
+             "optimized_schedule_timeline", "constraint_margins",
+             "optimization_framework"]
     checks["figure_triplets_complete"] = all(
         (args.figures / f"{stem}.{suffix}").exists()
         for stem in stems for suffix in ("png", "svg", "pdf")

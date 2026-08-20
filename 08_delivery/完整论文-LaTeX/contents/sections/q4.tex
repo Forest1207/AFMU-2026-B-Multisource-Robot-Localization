@@ -91,6 +91,15 @@ x_c=0\ (m_c<z)\right\}.
 \end{enumerate}
 \end{pseudocodeblock}
 
+上述过程由连续轨迹状态出发，先构造并复核候选集，再以贪心解给出任务数下界，继而通过冲突约束和
+三级词典序目标确定任务日程，整体求解框架如图\ref{fig:q4-framework}所示。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.98\textwidth]{q4/optimization_framework.pdf}
+  \caption{问题四固定轨迹任务调度的求解与优化框架}
+  \label{fig:q4-framework}
+\end{figure}
+
 \subsubsection{结果分析}\label{sec:q4-results}
 
 问题三提供 $445.0076\sim814.0076$ s 的3691个10 Hz状态点，目标集合包含18个射击目标和18个

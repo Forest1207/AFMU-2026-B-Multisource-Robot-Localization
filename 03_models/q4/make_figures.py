@@ -12,6 +12,7 @@ import pandas as pd
 from diagnostics import (
     plot_candidate_map,
     plot_margins,
+    plot_optimization_framework,
     plot_schedule,
     plot_trajectory_targets,
 )
@@ -48,8 +49,10 @@ def main() -> None:
                        args.figures / "candidate_feasibility_map.png")
     plot_schedule(schedule, args.figures / "optimized_schedule_timeline.png")
     plot_margins(schedule, args.figures / "constraint_margins.png")
+    plot_optimization_framework(args.figures / "optimization_framework.png")
     stems = ["trajectory_targets_schedule", "candidate_feasibility_map",
-             "optimized_schedule_timeline", "constraint_margins"]
+             "optimized_schedule_timeline", "constraint_margins",
+             "optimization_framework"]
     manifest = {
         "trajectory": str(args.trajectory),
         "trajectory_sha256": sha256(args.trajectory),

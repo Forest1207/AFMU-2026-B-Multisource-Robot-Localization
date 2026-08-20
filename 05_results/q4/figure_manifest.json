@@ -40,6 +40,14 @@
         "svg",
         "pdf"
       ]
+    },
+    {
+      "stem": "optimization_framework",
+      "formats": [
+        "png",
+        "svg",
+        "pdf"
+      ]
     }
   ]
 }

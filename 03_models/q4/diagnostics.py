@@ -7,9 +7,12 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.patches import FancyArrowPatch, Rectangle
 
 plt.rcParams["svg.fonttype"] = "none"
 plt.rcParams["pdf.fonttype"] = 42
+plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
 
 
 def save(fig: plt.Figure, path: str | Path) -> None:
@@ -19,6 +22,126 @@ def save(fig: plt.Figure, path: str | Path) -> None:
     fig.savefig(path.with_suffix(".svg"), bbox_inches="tight")
     fig.savefig(path.with_suffix(".pdf"), dpi=600, bbox_inches="tight")
     plt.close(fig)
+
+
+def plot_optimization_framework(path: str | Path) -> None:
+    """Draw the mathematical solution framework for Q4 scheduling."""
+    fig, ax = plt.subplots(figsize=(12.2, 7.0))
+    ax.set_xlim(0, 12.2)
+    ax.set_ylim(0, 7.0)
+    ax.axis("off")
+
+    colors = {
+        "input": "#DCEAF4",
+        "candidate": "#DDEFE4",
+        "baseline": "#F5E6C8",
+        "optimization": "#E8E1F0",
+        "output": "#F1E2DE",
+        "line": "#37474F",
+        "muted": "#66757F",
+    }
+
+    def box(x: float, y: float, w: float, h: float, title: str,
+            lines: list[str], fill: str, fontsize: float = 9.2) -> None:
+        ax.add_patch(Rectangle((x, y), w, h, facecolor=fill,
+                               edgecolor=colors["line"], linewidth=1.05))
+        ax.text(x + 0.12, y + h - 0.22, title, ha="left", va="top",
+                fontsize=10.2, fontweight="bold", color="#182126")
+        ax.text(x + 0.12, y + h - 0.62, "\n".join(lines), ha="left", va="top",
+                fontsize=fontsize, color="#263238", linespacing=1.28)
+
+    def arrow(x1: float, y1: float, x2: float, y2: float,
+              label: str | None = None, bend: float = 0.0) -> None:
+        patch = FancyArrowPatch(
+            (x1, y1), (x2, y2), arrowstyle="-|>", mutation_scale=12,
+            linewidth=1.15, color=colors["line"],
+            connectionstyle=f"arc3,rad={bend}", shrinkA=2, shrinkB=2,
+        )
+        ax.add_patch(patch)
+        if label:
+            ax.text((x1 + x2) / 2, (y1 + y2) / 2 + 0.10, label,
+                    ha="center", va="bottom", fontsize=8.4,
+                    color=colors["muted"],
+                    bbox={"facecolor": "white", "edgecolor": "none", "pad": 0.8})
+
+    def routed_arrow(points: list[tuple[float, float]],
+                     label: str | None = None,
+                     label_xy: tuple[float, float] | None = None) -> None:
+        for start, end in zip(points[:-2], points[1:-1], strict=True):
+            ax.plot([start[0], end[0]], [start[1], end[1]],
+                    color=colors["line"], linewidth=1.15)
+        start, end = points[-2], points[-1]
+        arrow(start[0], start[1], end[0], end[1])
+        if label and label_xy:
+            ax.text(label_xy[0], label_xy[1], label, ha="center", va="center",
+                    fontsize=8.4, color=colors["muted"],
+                    bbox={"facecolor": "white", "edgecolor": "none", "pad": 0.8})
+
+    ax.text(6.1, 6.72, "问题四固定轨迹任务调度的求解与优化框架",
+            ha="center", va="center", fontsize=15, fontweight="bold",
+            color="#172126")
+
+    ax.text(1.25, 6.25, "输入与状态", ha="center", fontsize=10.5,
+            fontweight="bold", color="#315B73")
+    box(0.20, 4.90, 2.10, 1.05, "轨迹状态", [r"$\mathbf{s}(t)=(\mathbf{p},v,a)$", "问题三输出的 10 Hz 状态"], colors["input"])
+    box(0.20, 3.55, 2.10, 1.05, "任务对象", [r"目标坐标 $\mathbf{g}_j$", "射击与拍照任务类型"], colors["input"])
+    box(0.20, 2.20, 2.10, 1.05, "规则参数", [r"$L_s,L_p,\varepsilon$", "距离、速度、加速度、角差"], colors["input"])
+
+    ax.text(3.85, 6.25, "候选构造", ha="center", fontsize=10.5,
+            fontweight="bold", color="#2D6A4F")
+    box(2.75, 4.75, 2.20, 1.20, "完整准备窗筛选",
+        [r"$I_c=[t_c-L_k,t_c]$", "窗口内各时刻均满足物理约束"], colors["candidate"])
+    box(2.75, 3.20, 2.20, 1.20, "候选压缩",
+        [r"时间步长 $h_c$", r"方向角分箱 $\Delta\theta$", "保留高裕度代表点"], colors["candidate"])
+    box(2.75, 1.65, 2.20, 1.20, "细网格复核",
+        [r"复核步长 $h_f$", r"计算 $m_c$，形成 $\mathcal{C}$"], colors["candidate"])
+
+    ax.text(7.25, 6.25, "基线与精确优化", ha="center", fontsize=10.5,
+            fontweight="bold", color="#6A4C78")
+    box(5.55, 4.75, 1.95, 1.20, "贪心基线",
+        ["按执行时刻扫描", r"得到下界 $N_G$"], colors["baseline"])
+    box(7.85, 4.75, 2.15, 1.20, "冲突建模",
+        ["资源区间最大团", "射击唯一性", r"拍照角差冲突集 $\mathcal{A}$"], colors["optimization"], 8.8)
+    box(5.55, 3.20, 2.05, 1.20, "第一级：任务数",
+        [r"$N^*=\max\sum_c x_c$", r"$x_c\in\{0,1\}$"], colors["optimization"])
+    box(7.95, 3.20, 2.05, 1.20, "第二级：最差裕度",
+        [r"$z^*=\max\min_{x_c=1}m_c$", r"固定 $\sum_cx_c=N^*$"], colors["optimization"])
+    box(6.75, 1.65, 2.05, 1.20, "第三级：总体裕度",
+        [r"$\max\sum_c m_cx_c$", r"固定 $N^*$ 与 $z^*$"], colors["optimization"])
+
+    ax.text(11.05, 6.25, "输出与复核", ha="center", fontsize=10.5,
+            fontweight="bold", color="#8A4F45")
+    box(10.45, 4.45, 1.55, 1.50, "时刻输出",
+        ["执行时刻舍入", "按时间排序"], colors["output"], 8.8)
+    box(10.45, 2.55, 1.55, 1.35, "可行性复核",
+        ["完整准备窗", "任务间冲突", "角差与唯一性"], colors["output"], 8.6)
+    box(10.45, 0.95, 1.55, 1.05, "最终日程",
+        [r"$N^*,z^*$ 与任务表"], colors["output"], 8.8)
+
+    arrow(2.30, 5.42, 2.75, 5.35)
+    arrow(2.30, 4.07, 2.75, 5.15, bend=-0.14)
+    arrow(2.30, 2.72, 2.75, 4.95, bend=-0.22)
+    arrow(3.85, 4.75, 3.85, 4.40)
+    arrow(3.85, 3.20, 3.85, 2.85)
+    routed_arrow([(4.95, 2.25), (5.20, 2.25), (5.20, 5.35), (5.55, 5.35)],
+                 "候选集", (5.20, 3.65))
+    routed_arrow([(4.95, 2.25), (5.20, 2.25), (5.20, 6.06),
+                  (8.92, 6.06), (8.92, 5.95)], "候选冲突", (7.15, 6.06))
+    arrow(6.52, 4.75, 6.52, 4.40, label="下界")
+    routed_arrow([(8.92, 4.75), (8.92, 4.57), (6.58, 4.57), (6.58, 4.40)])
+    arrow(7.60, 3.80, 7.95, 3.80)
+    arrow(6.58, 3.20, 7.25, 2.85)
+    arrow(8.97, 3.20, 8.30, 2.85)
+    routed_arrow([(8.80, 2.18), (10.18, 2.18), (10.18, 5.20), (10.45, 5.20)])
+    arrow(11.22, 4.45, 11.22, 3.90)
+    arrow(11.22, 2.55, 11.22, 2.00)
+
+    ax.text(6.1, 0.38,
+            "词典序优先级：任务总数  >  最小安全裕度  >  总安全裕度",
+            ha="center", va="center", fontsize=10.2, fontweight="bold",
+            color="#37474F")
+    fig.tight_layout(pad=0.35)
+    save(fig, path)
 
 
 def plot_trajectory_targets(trajectory: pd.DataFrame, targets: pd.DataFrame,
