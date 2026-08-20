@@ -41,16 +41,7 @@ def _gap(result) -> float | None:
 
 
 def _build_base(candidates: list[Candidate]):
-    """Build x/y linking, shooting uniqueness and photo-angle constraints.
-
-    x_e = whether candidate task e is selected.
-    y_g = whether target-task group g is covered at least once.
-
-    No cross-target time-resource conflict is imposed because the problem
-    statement does not say that the 1.5 s / 0.5 s preparation intervals are an
-    exclusive robot resource.  This is the key difference from the previous
-    conservative implementation.
-    """
+    """Build x/y linking, shooting uniqueness and photo-angle constraints."""
     n_x = len(candidates)
     groups: dict[tuple[str, str], list[int]] = {}
     for index, candidate in enumerate(candidates):
@@ -78,20 +69,15 @@ def _build_base(candidates: list[Candidate]):
         upper.append(float(hi))
         row_id += 1
 
-    # Link selected candidates to group-coverage variables.
-    #   y <= sum x
-    #   sum x <= M y
-    # For shooting, each target may be selected at most once.
+    # y_g=1 iff at least one candidate for target-task group g is selected.
     for key in group_keys:
         ids = groups[key]
         y = y_index[key]
-        add({**{j: 1.0 for j in ids}, y: -1.0}, lo=0.0)
-        add({**{j: 1.0 for j in ids}, y: -float(len(ids))}, hi=0.0)
+        add({**{j: 1.0 for j in ids}, y: -1.0}, lo=0.0)  # sum x - y >= 0
+        add({**{j: 1.0 for j in ids}, y: -float(len(ids))}, hi=0.0)  # sum x <= M y
         if key[0] == shoot.TASK_NAME:
             add({j: 1.0 for j in ids}, hi=1.0)
 
-    # Same photography target: any two selected observations must have a
-    # circular bearing separation of at least 60 degrees.
     angle_conflicts = 0
     for key, ids in groups.items():
         if key[0] != photo.TASK_NAME:
@@ -109,12 +95,7 @@ def _build_base(candidates: list[Candidate]):
 
 
 def optimize_schedule(candidates: list[Candidate]) -> ScheduleResult:
-    """Solve the three-level lexicographic Q4 scheduling model.
-
-    Level 1: maximize number of covered target-task groups.
-    Level 2: with coverage fixed, maximize number of valid photographs.
-    Level 3: with both fixed, maximize the sum of normalized safety margins.
-    """
+    """Solve coverage -> photo count -> safety-margin lexicographic MILP."""
     if not candidates:
         raise ValueError("No continuously feasible candidates were generated.")
 
@@ -148,27 +129,32 @@ def optimize_schedule(candidates: list[Candidate]) -> ScheduleResult:
             raise RuntimeError(f"Q4 MILP failed: {result.message}")
         return result
 
-    # Stage 1: maximum target coverage.
     c1 = np.zeros(n)
     c1[y_ids] = -1.0
     stage1 = solve(c1)
     coverage_count = int(round(float(np.sum(stage1.x[y_ids]))))
 
     fix_coverage = coo_matrix(
-        (np.ones(len(y_ids)), (np.zeros(len(y_ids)), y_ids)), shape=(1, n)
+        (
+            np.ones(len(y_ids), dtype=float),
+            (np.zeros(len(y_ids), dtype=int), y_ids),
+        ),
+        shape=(1, n),
     ).tocsr()
 
-    # Stage 2: among maximum-coverage schedules, maximize number of photos.
     c2 = np.zeros(n)
     c2[photo_ids] = -1.0
     stage2 = solve(c2, [fix_coverage], [coverage_count], [coverage_count])
     photo_count = int(round(float(np.sum(stage2.x[photo_ids]))))
 
     fix_photo = coo_matrix(
-        (np.ones(len(photo_ids)), (np.zeros(len(photo_ids)), photo_ids)), shape=(1, n)
+        (
+            np.ones(len(photo_ids), dtype=float),
+            (np.zeros(len(photo_ids), dtype=int), photo_ids),
+        ),
+        shape=(1, n),
     ).tocsr()
 
-    # Stage 3: preserve the first two optimal values and maximize robustness.
     margins = np.asarray([candidate.normalized_margin for candidate in candidates], dtype=float)
     c3 = np.zeros(n)
     c3[:n_x] = -margins
