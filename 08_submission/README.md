@@ -29,8 +29,6 @@ python scripts/package_submission.py --include-inputs
 
 ## 生成内容
 
-正常完成后包含：
-
 ```text
 08_submission/
 ├── B题-多源融合机器人定位及任务优化.pdf
@@ -39,17 +37,32 @@ python scripts/package_submission.py --include-inputs
 │   ├── audit_report.json
 │   └── audit_report.md
 ├── package/
-│   ├── paper/
+│   ├── B题-多源融合机器人定位及任务优化.pdf
 │   ├── result.xlsx
-│   ├── code/
-│   ├── formal_results/
-│   ├── reproducibility/
 │   ├── audit/
+│   ├── reproducible_source/
+│   │   ├── requirements.txt
+│   │   ├── README.md
+│   │   ├── 00_problem/
+│   │   ├── 01_ideas/
+│   │   ├── 03_models/
+│   │   ├── 05_results/
+│   │   ├── 06_figures/
+│   │   ├── 07_paper/latex/
+│   │   └── scripts/
 │   ├── README.md
 │   └── DELIVERABLES.json
 ├── AFMU-2026-B-submission.zip
 └── package_build.json
 ```
+
+`reproducible_source/` 保持原仓库相对路径，所以论文图引用、审计脚本和正式流水线无需为 ZIP 单独改路径。若不使用 `--include-inputs`，其中的 `00_problem/attachments/` 只放置说明文件；使用者补入官方附件后即可执行输入审计和完整重算。
+
+ZIP 构建完成后会再次执行：
+
+- CRC 检查；
+- ZIP 成员集合与 staging 目录逐项比较；
+- ZIP 自身 SHA256 记录。
 
 ## Q4 提交口径
 
@@ -63,4 +76,4 @@ python scripts/package_submission.py --include-inputs
 
 ## 当前状态警告
 
-在新版 Q4 用官方附件重新运行之前，仓库中旧的 9 项 `05_results/q4` 二进制/CSV 结果是历史产物。`audit_results.py` 与 `generate_latex_assets.py` 会拒绝这些旧结果，因此不能误打包成正式提交文件。
+在新版 Q4 用官方附件重新运行之前，仓库中旧的 9 项 `05_results/q4` 二进制/CSV/JSON 结果是历史产物。`audit_results.py` 与 `generate_latex_assets.py` 会主动拒绝这些旧结果，因此不能误编译或误打包成正式提交文件。
