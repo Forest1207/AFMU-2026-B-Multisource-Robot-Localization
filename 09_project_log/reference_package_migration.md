@@ -11,7 +11,8 @@
 3. 数据/结果/约束审计；
 4. 一键主流程；
 5. 最终交付打包与文件清单；
-6. Q4 的“目标覆盖 + 多角度拍照”MILP 结构。
+6. Q4 的“目标覆盖 + 多角度拍照”MILP 结构；
+7. Q4 的 5° 拍照方位角候选压缩与 MILP 后连续时间局部精修。
 
 ## Q1--Q3 决策
 
@@ -24,8 +25,6 @@
 原因是当前模型在统计假设、异步融合、敏感性分析和合成验证方面已经形成更完整证据链。
 
 ## Q4 关键纠正
-
-参考包帮助发现了旧分支 Q4 的两个人为限制：
 
 ### 错误 1：把模板 9 个初始结果行视作容量
 
@@ -54,7 +53,20 @@ sum(x) <= 9
 7. Stage 2 固定覆盖数后最大化拍照数；
 8. Stage 3 固定前两级后最大化质量/安全裕度。
 
-新版仓库 `03_models/q4/scheduler.py` 已采用该结构，同时保留当前仓库更严格的 0.01 s 连续窗口复核。
+本仓库 `03_models/q4/scheduler.py` 已采用该结构。
+
+## 候选压缩与连续精修迁移
+
+进一步吸收参考包中两个重要实现细节：
+
+- 拍照候选按 **5° 方位角箱**保留每箱最高安全裕度候选，并补充连续可行段端点；
+- MILP 组合确定后，对每个任务在原执行时刻附近 **±0.1 s** 内做有界连续搜索。
+
+本仓库在此基础上增加更严格的验证：
+
+- 所有压缩候选先以 0.01 s 网格复核整个准备窗口；
+- 连续精修后的拍照任务必须继续满足同一目标照片间至少 60°；
+- 最终执行时刻保留两位小数后再次以 0.01 s 复核完整准备窗口和组合约束。
 
 ## 参考包 Q4 数值基准
 
@@ -67,23 +79,51 @@ sum(x) <= 9
 | 拍照次数 | 23 | 14 |
 | 总任务记录 | 36 | 27 |
 
-该结果说明联合 MILP 的主要价值不是提高一级可覆盖目标数，而是在覆盖数不下降的前提下，为拍照目标增加满足 60° 角差要求的有效视角。
+其主要增益是：在一级覆盖目标数不下降的前提下，通过联合角度优化增加有效照片数。
 
-**这些数字不能直接作为当前仓库正式结果。** 当前仓库使用不同的 Q3 融合轨迹，必须用新版 Q4 重算。
+## 当前仓库正式 Q4 结果
+
+新版模型已在当前仓库正式 Q3 轨迹与官方附件 4 上通过 GitHub Actions 实际重算，并由独立验证脚本、跨问题审计和 LaTeX 资产生成器共同放行：
+
+| 指标 | MILP | 贪心 |
+|---|---:|---:|
+| 覆盖目标数 | **34** | **34** |
+| 射击次数 | **16** | **16** |
+| 拍照次数 | **36** | **18** |
+| 总任务记录 | **52** | **34** |
+
+其他关键结果：
+
+- 候选数：367（射击 48、拍照 319）；
+- 拍照候选方位角箱：5°；
+- 照片角冲突对：2848；
+- 三阶段 HiGHS MILP gap：均为 0；
+- MILP 后 ±0.1 s 连续精修移动了 50/52 个任务；
+- 最终最小归一化安全裕度约 0.26211；
+- 最终总归一化裕度约 30.48416；
+- 射击期望命中数：13.60；
+- 三组固定种子扰动压力情景中整套 52 项方案均保持 100% 可行率；
+- `result.xlsx` 已扩展写入全部 52 条记录；
+- 原表头以及 H:L 红色说明/范例保持不变；
+- `05_results/q4/validation.json` 全部检查项均为 `true`。
+
+因此参考包给出的 27/36 只作为方法基准，不再作为当前仓库结果；当前正式结果以 `05_results/q4/` 为准。
 
 ## 工程能力迁移
 
-已新增：
+已新增/完善：
 
 - `00_problem/input_manifest.json`：官方输入 SHA256 / sheet / 行数 / 字段契约；
 - `scripts/audit_inputs.py`：输入审计；
-- `scripts/audit_results.py`：正式结果与图件审计；
+- `scripts/audit_results.py`：正式结果、统一符号、图件、Q4 schema 与 Excel 审计；
 - `scripts/run_formal_pipeline.py`：无隐藏依赖的一键正式计算入口；
-- `scripts/generate_latex_assets.py`：从 `05_results` 自动生成 TeX 宏、表格与图引用；
+- `scripts/generate_latex_assets.py`：从 `05_results` 自动生成 TeX 宏、表格、Q4 longtable 和图引用；
 - `07_paper/latex/`：当前正式论文工程；
 - `scripts/build_paper.py`：审计门禁后的 XeLaTeX 构建；
-- `scripts/package_submission.py`：最终 ZIP、SHA256 清单和复现材料打包；
-- `08_submission/`：当前正式提交目录。
+- `scripts/package_submission.py`：自包含 `reproducible_source/`、SHA256 清单、CRC 与成员集合复核；
+- `08_submission/`：当前正式提交目录；
+- `.github/workflows/model-checks.yml`：Python 编译和 Q1--Q4 合成回归，带 `[refresh-q4]` 的正式数据刷新门禁；
+- `.github/workflows/submission-build.yml`：真实 XeLaTeX 编译、ZIP 构建与 Actions artifact 验证。
 
 ## 参考包复现问题及修复
 
@@ -93,10 +133,13 @@ sum(x) <= 9
 
 ## 当前门禁状态
 
-由于分支中 `05_results/q4` 的 CSV/XLSX/JSON 仍是旧 9 项模型运行结果：
+Q4 数值门禁已经解除：
 
-- `scripts/audit_results.py` 会主动失败；
-- `scripts/generate_latex_assets.py` 会主动失败；
-- `scripts/build_paper.py` 和 `scripts/package_submission.py` 因前置审计不会生成错误交付包。
+- 官方输入审计 PASS；
+- Python 编译与 Q1--Q4 合成测试 PASS；
+- 正式 Q4 求解 PASS；
+- Q4 独立验证 PASS；
+- 跨问题 `audit_results.py` PASS；
+- `generate_latex_assets.py` PASS。
 
-把官方附件放入 `00_problem/attachments` 并重跑新版 Q4 后，才能解除该门禁。
+最终交付链另外通过 `.github/workflows/submission-build.yml` 真实编译 LaTeX、构建并校验 ZIP，确保“脚本存在”进一步升级为“干净 CI 环境实际可交付”。
