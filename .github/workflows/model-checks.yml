@@ -59,9 +59,11 @@ jobs:
   refresh-formal-q4:
     needs: synthetic-tests
     if: >-
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/agent/reference-submission-solution' &&
-      contains(github.event.head_commit.message, '[refresh-q4]')
+      (github.event_name == 'pull_request' &&
+       github.head_ref == 'agent/reference-submission-solution') ||
+      (github.event_name == 'push' &&
+       github.ref == 'refs/heads/agent/reference-submission-solution' &&
+       contains(github.event.head_commit.message, '[refresh-q4]'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout feature branch
