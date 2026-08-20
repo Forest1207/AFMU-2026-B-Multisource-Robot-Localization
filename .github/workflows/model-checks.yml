@@ -62,8 +62,7 @@ jobs:
       (github.event_name == 'pull_request' &&
        github.head_ref == 'agent/reference-submission-solution') ||
       (github.event_name == 'push' &&
-       github.ref == 'refs/heads/agent/reference-submission-solution' &&
-       contains(github.event.head_commit.message, '[refresh-q4]'))
+       github.ref == 'refs/heads/agent/reference-submission-solution')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout feature branch
@@ -72,19 +71,36 @@ jobs:
           ref: agent/reference-submission-solution
           fetch-depth: 0
 
+      - name: Detect formal refresh marker
+        id: refresh
+        shell: bash
+        run: |
+          MESSAGE="$(git log -1 --pretty=%B)"
+          if printf '%s' "$MESSAGE" | grep -Fq '[refresh-q4]'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Formal Q4 refresh requested."
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "No [refresh-q4] marker; skipping expensive official-data refresh."
+          fi
+
       - name: Set up Python
+        if: steps.refresh.outputs.run == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
 
       - name: Install dependencies
+        if: steps.refresh.outputs.run == 'true'
         run: python -m pip install --upgrade pip && pip install -r requirements.txt
 
       - name: Audit committed official inputs
+        if: steps.refresh.outputs.run == 'true'
         run: python scripts/audit_inputs.py --data-dir 00_problem/attachments
 
       - name: Recompute formal unrestricted Q4
+        if: steps.refresh.outputs.run == 'true'
         run: |
           python 03_models/q4/run_q4.py \
             --trajectory 05_results/q3/trajectory_10hz.csv \
@@ -93,6 +109,7 @@ jobs:
             --results 05_results/q4
 
       - name: Regenerate Q4 figures
+        if: steps.refresh.outputs.run == 'true'
         run: |
           python 03_models/q4/make_figures.py \
             --trajectory 05_results/q3/trajectory_10hz.csv \
@@ -101,6 +118,7 @@ jobs:
             --figures 06_figures/q4
 
       - name: Validate formal Q4
+        if: steps.refresh.outputs.run == 'true'
         run: |
           python 03_models/q4/validation.py \
             --trajectory 05_results/q3/trajectory_10hz.csv \
@@ -111,12 +129,15 @@ jobs:
             --output 05_results/q4/validation.json
 
       - name: Audit formal result chain
+        if: steps.refresh.outputs.run == 'true'
         run: python scripts/audit_results.py --output-dir /tmp/formal-audit
 
       - name: Validate fresh Q4 against LaTeX asset generator
+        if: steps.refresh.outputs.run == 'true'
         run: python scripts/generate_latex_assets.py
 
       - name: Commit refreshed formal Q4 artifacts
+        if: steps.refresh.outputs.run == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
