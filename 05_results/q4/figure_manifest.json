@@ -1,7 +1,7 @@
 {
-  "trajectory": "05_results\\q3\\trajectory_10hz.csv",
-  "trajectory_sha256": "c82ce532a56c5f05df3f2efd34d91175b337989f4d12e98a21398a266612b481",
-  "targets": "D:\\MathModeling\\School modeling\\2026赛题\\2026_B题\\附件4.xlsx",
+  "trajectory": "05_results/q3/trajectory_10hz.csv",
+  "trajectory_sha256": "9b516206667aed319b701b961b04ce8b6b00dbc1e20cb04111b7587a1feb5be4",
+  "targets": "00_problem/attachments/附件4.xlsx",
   "targets_sha256": "fa3594cba0f492654450dc0d4ea14101d411b57f25245093e6307d2bd06cd55b",
   "source_results": [
     "feasible_tasks.csv",
