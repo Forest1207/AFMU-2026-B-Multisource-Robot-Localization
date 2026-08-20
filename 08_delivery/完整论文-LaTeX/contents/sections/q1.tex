@@ -8,7 +8,7 @@
 \(\mathbf r^{\star}(t)=(x^{\star}(t),y^{\star}(t))^{\mathsf T}\)。两种定位方式
 仅具有不同的设备时间原点，其观测坐标均来自同一条真实轨迹。记第 \(m\) 种方式的
 设备时钟偏移为 \(\delta_m\)，并以方式 1 的时间轴为基准，即
-\(\delta_1=0\)、\(\delta_2=\Delta t<0\)，则第 \(i\) 个观测满足
+\(\delta_1=0\)、\(\delta_2=\Delta t_c<0\)，则第 \(i\) 个观测满足
 
 \begin{equation}
 \mathbf p_i^{(m)}=
@@ -28,7 +28,7 @@ D_m=\left\{\left(t_i^{(m)},\mathbf p_i^{(m)}\right)\right\}_{i=1}^{n_m}
 \end{equation}
 
 式\eqref{eq:q1-true-sampling}中不含随机误差项，故时间对齐的核心是辨识
-\(\Delta t\)，而不是估计或滤除位置噪声。
+\(\Delta t_c\)，而不是估计或滤除位置噪声。
 
 \noindent\textbf{（2）连续轨迹重建}
 
@@ -63,17 +63,17 @@ S_{m,z,i-1}^{(q)}(t_i^{(m)})=S_{m,z,i}^{(q)}(t_i^{(m)}),
 
 \noindent\textbf{（3）时间映射与位置误差目标}
 
-将\emph{加到方式 2 原始时间戳上的校正量}定义为 \(\Delta t\)，即
+将\emph{加到方式 2 原始时间戳上的校正量}定义为 \(\Delta t_c\)，即
 
 \begin{equation}
-t_{2,\mathrm{aligned}}=t_2+\Delta t,
+t_{2,\mathrm{aligned}}=t_2+\Delta t_c,
 \qquad
-\Delta t:=t_{2,\mathrm{aligned}}-t_2<0.
+\Delta t_c:=t_{2,\mathrm{aligned}}-t_2<0.
 \label{eq:q1-time-map}
 \end{equation}
 
-因此 \(|\Delta t|\) 表示方式 2 时间轴向前平移的时长。参考时刻 \(t\) 在
-方式 2 原始时间轴上对应 \(t-\Delta t\)。对任一候选校正量 \(\delta\)，两条
+因此 \(|\Delta t_c|\) 表示方式 2 时间轴向前平移的时长。参考时刻 \(t\) 在
+方式 2 原始时间轴上对应 \(t-\Delta t_c\)。对任一候选校正量 \(\delta\)，两条
 连续轨迹的公共有效区间为
 
 \begin{equation}
@@ -114,7 +114,7 @@ J(\delta)=\frac{1}{N(\delta)}
 从而得到
 
 \begin{equation}
-\Delta t^*=\underset{\delta\in\mathcal D}{\arg\min}\ J(\delta).
+\Delta t_c^*=\underset{\delta\in\mathcal D}{\arg\min}\ J(\delta).
 \label{eq:q1-optimum}
 \end{equation}
 
@@ -204,7 +204,7 @@ j=0,1,\ldots,
 步之间自适应切换，最终求解
 
 \begin{equation}
-\Delta t^*=\underset{\delta\in[a,b]}{\arg\min}\
+\Delta t_c^*=\underset{\delta\in[a,b]}{\arg\min}\
 \frac{1}{N_B}\sum_{t_k\in\Omega_B}
 \left\|\mathbf r_1(t_k)-\mathbf r_2(t_k-\delta)\right\|_2^2,
 \label{eq:q1-brent-objective}
@@ -214,7 +214,7 @@ j=0,1,\ldots,
 
 \noindent\textbf{（3）同时刻观测合并与10 Hz重建}
 
-对方式 2 时间戳施加 \(\Delta t^*\)
+对方式 2 时间戳施加 \(\Delta t_c^*\)
 后，将两组观测合并、排序。若两个观测落在
 同一真实时刻，则先检查坐标差，再按
 
@@ -229,8 +229,8 @@ I_\tau=\{(m,i):t_{i,\mathrm{aligned}}^{(m)}=\tau\}
 合并为一个节点。对合并后的唯一时刻序列建立三次样条，记其有效时间边界为
 
 \begin{equation}
-t_{\min}^{\mathrm{out}}=\min(t_{1,\min},t_{2,\min}+\Delta t^*),\qquad
-t_{\max}^{\mathrm{out}}=\max(t_{1,\max},t_{2,\max}+\Delta t^*).
+t_{\min}^{\mathrm{out}}=\min(t_{1,\min},t_{2,\min}+\Delta t_c^*),\qquad
+t_{\max}^{\mathrm{out}}=\max(t_{1,\max},t_{2,\max}+\Delta t_c^*).
 \label{eq:q1-output-domain}
 \end{equation}
 
@@ -247,7 +247,7 @@ t_n=t_{\min}^{\mathrm{out}}+nh_o,\qquad n=0,1,\ldots,N_o.
 
 \begin{pseudocodeblock}{\textbf{Algorithm 1}\quad 无噪声时间配准与10 Hz轨迹重建}
 \noindent\textbf{Require:}\quad 两路定位序列 \(D_1,D_2\)，参数 \(T_{\min},h_c,h_g,h_f,h_o,w,\varepsilon_t\)\par
-\noindent\textbf{Ensure:}\quad 负时间校正量 \(\Delta t^*\) 与10 Hz二维位置轨迹 \(\widehat{\mathbf r}(t_n)\)\par
+\noindent\textbf{Ensure:}\quad 负时间校正量 \(\Delta t_c^*\) 与10 Hz二维位置轨迹 \(\widehat{\mathbf r}(t_n)\)\par
 \medskip
 \begin{pseudocodelines}
 \pseudostep{按式\eqref{eq:q1-spline-piece}--\eqref{eq:q1-continuous-trajectory}构造连续轨迹 \(\mathbf r_1(t),\mathbf r_2(t)\)}
@@ -258,10 +258,10 @@ t_n=t_{\min}^{\mathrm{out}}+nh_o,\qquad n=0,1,\ldots,N_o.
 \pseudostep[2em]{按式\eqref{eq:q1-objective}计算位置均方误差 \(J(\delta)\)}
 \pseudostep{\textbf{end for}}
 \pseudostep{在网格 \(\mathcal D_g\) 上扫描 \(J(\delta)\)，选择最小值点 \(\delta_0\) 作为初值}
-\pseudostep{按式\eqref{eq:q1-brent-bracket}构造 \([a,b]\)，用 Brent 法求得 \(\Delta t^*\)}
+\pseudostep{按式\eqref{eq:q1-brent-bracket}构造 \([a,b]\)，用 Brent 法求得 \(\Delta t_c^*\)}
 \pseudostep{按式\eqref{eq:q1-time-map}校正方式2时间戳，并按式\eqref{eq:q1-merge-duplicate}合并同刻观测}
 \pseudostep{按式\eqref{eq:q1-grid}生成时刻 \(t_n\)，重建轨迹 \(\widehat{\mathbf r}(t_n)\)}
-\pseudostep{\textbf{return} \(\Delta t^*,\{\widehat{\mathbf r}(t_n)\}_{n=0}^{N_o}\)}
+\pseudostep{\textbf{return} \(\Delta t_c^*,\{\widehat{\mathbf r}(t_n)\}_{n=0}^{N_o}\)}
 \end{pseudocodelines}
 \end{pseudocodeblock}
 
@@ -288,14 +288,14 @@ Brent 搜索区间取 \([-199.3317,-197.3317]\ \mathrm{s}\)，固定评价网格
 \(h_f=0.05\ \mathrm{s}\)，横坐标终止容差为 \(10^{-10}\ \mathrm{s}\)。连续优化值为
 
 \begin{equation}
-\Delta t^*=-198.4316999986\ \mathrm{s}.
+\Delta t_c^*=-198.4316999986\ \mathrm{s}.
 \label{eq:q1-raw-offset}
 \end{equation}
 
 输入时间戳保留 4 位小数，故时间校正量取
 
 \begin{equation}
-\boxed{\Delta t^*=-198.4317\ \mathrm{s}}.
+\boxed{\Delta t_c^*=-198.4317\ \mathrm{s}}.
 \label{eq:q1-reported-offset}
 \end{equation}
 
@@ -306,7 +306,7 @@ Brent 搜索区间取 \([-199.3317,-197.3317]\ \mathrm{s}\)，固定评价网格
 位置误差为
 
 \begin{equation}
-\operatorname{RMSE}=\sqrt{J(\Delta t^*)}
+\operatorname{RMSE}=\sqrt{J(\Delta t_c^*)}
 =8.51\times10^{-11}\ \mathrm{m}
 \label{eq:q1-rmse}
 \end{equation}

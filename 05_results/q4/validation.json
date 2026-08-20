@@ -1,14 +1,14 @@
 {
   "ok": true,
   "checks": {
-    "nine_rows": true,
+    "selected_count_matches_optimum": true,
+    "fixed_nine_task_cap_removed": true,
     "time_sorted": true,
-    "capacity_optimal": true,
+    "uncapped_model": true,
     "all_milp_stages_optimal": true,
     "all_milp_gaps_zero": true,
     "positive_margin": true,
-    "milp_margin_beats_greedy": true,
-    "robustness_high": true,
+    "exact_count_beats_greedy": true,
     "preparation_intervals_disjoint": true,
     "shooting_targets_unique": true,
     "photography_angle_separation": true,

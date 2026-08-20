@@ -1,5 +1,16 @@
 # CUMCM
 
+## 本项目交付状态
+
+`main.tex` 是论文唯一编译入口，正式 PDF 位于上一级
+`08_delivery/B题-完整论文.pdf`。当前版本共 32 页，问题四不设置固定任务次数上限，
+结果为 40 项任务，其中射击 14 项、拍照 26 项。
+
+全结果复现入口为仓库根目录下的
+`04_experiments/reproduce_all_results.ipynb`。该 Notebook 从原始附件顺序重算四问，
+生成独立复现目录，并对 20 项论文关键结论执行数值或离散一致性门禁；最近一次完整执行为
+20/20 通过。
+
 - LaTeX Template for China Undergraduate Mathematical Contest in Modeling
 - 中国大学生数学建模竞赛LaTeX模板
 - 项目地址: [cumcm](https://github.com/jayxin/cumcm)

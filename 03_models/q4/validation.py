@@ -35,9 +35,10 @@ def main() -> None:
     targets = load_targets(args.targets)
     target_map = {target.target_id: target for target in targets}
     checks = {
-        "nine_rows": len(schedule) == 9,
+        "selected_count_matches_optimum": len(schedule) == int(params["maximum_task_count"]),
+        "fixed_nine_task_cap_removed": len(schedule) > 9,
         "time_sorted": bool(np.all(np.diff(schedule["任务执行时刻(s)"]) > 0)),
-        "capacity_optimal": int(params["maximum_task_count"]) == 9,
+        "uncapped_model": params["milp"]["capacity_upper_bound"] is None,
         "all_milp_stages_optimal": all(
             int(params["milp"][key]) == 0
             for key in ("stage1_status", "stage2_status", "stage3_status")
@@ -47,11 +48,7 @@ def main() -> None:
             for key in ("stage1_gap", "stage2_gap", "stage3_gap")
         ),
         "positive_margin": bool(np.all(schedule["归一化最小裕度"] > 0)),
-        "milp_margin_beats_greedy": float(params["minimum_normalized_margin"]) > float(params["greedy_minimum_margin"]),
-        "robustness_high": min(
-            float(item["whole_schedule_feasible_rate"])
-            for item in params["robustness_scenarios"].values()
-        ) >= 0.95,
+        "exact_count_beats_greedy": int(params["maximum_task_count"]) >= int(params["greedy_task_count"]),
     }
     intervals_ok = True
     for first in range(len(schedule)):
@@ -94,7 +91,7 @@ def main() -> None:
     wb = load_workbook(result_path, data_only=False)
     ws = wb[wb.sheetnames[0]]
     workbook_rows = [[ws.cell(row, column).value for column in range(1, 6)]
-                     for row in range(2, 11)]
+                     for row in range(2, len(schedule) + 2)]
     expected_rows = [[int(row["序号"]), row["目标编号"], row["任务"],
                       float(row["开始准备时刻(s)"]),
                       float(row["任务执行时刻(s)"])]

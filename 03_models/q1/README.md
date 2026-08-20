@@ -26,26 +26,27 @@
 
 ## 时间偏差符号约定
 
-统一采用：
+问题一将“加到方式 2 原始时间戳上的校正量”记为 \(\Delta t_c\)，程序字段仍沿用
+\(\mathtt{time\_offset\_s}\)：
 
 ```math
-t_{2,\mathrm{aligned}} = t_2 + \Delta t.
+t_{2,\mathrm{aligned}} = t_2 + \Delta t_c.
 ```
 
 因此：
 
-- `Δt > 0`：方式 2 的时间轴需要向后平移；
-- `Δt < 0`：方式 2 的时间轴需要向前平移。
+- \(\Delta t_c>0\)：方式 2 的时间轴需要向后平移；
+- \(\Delta t_c<0\)：方式 2 的时间轴需要向前平移。
 
 位置对齐目标函数为：
 
 ```math
-J(\Delta t)
+J(\Delta t_c)
 =
-\frac{1}{N(\Delta t)}
-\sum_{t_k\in\Omega(\Delta t)}
+\frac{1}{N(\Delta t_c)}
+\sum_{t_k\in\Omega(\Delta t_c)}
 \left\|
-\mathbf r_1(t_k)-\mathbf r_2(t_k-\Delta t)
+\mathbf r_1(t_k)-\mathbf r_2(t_k-\Delta t_c)
 \right\|_2^2.
 ```
 

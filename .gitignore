@@ -13,6 +13,7 @@ env/
 
 # Jupyter
 .ipynb_checkpoints/
+04_experiments/reproduction_run/
 
 # IDE / OS
 .vscode/
@@ -38,3 +39,5 @@ outputs/
 .work/paper-extract.txt
 .work/problem.txt
 .work/q2_current.csv
+.work/build_reproduction_notebook.py
+.work/execute_reproduction_notebook.py

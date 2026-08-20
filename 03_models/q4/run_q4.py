@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import shutil
@@ -52,20 +53,15 @@ def _untouched_snapshot(path: str | Path) -> dict:
     wb = load_workbook(path, data_only=False)
     ws = wb[wb.sheetnames[0]]
     cells = {}
-    for row in range(1, ws.max_row + 1):
-        for column in range(1, ws.max_column + 1):
-            # B2:E10 is the only writable rectangle.  A2:A10 already contains
-            # the required sequence numbers and is deliberately untouched.
-            if 2 <= row <= 10 and 2 <= column <= 5:
-                continue
+    for row in range(1, min(ws.max_row, 10) + 1):
+        for column in range(8, ws.max_column + 1):
             cell = ws.cell(row, column)
             cells[cell.coordinate] = _cell_signature(cell)
     return {
         "sheetnames": wb.sheetnames,
-        "dimensions": [ws.max_row, ws.max_column],
         "merged": [str(item) for item in ws.merged_cells.ranges],
         "freeze_panes": str(ws.freeze_panes),
-        "cells": cells,
+        "instruction_cells": cells,
     }
 
 
@@ -115,14 +111,14 @@ def _compatible(candidate: Candidate, selected: list[Candidate]) -> bool:
     return True
 
 
-def greedy_baseline(candidates: list[Candidate], capacity: int = 9) -> list[Candidate]:
+def greedy_baseline(candidates: list[Candidate], capacity: int | None = None) -> list[Candidate]:
     selected: list[Candidate] = []
     for candidate in sorted(candidates, key=lambda item: (
         item.execution_time_s, -item.normalized_margin, item.target_id
     )):
         if _compatible(candidate, selected):
             selected.append(candidate)
-            if len(selected) == capacity:
+            if capacity is not None and len(selected) == capacity:
                 break
     return selected
 
@@ -171,15 +167,24 @@ def robustness_check(selected: list[Candidate], trajectory: TrajectoryState,
 
 def write_result_template(template: str | Path, output: str | Path,
                           selected: list[Candidate]) -> dict:
-    if len(selected) > 9:
-        raise ValueError("result.xlsx provides only nine output rows.")
     before = _untouched_snapshot(template)
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(template, output)
     wb = load_workbook(output)
     ws = wb[wb.sheetnames[0]]
+    required_last_row = len(selected) + 1
+    for row in range(11, required_last_row + 1):
+        for column in range(1, 6):
+            source = ws.cell(10, column)
+            target = ws.cell(row, column)
+            target._style = copy.copy(source._style)
+            target.number_format = source.number_format
+            target.alignment = copy.copy(source.alignment)
+            target.protection = copy.copy(source.protection)
+        ws.cell(row, 1).value = row - 1
     for row, candidate in enumerate(selected, start=2):
+        ws.cell(row, 1).value = row - 1
         ws.cell(row, 2).value = candidate.target_id
         ws.cell(row, 3).value = candidate.task
         ws.cell(row, 4).value = candidate.preparation_start_s
@@ -192,7 +197,8 @@ def write_result_template(template: str | Path, output: str | Path,
         "template_sha256": sha256(template),
         "output_sha256": sha256(output),
         "untouched_snapshot_equal": True,
-        "writable_cells": "B2:E10",
+        "result_range": f"A2:E{required_last_row}",
+        "instruction_area_preserved": "H1:L10",
         "filled_rows": len(selected),
     }
 
@@ -211,9 +217,9 @@ def main() -> None:
     trajectory = TrajectoryState.load(args.trajectory)
     targets = load_targets(args.targets)
     candidates = generate_candidates(trajectory, targets)
-    schedule = optimize_schedule(candidates, capacity=9)
+    greedy = greedy_baseline(candidates)
+    schedule = optimize_schedule(candidates)
     selected = _rounded_and_verified(schedule.selected, trajectory, targets)
-    greedy = greedy_baseline(candidates, capacity=9)
     robust_scenarios = {
         "moderate": robustness_check(
             selected, trajectory, targets, trials=500, seed=2026,
@@ -274,7 +280,8 @@ def main() -> None:
             "stage1_gap": schedule.stage1_gap,
             "stage2_gap": schedule.stage2_gap,
             "stage3_gap": schedule.stage3_gap,
-            "capacity_upper_bound": 9,
+            "capacity_upper_bound": None,
+            "greedy_reference_computed": True,
         },
         "continuous_recheck_step_s": 0.01,
         "robustness_scenarios": robust_scenarios,

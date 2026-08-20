@@ -69,20 +69,41 @@ def plot_candidate_map(candidates: pd.DataFrame, schedule: pd.DataFrame,
 
 
 def plot_schedule(schedule: pd.DataFrame, path: str | Path) -> None:
-    fig, ax = plt.subplots(figsize=(9.0, 5.0))
-    for index, row in schedule.iterrows():
-        color = "#D55E00" if row["任务"] == "射击" else "#0072B2"
-        start, end = row["开始准备时刻(s)"], row["任务执行时刻(s)"]
-        ax.barh(index, end - start, left=start, height=0.55, color=color, alpha=0.8)
-        ax.scatter(end, index, color="black", s=22, zorder=3)
     labels = [f"{int(row['序号'])}  {row['目标编号']} {'shoot' if row['任务'] == '射击' else 'photo'}"
               for _, row in schedule.iterrows()]
-    ax.set_yticks(np.arange(len(labels)), labels)
-    ax.invert_yaxis()
-    ax.set(xlabel="reference time (s)", ylabel="scheduled task",
-           title="Q4 preparation intervals and execution instants")
-    ax.grid(axis="x", alpha=0.25)
-    fig.tight_layout()
+    windows = [(444.0, 536.5), (748.0, 765.0), (806.0, 811.0)]
+    fig, axes = plt.subplots(
+        1, 3, figsize=(11.0, max(7.0, 0.27 * len(schedule))), sharey=True,
+        gridspec_kw={"width_ratios": [3.8, 1.35, 0.85], "wspace": 0.06},
+    )
+    for ax, (left, right) in zip(axes, windows, strict=True):
+        for index, row in schedule.iterrows():
+            color = "#D55E00" if row["任务"] == "射击" else "#0072B2"
+            start, end = row["开始准备时刻(s)"], row["任务执行时刻(s)"]
+            ax.barh(index, end - start, left=start, height=0.55,
+                    color=color, alpha=0.82, clip_on=True)
+            if left <= end <= right:
+                ax.scatter(end, index, color="black", s=18, zorder=3)
+        ax.set_xlim(left, right)
+        ax.grid(axis="x", alpha=0.25)
+        ax.set_xlabel("time (s)")
+    axes[0].set_yticks(np.arange(len(labels)), labels, fontsize=7)
+    axes[0].invert_yaxis()
+    axes[0].set_ylabel("scheduled task")
+    for ax in axes[1:]:
+        ax.tick_params(axis="y", left=False, labelleft=False)
+    for left_ax, right_ax in zip(axes[:-1], axes[1:], strict=True):
+        left_ax.spines["right"].set_visible(False)
+        right_ax.spines["left"].set_visible(False)
+        left_ax.tick_params(right=False)
+        right_ax.tick_params(left=False)
+        kwargs = dict(color="black", clip_on=False, linewidth=0.8)
+        left_ax.plot((0.988, 1.012), (-0.008, 0.008), transform=left_ax.transAxes, **kwargs)
+        left_ax.plot((0.988, 1.012), (0.992, 1.008), transform=left_ax.transAxes, **kwargs)
+        right_ax.plot((-0.012, 0.012), (-0.008, 0.008), transform=right_ax.transAxes, **kwargs)
+        right_ax.plot((-0.012, 0.012), (0.992, 1.008), transform=right_ax.transAxes, **kwargs)
+    fig.suptitle("Q4 preparation intervals and execution instants", y=0.985)
+    fig.subplots_adjust(left=0.20, right=0.98, top=0.95, bottom=0.07)
     save(fig, path)
 
 
@@ -100,7 +121,7 @@ def plot_margins(schedule: pd.DataFrame, path: str | Path) -> None:
         speed.append((vmax - row["准备窗最大速度(m/s)"]) / vmax)
         acceleration.append((1.5 - row["准备窗最大加速度(m/s²)"]) / 1.5)
     values = np.array([distance_low, distance_high, speed, acceleration])
-    fig, ax = plt.subplots(figsize=(9.0, 5.2))
+    fig, ax = plt.subplots(figsize=(max(12.0, 0.34 * len(labels)), 5.8))
     width = 0.19
     x = np.arange(len(labels))
     names = ["distance lower", "distance upper", "speed", "acceleration"]
