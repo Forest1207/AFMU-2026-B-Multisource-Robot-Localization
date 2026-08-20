@@ -31,7 +31,7 @@ $I_c=[t_c-L_{m s},t_c]$ 内须始终满足
 \end{equation}
 并要求 $\delta(\theta_c,\theta_d)\ge60^\circ$。机器人只有一套任务执行资源，因此任意两项
 准备区间不得重叠；以 $\varepsilon>0$ 表示相邻任务的最小时间间隔。每个射击目标至多计一次
-有效完成，任务总数不另设上限。
+有效完成。
 
 对每个可能执行时刻向前检查完整准备窗。记候选 $c$ 对应任务的距离上下界、速度上界和加速度
 上界为 $d_{\min,c}$、$d_{\max,c}$、$v_{\max,c}$、$a_{\max,c}$，其归一化最小裕度定义为
@@ -79,7 +79,7 @@ x_c=0\ (m_c<z)\right\}.
 约束；在此基础上依次求解式\eqref{eq:q4-milp-stage1}、式\eqref{eq:q4-milp-stage2}和总裕度目标。
 输出时刻按给定小数位数舍入后，再次以细网格检查完整准备窗与任务冲突。
 
-\begin{pseudocodeblock}{算法4\quad 无固定次数上限的任务调度}
+\begin{pseudocodeblock}{算法4\quad 固定轨迹任务调度算法}
 {\heiti 输入：}问题三的10 Hz状态、目标坐标及射击和拍照约束。\par
 {\heiti 输出：}按执行时刻排序的全部选定任务。\par
 \begin{enumerate}[label={\heiti 步骤~\arabic*:},leftmargin=5.5em,itemsep=1pt,topsep=3pt]
@@ -114,7 +114,7 @@ $\Delta\theta=30^\circ$，连续复核步长取 $h_f=0.01$ s。由此得到1255�
   \label{fig:q4-candidates}
 \end{figure}
 
-相邻任务间隔取 $\varepsilon=0.01$ s。无次数截断的最早完成贪心算法得到 38 项任务，其中射击
+相邻任务间隔取 $\varepsilon=0.01$ s。最早完成贪心算法得到 38 项任务，其中射击
 11 项、拍照 27 项，最小归一化裕度为 $1.50\times10^{-4}$。精确数量优化进一步
 得到 40 项可行任务，并以零 MIP gap 证明在当前候选集与约束口径下达到全局最优，比贪心下界增加
 2 项。三个优化阶段均返回最优状态且 MIP gap 为0。优化方案含14次射击和26次拍照，覆盖全部
@@ -127,7 +127,7 @@ E(N_{\mathrm{hit}})=14\times0.85=11.90.
 \end{equation}
 
 \begin{longtable}{rccrr}
-\caption{问题四无固定次数上限的40项任务日程}\label{tab:q4-schedule}\\
+\caption{问题四的40项任务日程}\label{tab:q4-schedule}\\
 \toprule
 序号 & 目标编号 & 任务 & 开始准备时刻/s & 任务执行时刻/s \\
 \midrule
