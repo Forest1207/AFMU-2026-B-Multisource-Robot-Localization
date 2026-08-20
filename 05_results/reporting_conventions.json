@@ -1,0 +1,30 @@
+{
+  "time_offset": {
+    "paper_definition": "t2_aligned = t2 + delta",
+    "unit": "s",
+    "q1": {
+      "source_parameter": "05_results/q1/parameters.json::time_offset_s",
+      "transform": "delta = time_offset_s",
+      "delta_s": -198.4316999986374,
+      "reported_delta_s": -198.4317
+    },
+    "q2": {
+      "source_parameter": "05_results/q2/parameters.json::time_offset_s",
+      "transform": "delta = -time_offset_s",
+      "delta_s": -50.17173202142149,
+      "reported_delta_s": -50.17
+    },
+    "q3": {
+      "source_parameter": "05_results/q3/parameters.json::time_offset_s",
+      "transform": "delta = -time_offset_s",
+      "delta_s": 367.87761939367795,
+      "reported_delta_s": 367.88
+    }
+  },
+  "q4": {
+    "template_capacity": 9,
+    "writable_range": "B2:E10",
+    "primary_resource_mode": "exclusive",
+    "resource_mode_note": "Exclusive preparation intervals are an explicit engineering assumption, not a verbatim problem constraint. A parallel-preparation comparison is generated separately."
+  }
+}
