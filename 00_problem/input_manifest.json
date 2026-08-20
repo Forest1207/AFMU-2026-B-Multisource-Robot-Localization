@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "description": "Expected official competition inputs. Binary attachments are not required to be committed, but local copies must match this manifest before a full reproducibility run.",
+  "files": {
+    "附件1.xlsx": {
+      "sha256": "eb9dbdefb6d566b7d4396d7d0ad09e816afb43146ae7ad5e13882a745a9ba577",
+      "bytes": 278801,
+      "sheets": {
+        "方式1(4Hz)": {"rows": 3000, "columns": ["时间(s)", "X坐标(m)", "Y坐标(m)"]},
+        "方式2(5Hz)": {"rows": 4001, "columns": ["时间(s)", "X坐标(m)", "Y坐标(m)"]}
+      }
+    },
+    "附件2.xlsx": {
+      "sha256": "03031d2d633eabd8ef7cc530972bd738216cd6bb91858cb09cd44b70fe88df17",
+      "bytes": 279700,
+      "sheets": {
+        "方式1(4Hz)": {"rows": 3000, "columns": ["时间(s)", "X坐标(m)", "Y坐标(m)"]},
+        "方式2(5Hz)": {"rows": 3948, "columns": ["时间(s)", "X坐标(m)", "Y坐标(m)"]}
+      }
+    },
+    "附件3.xlsx": {
+      "sha256": "6348d12985fcabc238095ae026a4891ea28195ef5112b7788beb4bf94bd9b199",
+      "bytes": 128082,
+      "sheets": {
+        "方式1(4Hz)": {"rows": 1381, "columns": ["时间(s)", "X坐标(m)", "Y坐标(m)"]},
+        "方式2(5Hz)": {"rows": 1621, "columns": ["时间(s)", "X坐标(m)", "Y坐标(m)"]}
+      }
+    },
+    "附件4.xlsx": {
+      "sha256": "fa3594cba0f492654450dc0d4ea14101d411b57f25245093e6307d2bd06cd55b",
+      "bytes": 11308,
+      "sheets": {
+        "射击目标": {"rows": 18, "columns": ["编号", "X坐标(m)", "Y坐标(m)"]},
+        "拍照目标": {"rows": 18, "columns": ["编号", "X坐标(m)", "Y坐标(m)"]}
+      }
+    },
+    "result_template.xlsx": {
+      "accepted_local_names": ["result_template.xlsx", "result.xlsx"],
+      "sha256": "e79789ba98fbaaf16ab02f25e39e384804dd654c598a23475f4d977c705c9d34",
+      "bytes": 9167,
+      "sheets": {
+        "Sheet1": {
+          "data_rows": 9,
+          "writable_range": "B2:E10",
+          "note": "A2:A10 sequence numbers and the red instruction/example region must remain unchanged."
+        }
+      }
+    }
+  }
+}

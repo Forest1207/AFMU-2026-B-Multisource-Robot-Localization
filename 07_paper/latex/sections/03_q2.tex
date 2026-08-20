@@ -1,0 +1,16 @@
+\section{问题二：稳健时空标定与异步状态融合}
+
+问题二同时存在随机测量噪声、时间不同步和固定相对空间偏差。设两源观测为
+\begin{align}
+\bm z_1(t_i)&=\bm p(t_i)+\bm\varepsilon_{1,i},\\
+\bm z_2(s_j)&=\bm p(s_j+\delta)+\bm b+\bm\varepsilon_{2,j},
+\end{align}
+其中 $\bm b$ 只表示两套设备之间的相对偏差。在无外部绝对真值时，不把它归因于任一单独设备。
+
+模型先用偏差不敏感运动特征做粗配准，再在固定公共评价网格上建立 Huber 剖面目标，联合估计时间偏差和二维常偏差。固定评价样本集可避免候选时间偏差改变公共样本集合而人为移动目标函数。
+
+校正后不把 10 Hz 插值点作为新观测，而是在原始 4 Hz/5 Hz 异步事件时刻运行常加速度 Kalman 滤波，并用 99\% NIS 门控对异常观测稳健降权，再采用 RTS 固定区间平滑恢复完整状态。过程噪声在关闭门控反馈的调参阶段根据门控前 NIS 和 Cholesky 白化创新相关性选择。
+
+正式估计为统一时间偏差 $\delta=\QTwoDelta\,\mathrm{s}$，相对系统偏差约为 $(\QTwoBiasX,\QTwoBiasY)\,\mathrm{m}$，偏差模为 \QTwoBiasNorm\,m。校正后两源位置差 RMSE 为 \QTwoCorrectedRMSE\,m。
+
+\input{generated/table_q2.tex}

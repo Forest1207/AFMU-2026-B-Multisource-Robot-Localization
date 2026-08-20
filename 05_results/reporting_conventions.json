@@ -1,0 +1,36 @@
+{
+  "time_offset": {
+    "paper_definition": "t2_aligned = t2 + delta",
+    "unit": "s",
+    "q1": {
+      "source_parameter": "05_results/q1/parameters.json::time_offset_s",
+      "transform": "delta = time_offset_s",
+      "delta_s": -198.4316999986374,
+      "reported_delta_s": -198.4317
+    },
+    "q2": {
+      "source_parameter": "05_results/q2/parameters.json::time_offset_s",
+      "transform": "delta = -time_offset_s",
+      "delta_s": -50.17173202142149,
+      "reported_delta_s": -50.17
+    },
+    "q3": {
+      "source_parameter": "05_results/q3/parameters.json::time_offset_s",
+      "transform": "delta = -time_offset_s",
+      "delta_s": 367.87761939367795,
+      "reported_delta_s": 367.88
+    }
+  },
+  "q4": {
+    "template_capacity": null,
+    "writable_region": "A:E, rows >= 2, expandable",
+    "red_instruction_region": "H:L protected",
+    "primary_resource_mode": "no_cross_task_time_mutex",
+    "objective_order": [
+      "maximize covered target-task groups",
+      "maximize valid photo count at fixed coverage",
+      "maximize total normalized safety margin"
+    ],
+    "note": "The nine initially numbered rows in result.xlsx are not interpreted as a task-capacity constraint. Preparation windows are not treated as mutually exclusive unless the problem statement explicitly says so."
+  }
+}

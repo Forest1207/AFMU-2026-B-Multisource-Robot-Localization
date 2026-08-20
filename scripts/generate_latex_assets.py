@@ -1,0 +1,301 @@
+"""Generate LaTeX macros, tables and figure includes from formal results.
+
+The paper never hand-copies core numerical conclusions.  This module reads the
+formal artifacts under ``05_results`` and emits small TeX fragments consumed by
+``07_paper/latex/main.tex``.  It also rejects legacy Q4 outputs so an outdated
+nine-row-capacity result cannot silently enter a submission PDF.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+from pathlib import Path
+
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parents[1]
+RESULTS = ROOT / "05_results"
+GENERATED = ROOT / "07_paper" / "latex" / "generated"
+
+
+def load_json(path: Path) -> dict:
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def tex_escape(value: object) -> str:
+    mapping = {
+        "\\": r"\textbackslash{}",
+        "&": r"\&",
+        "%": r"\%",
+        "$": r"\$",
+        "#": r"\#",
+        "_": r"\_",
+        "{": r"\{",
+        "}": r"\}",
+        "~": r"\textasciitilde{}",
+        "^": r"\textasciicircum{}",
+    }
+    return "".join(mapping.get(char, char) for char in str(value))
+
+
+def fmt(value: float, digits: int = 4) -> str:
+    return f"{float(value):.{digits}f}"
+
+
+def sci_tex(value: float, significant: int = 4) -> str:
+    value = float(value)
+    if value == 0:
+        return "0"
+    exponent = int(math.floor(math.log10(abs(value))))
+    mantissa = value / (10 ** exponent)
+    return rf"{mantissa:.{significant - 1}f}\times 10^{{{exponent}}}"
+
+
+def require_current_q4(q4: dict) -> None:
+    required = {
+        "coverage_count",
+        "selected_task_count",
+        "shooting_count",
+        "photography_count",
+        "greedy_coverage_count",
+        "greedy_task_count",
+        "greedy_shooting_count",
+        "greedy_photography_count",
+        "total_normalized_margin",
+        "candidate_generation",
+        "continuous_refinement",
+        "milp",
+    }
+    missing = sorted(required - set(q4))
+    if missing:
+        raise RuntimeError(
+            "Q4 formal results are stale. Re-run the latest 03_models/q4/run_q4.py. "
+            "Missing keys: " + ", ".join(missing)
+        )
+
+    milp = q4["milp"]
+    if milp.get("artificial_capacity", "legacy") is not None:
+        raise RuntimeError("Q4 still contains an artificial task-capacity constraint.")
+    if milp.get("cross_task_time_mutex", "legacy") is not False:
+        raise RuntimeError("Q4 still contains a cross-task preparation-time mutex.")
+
+    generation = q4["candidate_generation"]
+    if not math.isclose(float(generation.get("photo_angle_bin_deg", -1)), 5.0, abs_tol=1e-12):
+        raise RuntimeError("Q4 paper build requires 5-degree photo bearing bins.")
+    if not math.isclose(float(generation.get("continuous_recheck_step_s", -1)), 0.01, abs_tol=1e-12):
+        raise RuntimeError("Q4 paper build requires 0.01 s candidate recheck.")
+
+    refinement = q4["continuous_refinement"]
+    if not math.isclose(float(refinement.get("half_width_s", -1)), 0.1, abs_tol=1e-12):
+        raise RuntimeError("Q4 paper build requires +/-0.1 s continuous refinement.")
+    if not math.isclose(float(refinement.get("evaluation_step_s", -1)), 0.01, abs_tol=1e-12):
+        raise RuntimeError("Q4 paper build requires 0.01 s refinement evaluation.")
+
+
+def write_macros(q1: dict, q2: dict, q3: dict, q4: dict, reporting: dict) -> None:
+    delta = reporting["time_offset"]
+    macros = {
+        "QOneDelta": fmt(delta["q1"]["reported_delta_s"], 4),
+        "QTwoDelta": fmt(delta["q2"]["reported_delta_s"], 2),
+        "QThreeDelta": fmt(delta["q3"]["reported_delta_s"], 2),
+        "QOneRMSE": sci_tex(q1["loss"]["rmse"]),
+        "QTwoBiasX": fmt(q2["bias_x_m"], 3),
+        "QTwoBiasY": fmt(q2["bias_y_m"], 3),
+        "QTwoBiasNorm": fmt(q2["bias_norm_m"], 3),
+        "QTwoCorrectedRMSE": fmt(q2["corrected_inter_sensor_rmse_m"], 3),
+        "QThreeWaldP": fmt(q3["wald"]["p_value"], 4),
+        "QThreeEffectIndex": fmt(q3["wald"]["effect_index"], 4),
+        "QThreeBiasNorm": fmt(q3["wald"]["bias_norm"], 3),
+        "QFourCoverageCount": str(int(q4["coverage_count"])),
+        "QFourTaskCount": str(int(q4["selected_task_count"])),
+        "QFourShootCount": str(int(q4["shooting_count"])),
+        "QFourPhotoCount": str(int(q4["photography_count"])),
+        "QFourGreedyCoverage": str(int(q4["greedy_coverage_count"])),
+        "QFourGreedyPhotoCount": str(int(q4["greedy_photography_count"])),
+        "QFourExpectedHits": fmt(q4["expected_shooting_hits"], 2),
+        "QFourMinMargin": fmt(q4["minimum_normalized_margin"], 4),
+        "QFourTotalMargin": fmt(q4["total_normalized_margin"], 4),
+    }
+    lines = ["% Auto-generated. Do not edit by hand."]
+    lines.extend(rf"\newcommand{{\{name}}}{{{value}}}" for name, value in macros.items())
+    (GENERATED / "result_macros.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_summary_tables(q2: dict, q3: dict, q4: dict, reporting: dict) -> None:
+    delta = reporting["time_offset"]
+
+    (GENERATED / "table_time_offsets.tex").write_text(rf"""% Auto-generated.
+\begin{{table}}[htbp]
+\centering
+\caption{{统一时间偏差口径下的三问估计结果}}
+\label{{tab:time-offsets}}
+\begin{{tabular}}{{lrrl}}
+\toprule
+问题 & $\delta$ / s & 输出频率 / Hz & 说明 \\
+\midrule
+Q1 & {delta['q1']['reported_delta_s']:.4f} & 10 & 无噪声精确对齐 \\
+Q2 & {delta['q2']['reported_delta_s']:.2f} & 10 & Huber 标定 + KF/RTS \\
+Q3 & {delta['q3']['reported_delta_s']:.2f} & 10 & 偏差检验驱动稳健融合 \\
+\bottomrule
+\end{{tabular}}
+\end{{table}}
+""", encoding="utf-8")
+
+    (GENERATED / "table_q2.tex").write_text(rf"""% Auto-generated.
+\begin{{table}}[htbp]
+\centering
+\caption{{问题二时空标定与融合关键结果}}
+\label{{tab:q2-calibration}}
+\begin{{tabular}}{{lr}}
+\toprule
+指标 & 数值 \\
+\midrule
+统一时间偏差 $\delta$ / s & {delta['q2']['reported_delta_s']:.2f} \\
+相对系统偏差 $b_x$ / m & {q2['bias_x_m']:.3f} \\
+相对系统偏差 $b_y$ / m & {q2['bias_y_m']:.3f} \\
+偏差模 / m & {q2['bias_norm_m']:.3f} \\
+校正后两源差值 RMSE / m & {q2['corrected_inter_sensor_rmse_m']:.3f} \\
+门控前平均 NIS & {q2['mean_nis']:.3f} \\
+白化创新平均 $|\rho_1|$ & {q2['mean_abs_lag1_whitened_innovation']:.4f} \\
+\bottomrule
+\end{{tabular}}
+\end{{table}}
+""", encoding="utf-8")
+
+    ci_low = q3["bootstrap"]["ci_low"]
+    ci_high = q3["bootstrap"]["ci_high"]
+    (GENERATED / "table_q3.tex").write_text(rf"""% Auto-generated.
+\begin{{table}}[htbp]
+\centering
+\caption{{问题三系统偏差判定}}
+\label{{tab:q3-bias-test}}
+\begin{{tabular}}{{lr}}
+\toprule
+指标 & 数值 \\
+\midrule
+统一时间偏差 $\delta$ / s & {delta['q3']['reported_delta_s']:.2f} \\
+HAC--Wald $p$ 值 & {q3['wald']['p_value']:.4f} \\
+偏差模 / m & {q3['wald']['bias_norm']:.3f} \\
+工程效应指数 & {q3['wald']['effect_index']:.4f} \\
+Bootstrap 95\% CI ($x$) / m & [{ci_low[0]:.3f}, {ci_high[0]:.3f}] \\
+Bootstrap 95\% CI ($y$) / m & [{ci_low[1]:.3f}, {ci_high[1]:.3f}] \\
+启用系统偏差状态 & {'是' if q3['bias_state_enabled'] else '否'} \\
+\bottomrule
+\end{{tabular}}
+\end{{table}}
+""", encoding="utf-8")
+
+    photo_gain = int(q4["photography_count"]) - int(q4["greedy_photography_count"])
+    (GENERATED / "table_q4_summary.tex").write_text(rf"""% Auto-generated.
+\begin{{table}}[htbp]
+\centering
+\caption{{问题四联合 MILP 与逐目标贪心基线}}
+\label{{tab:q4-summary}}
+\begin{{tabular}}{{lrrr}}
+\toprule
+指标 & MILP & 贪心基线 & 差异 \\
+\midrule
+覆盖目标数 & {int(q4['coverage_count'])} & {int(q4['greedy_coverage_count'])} & {int(q4['coverage_count'])-int(q4['greedy_coverage_count']):+d} \\
+射击任务数 & {int(q4['shooting_count'])} & {int(q4['greedy_shooting_count'])} & {int(q4['shooting_count'])-int(q4['greedy_shooting_count']):+d} \\
+拍照任务数 & {int(q4['photography_count'])} & {int(q4['greedy_photography_count'])} & {photo_gain:+d} \\
+任务记录总数 & {int(q4['selected_task_count'])} & {int(q4['greedy_task_count'])} & {int(q4['selected_task_count'])-int(q4['greedy_task_count']):+d} \\
+\bottomrule
+\end{{tabular}}
+\end{{table}}
+""", encoding="utf-8")
+
+
+def write_schedule_table() -> None:
+    frame = pd.read_csv(RESULTS / "q4" / "optimized_schedule.csv")
+    required = ["序号", "目标编号", "任务", "开始准备时刻(s)", "任务执行时刻(s)"]
+    missing = [column for column in required if column not in frame.columns]
+    if missing:
+        raise ValueError(f"optimized_schedule.csv missing columns: {missing}")
+
+    row_break = r"\\"
+    header = "序号 & 目标编号 & 任务 & 开始准备 / s & 执行 / s " + row_break
+    lines = [
+        "% Auto-generated.",
+        r"\begin{longtable}{cllrr}",
+        r"\caption{问题四最终任务调度}\label{tab:q4-schedule}\\",
+        r"\toprule",
+        header,
+        r"\midrule",
+        r"\endfirsthead",
+        r"\toprule",
+        header,
+        r"\midrule",
+        r"\endhead",
+    ]
+    for _, row in frame[required].iterrows():
+        lines.append(
+            f"{int(row['序号'])} & {tex_escape(row['目标编号'])} & {tex_escape(row['任务'])} & "
+            f"{float(row['开始准备时刻(s)']):.2f} & {float(row['任务执行时刻(s)']):.2f} "
+            + row_break
+        )
+    lines.extend([r"\bottomrule", r"\end{longtable}"])
+    (GENERATED / "table_q4_schedule.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_figure_includes() -> None:
+    selections = [
+        (1, "objective_scan", "问题一时间偏差目标函数扫描"),
+        (1, "aligned_trajectory", "问题一时间对齐后的空间轨迹"),
+        (2, "objective_profile", "问题二稳健时空标定目标函数"),
+        (2, "fused_trajectory_10hz", "问题二 10 Hz RTS 融合轨迹"),
+        (2, "innovation_diagnostics", "问题二创新一致性诊断"),
+        (3, "bias_confidence_interval", "问题三系统偏差置信区间"),
+        (3, "fused_trajectory_uncertainty", "问题三融合轨迹及模型内不确定性"),
+        (4, "trajectory_targets_schedule", "问题四轨迹、目标与最终任务位置"),
+        (4, "candidate_feasibility_map", "问题四候选任务时空可行性"),
+        (4, "optimized_schedule_timeline", "问题四最终调度时间线"),
+        (4, "constraint_margins", "问题四任务约束裕度"),
+    ]
+
+    lines = ["% Auto-generated. Formal PDF figures are referenced in place."]
+    manifest = []
+    for problem, stem, caption in selections:
+        rel = f"../../06_figures/q{problem}/{stem}.pdf"
+        label = f"fig:auto-q{problem}-{stem.replace('_', '-')}"
+        lines.extend([
+            rf"\IfFileExists{{{rel}}}{{%",
+            r"\begin{figure}[htbp]",
+            r"  \centering",
+            rf"  \includegraphics[width=0.88\textwidth,height=0.68\textheight,keepaspectratio]{{{rel}}}",
+            rf"  \caption{{{caption}}}",
+            rf"  \label{{{label}}}",
+            r"\end{figure}",
+            r"}{}",
+            "",
+        ])
+        manifest.append({"problem": problem, "stem": stem, "path": rel, "caption": caption})
+
+    # Important: the empty fallback above must be written as ``}{}``.  A form
+    # such as ``}{% comment }`` is invalid because TeX comments away the closing
+    # brace and produces a runaway \IfFileExists argument.
+    (GENERATED / "figures.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (GENERATED / "latex_asset_manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
+def main() -> None:
+    GENERATED.mkdir(parents=True, exist_ok=True)
+    q1 = load_json(RESULTS / "q1" / "parameters.json")
+    q2 = load_json(RESULTS / "q2" / "parameters.json")
+    q3 = load_json(RESULTS / "q3" / "parameters.json")
+    q4 = load_json(RESULTS / "q4" / "parameters.json")
+    reporting = load_json(RESULTS / "reporting_conventions.json")
+    require_current_q4(q4)
+    write_macros(q1, q2, q3, q4, reporting)
+    write_summary_tables(q2, q3, q4, reporting)
+    write_schedule_table()
+    write_figure_includes()
+    print(f"[generate_latex_assets] PASS -> {GENERATED}")
+
+
+if __name__ == "__main__":
+    main()
