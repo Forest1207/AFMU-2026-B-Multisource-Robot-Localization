@@ -1,4 +1,11 @@
-"""Lexicographic MILP scheduler for compressed Q4 candidates."""
+"""Lexicographic MILP scheduler for Q4 compressed candidates.
+
+The formal model follows the competition statement and the reference-package
+Q4 structure: there is no artificial nine-row capacity and no assumption that
+preparation windows of different tasks are mutually exclusive.  The decision
+problem is therefore driven by target coverage, repeated photographic views
+and safety margin.
+"""
 
 from __future__ import annotations
 
@@ -6,7 +13,7 @@ from dataclasses import dataclass
 
 import numpy as np
 from scipy.optimize import Bounds, LinearConstraint, milp
-from scipy.sparse import lil_matrix, vstack
+from scipy.sparse import coo_matrix, vstack
 
 import photography_model as photo
 import shooting_model as shoot
@@ -16,14 +23,16 @@ from feasible_windows import Candidate
 @dataclass(frozen=True)
 class ScheduleResult:
     selected: list[Candidate]
-    maximum_task_count: int
-    minimum_margin: float
+    coverage_count: int
+    photo_count: int
+    total_margin: float
     stage1_status: int
     stage2_status: int
     stage3_status: int
     stage1_gap: float | None
     stage2_gap: float | None
     stage3_gap: float | None
+    angle_conflict_count: int
 
 
 def _gap(result) -> float | None:
@@ -31,158 +40,162 @@ def _gap(result) -> float | None:
     return None if value is None else float(value)
 
 
-def _base_constraints(candidates: list[Candidate]) -> tuple[lil_matrix, np.ndarray]:
-    n = len(candidates)
-    rows: list[tuple[int, int]] = []
-    # Closed preparation/execution intervals may not overlap.  A 0.01 s gap
-    # separates an execution instant from the next preparation interval.
-    for i in range(n):
-        a = candidates[i]
-        for j in range(i + 1, n):
-            b = candidates[j]
-            separated = (
-                a.execution_time_s + 0.01 <= b.preparation_start_s + 1e-9
-                or b.execution_time_s + 0.01 <= a.preparation_start_s + 1e-9
-            )
-            if not separated:
-                rows.append((i, j))
-    shot_groups: dict[str, list[int]] = {}
+def _build_base(candidates: list[Candidate]):
+    """Build x/y linking, shooting uniqueness and photo-angle constraints.
+
+    x_e = whether candidate task e is selected.
+    y_g = whether target-task group g is covered at least once.
+
+    No cross-target time-resource conflict is imposed because the problem
+    statement does not say that the 1.5 s / 0.5 s preparation intervals are an
+    exclusive robot resource.  This is the key difference from the previous
+    conservative implementation.
+    """
+    n_x = len(candidates)
+    groups: dict[tuple[str, str], list[int]] = {}
     for index, candidate in enumerate(candidates):
-        if candidate.task == shoot.TASK_NAME:
-            shot_groups.setdefault(candidate.target_id, []).append(index)
-    angle_conflicts: list[tuple[int, int]] = []
-    photo_groups: dict[str, list[int]] = {}
-    for index, candidate in enumerate(candidates):
-        if candidate.task == photo.TASK_NAME:
-            photo_groups.setdefault(candidate.target_id, []).append(index)
-    for group in photo_groups.values():
-        for position, i in enumerate(group):
-            for j in group[position + 1:]:
+        groups.setdefault((candidate.task, candidate.target_id), []).append(index)
+
+    group_keys = sorted(groups)
+    y_index = {key: n_x + i for i, key in enumerate(group_keys)}
+    n = n_x + len(group_keys)
+
+    rows: list[int] = []
+    cols: list[int] = []
+    vals: list[float] = []
+    lower: list[float] = []
+    upper: list[float] = []
+    row_id = 0
+
+    def add(coefficients: dict[int, float], lo: float = -np.inf,
+            hi: float = np.inf) -> None:
+        nonlocal row_id
+        for column, value in coefficients.items():
+            rows.append(row_id)
+            cols.append(column)
+            vals.append(float(value))
+        lower.append(float(lo))
+        upper.append(float(hi))
+        row_id += 1
+
+    # Link selected candidates to group-coverage variables.
+    #   y <= sum x
+    #   sum x <= M y
+    # For shooting, each target may be selected at most once.
+    for key in group_keys:
+        ids = groups[key]
+        y = y_index[key]
+        add({**{j: 1.0 for j in ids}, y: -1.0}, lo=0.0)
+        add({**{j: 1.0 for j in ids}, y: -float(len(ids))}, hi=0.0)
+        if key[0] == shoot.TASK_NAME:
+            add({j: 1.0 for j in ids}, hi=1.0)
+
+    # Same photography target: any two selected observations must have a
+    # circular bearing separation of at least 60 degrees.
+    angle_conflicts = 0
+    for key, ids in groups.items():
+        if key[0] != photo.TASK_NAME:
+            continue
+        for position, i in enumerate(ids):
+            for j in ids[position + 1:]:
                 if photo.circular_separation_deg(
                     candidates[i].angle_deg, candidates[j].angle_deg
                 ) < photo.MIN_ANGLE_SEPARATION_DEG - 1e-9:
-                    angle_conflicts.append((i, j))
+                    add({i: 1.0, j: 1.0}, hi=1.0)
+                    angle_conflicts += 1
 
-    total_rows = len(rows) + len(shot_groups) + len(angle_conflicts)
-    matrix = lil_matrix((total_rows, n), dtype=float)
-    upper = np.ones(total_rows, dtype=float)
-    row = 0
-    for i, j in rows:
-        matrix[row, i] = matrix[row, j] = 1.0
-        row += 1
-    for group in shot_groups.values():
-        matrix[row, group] = 1.0
-        row += 1
-    for i, j in angle_conflicts:
-        matrix[row, i] = matrix[row, j] = 1.0
-        row += 1
-    return matrix, upper
+    A = coo_matrix((vals, (rows, cols)), shape=(row_id, n)).tocsr()
+    return A, np.asarray(lower), np.asarray(upper), y_index, angle_conflicts
 
 
-def optimize_schedule(candidates: list[Candidate], capacity: int = 9) -> ScheduleResult:
+def optimize_schedule(candidates: list[Candidate]) -> ScheduleResult:
+    """Solve the three-level lexicographic Q4 scheduling model.
+
+    Level 1: maximize number of covered target-task groups.
+    Level 2: with coverage fixed, maximize number of valid photographs.
+    Level 3: with both fixed, maximize the sum of normalized safety margins.
+    """
     if not candidates:
         raise ValueError("No continuously feasible candidates were generated.")
-    n = len(candidates)
-    base_A, base_upper = _base_constraints(candidates)
-    count_row = lil_matrix((1, n), dtype=float)
-    count_row[0, :] = 1.0
-    A1 = vstack([base_A, count_row]).tocsr()
-    lower1 = np.r_[np.full(base_A.shape[0], -np.inf), -np.inf]
-    upper1 = np.r_[base_upper, float(capacity)]
-    stage1 = milp(
-        c=-np.ones(n), integrality=np.ones(n), bounds=Bounds(0, 1),
-        constraints=LinearConstraint(A1, lower1, upper1),
-        options={"mip_rel_gap": 0.0},
-    )
-    if not stage1.success:
-        raise RuntimeError(f"Stage-1 MILP failed: {stage1.message}")
-    maximum_count = int(round(np.sum(stage1.x > 0.5)))
 
-    # Stage 2: with the optimal count fixed, maximize the minimum normalized
-    # constraint margin among selected candidates.
-    A2 = lil_matrix((base_A.shape[0] + 1 + n, n + 1), dtype=float)
-    A2[:base_A.shape[0], :n] = base_A
-    A2[base_A.shape[0], :n] = 1.0
-    margins = np.array([candidate.normalized_margin for candidate in candidates])
-    big_m = 2.0
-    for i, margin in enumerate(margins):
-        A2[base_A.shape[0] + 1 + i, i] = big_m
-        A2[base_A.shape[0] + 1 + i, n] = 1.0
-    lower2 = np.r_[np.full(base_A.shape[0], -np.inf), maximum_count,
-                   np.full(n, -np.inf)]
-    upper2 = np.r_[base_upper, maximum_count, margins + big_m]
-    c2 = np.zeros(n + 1)
-    c2[-1] = -1.0
-    stage2 = milp(
-        c=c2, integrality=np.r_[np.ones(n), 0],
-        bounds=Bounds(np.zeros(n + 1), np.r_[np.ones(n), 1.0]),
-        constraints=LinearConstraint(A2.tocsr(), lower2, upper2),
-        options={"mip_rel_gap": 0.0},
+    n_x = len(candidates)
+    base_A, base_lower, base_upper, y_index, angle_conflicts = _build_base(candidates)
+    n = base_A.shape[1]
+    y_ids = np.asarray(list(y_index.values()), dtype=int)
+    photo_ids = np.asarray(
+        [i for i, candidate in enumerate(candidates) if candidate.task == photo.TASK_NAME],
+        dtype=int,
     )
-    if not stage2.success:
-        raise RuntimeError(f"Stage-2 MILP failed: {stage2.message}")
-    minimum_margin = float(stage2.x[-1])
+    integrality = np.ones(n, dtype=int)
+    bounds = Bounds(np.zeros(n), np.ones(n))
 
-    # Stage 3: preserve the optimal minimum margin, then maximize total margin
-    # and same-target photographic angular diversity via AND auxiliaries.
-    eligible = margins >= minimum_margin - 1e-7
-    photo_pairs: list[tuple[int, int, float]] = []
-    groups: dict[str, list[int]] = {}
-    for index, candidate in enumerate(candidates):
-        if eligible[index] and candidate.task == photo.TASK_NAME:
-            groups.setdefault(candidate.target_id, []).append(index)
-    for group in groups.values():
-        for position, i in enumerate(group):
-            for j in group[position + 1:]:
-                separation = photo.circular_separation_deg(
-                    candidates[i].angle_deg, candidates[j].angle_deg
-                )
-                if separation >= photo.MIN_ANGLE_SEPARATION_DEG - 1e-9:
-                    photo_pairs.append((i, j, separation / 180.0))
-    p = len(photo_pairs)
-    A3 = lil_matrix((base_A.shape[0] + 1 + 3 * p, n + p), dtype=float)
-    A3[:base_A.shape[0], :n] = base_A
-    A3[base_A.shape[0], :n] = 1.0
-    lower3 = np.r_[np.full(base_A.shape[0], -np.inf), maximum_count,
-                   np.full(3 * p, -np.inf)]
-    upper3 = np.r_[base_upper, maximum_count, np.zeros(3 * p)]
-    row = base_A.shape[0] + 1
-    for pair_index, (i, j, _) in enumerate(photo_pairs):
-        y = n + pair_index
-        A3[row, y], A3[row, i] = 1.0, -1.0       # y <= xi
-        A3[row + 1, y], A3[row + 1, j] = 1.0, -1.0  # y <= xj
-        A3[row + 2, i], A3[row + 2, j], A3[row + 2, y] = 1.0, 1.0, -1.0
-        upper3[row + 2] = 1.0                     # y >= xi+xj-1
-        row += 3
-    c3 = np.zeros(n + p)
-    c3[:n] = -margins
-    # Small expected-hit reward prevents arbitrary task labels without
-    # overpowering margins; angular diversity is a genuine secondary reward.
-    c3[:n] -= np.array([
-        0.02 * shoot.HIT_PROBABILITY if candidate.task == shoot.TASK_NAME else 0.0
-        for candidate in candidates
-    ])
-    if p:
-        c3[n:] = -0.25 * np.array([pair[2] for pair in photo_pairs])
-    lower_bounds = np.zeros(n + p)
-    upper_bounds = np.ones(n + p)
-    upper_bounds[:n] = eligible.astype(float)
-    stage3 = milp(
-        c=c3, integrality=np.ones(n + p),
-        bounds=Bounds(lower_bounds, upper_bounds),
-        constraints=LinearConstraint(A3.tocsr(), lower3, upper3),
-        options={"mip_rel_gap": 0.0},
+    def solve(c: np.ndarray, extra_rows=None, extra_lower=None, extra_upper=None):
+        A = base_A
+        lower = base_lower
+        upper = base_upper
+        if extra_rows:
+            A = vstack([base_A] + extra_rows).tocsr()
+            lower = np.concatenate([base_lower, np.asarray(extra_lower, dtype=float)])
+            upper = np.concatenate([base_upper, np.asarray(extra_upper, dtype=float)])
+        result = milp(
+            c=c,
+            integrality=integrality,
+            bounds=bounds,
+            constraints=LinearConstraint(A, lower, upper),
+            options={"mip_rel_gap": 0.0, "presolve": True},
+        )
+        if not result.success:
+            raise RuntimeError(f"Q4 MILP failed: {result.message}")
+        return result
+
+    # Stage 1: maximum target coverage.
+    c1 = np.zeros(n)
+    c1[y_ids] = -1.0
+    stage1 = solve(c1)
+    coverage_count = int(round(float(np.sum(stage1.x[y_ids]))))
+
+    fix_coverage = coo_matrix(
+        (np.ones(len(y_ids)), (np.zeros(len(y_ids)), y_ids)), shape=(1, n)
+    ).tocsr()
+
+    # Stage 2: among maximum-coverage schedules, maximize number of photos.
+    c2 = np.zeros(n)
+    c2[photo_ids] = -1.0
+    stage2 = solve(c2, [fix_coverage], [coverage_count], [coverage_count])
+    photo_count = int(round(float(np.sum(stage2.x[photo_ids]))))
+
+    fix_photo = coo_matrix(
+        (np.ones(len(photo_ids)), (np.zeros(len(photo_ids)), photo_ids)), shape=(1, n)
+    ).tocsr()
+
+    # Stage 3: preserve the first two optimal values and maximize robustness.
+    margins = np.asarray([candidate.normalized_margin for candidate in candidates], dtype=float)
+    c3 = np.zeros(n)
+    c3[:n_x] = -margins
+    stage3 = solve(
+        c3,
+        [fix_coverage, fix_photo],
+        [coverage_count, photo_count],
+        [coverage_count, photo_count],
     )
-    if not stage3.success:
-        raise RuntimeError(f"Stage-3 MILP failed: {stage3.message}")
-    selected = [candidate for candidate, value in zip(candidates, stage3.x[:n], strict=True)
-                if value > 0.5]
-    selected.sort(key=lambda candidate: candidate.execution_time_s)
+
+    selected = [
+        candidate
+        for candidate, value in zip(candidates, stage3.x[:n_x], strict=True)
+        if value > 0.5
+    ]
+    selected.sort(key=lambda item: (item.execution_time_s, item.task, item.target_id))
+
     return ScheduleResult(
         selected=selected,
-        maximum_task_count=maximum_count,
-        minimum_margin=min(candidate.normalized_margin for candidate in selected),
-        stage1_status=int(stage1.status), stage2_status=int(stage2.status),
-        stage3_status=int(stage3.status), stage1_gap=_gap(stage1),
-        stage2_gap=_gap(stage2), stage3_gap=_gap(stage3),
+        coverage_count=coverage_count,
+        photo_count=photo_count,
+        total_margin=float(sum(item.normalized_margin for item in selected)),
+        stage1_status=int(stage1.status),
+        stage2_status=int(stage2.status),
+        stage3_status=int(stage3.status),
+        stage1_gap=_gap(stage1),
+        stage2_gap=_gap(stage2),
+        stage3_gap=_gap(stage3),
+        angle_conflict_count=angle_conflicts,
     )
