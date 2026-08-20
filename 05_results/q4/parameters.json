@@ -238,7 +238,7 @@
   },
   "result_workbook": {
     "template_sha256": "e79789ba98fbaaf16ab02f25e39e384804dd654c598a23475f4d977c705c9d34",
-    "output_sha256": "65f2b96566a7c3108f9a4f7f57d6f7b4069d2e8e050fb022b42996c9a0e1f614",
+    "output_sha256": "8f865ea586918e1b31e5ce64e2553b618b66f6cdbe747ce230888f1239407f80",
     "protected_snapshot_equal": true,
     "writable_region": "A:E, rows >= 2 (expandable)",
     "filled_rows": 52,
