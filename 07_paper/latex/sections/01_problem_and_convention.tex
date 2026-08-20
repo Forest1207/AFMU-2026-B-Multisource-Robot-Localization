@@ -1,0 +1,24 @@
+\section{问题重述与统一符号}
+
+机器人由两类定位系统给出异频观测。前三问依次要求在无噪声、含噪且含固定系统偏差、实际复杂误差三种条件下恢复统一 10 Hz 轨迹；第四问在固定轨迹上安排射击和拍照任务。
+
+为了避免不同代码模块对“时间偏差”的正负号定义不一致，本文只在报告层使用一个符号：
+\begin{equation}
+  t_{2,\mathrm{aligned}}=t_2+\delta.
+\end{equation}
+因此 $\delta>0$ 表示方式 2 时间戳整体增加，$\delta<0$ 表示整体减小。底层程序仍保留各自已经验证的内部变量定义，自动报告脚本负责转换到统一口径。
+
+\input{generated/table_time_offsets.tex}
+
+四问的总体技术路线为
+\[
+\text{时间同步}
+\longrightarrow
+\text{时空标定}
+\longrightarrow
+\text{偏差检验与鲁棒融合}
+\longrightarrow
+\text{固定轨迹任务调度}.
+\]
+
+所有正式结果均写入 \texttt{05\_results/}，论文图来自 \texttt{06\_figures/}，因此论文正文不再作为数值的唯一来源。
