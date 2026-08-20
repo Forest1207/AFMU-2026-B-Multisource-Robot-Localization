@@ -1,0 +1,68 @@
+name: submission-build
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/submission-build.yml'
+      - '07_paper/latex/**'
+      - 'scripts/**'
+      - '05_results/**'
+      - '06_figures/**'
+      - '08_submission/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-submission:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install Python dependencies
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+
+      - name: Audit formal result chain
+        run: python scripts/audit_results.py
+
+      - name: Install XeLaTeX toolchain
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            latexmk \
+            texlive-xetex \
+            texlive-lang-chinese \
+            texlive-latex-extra
+
+      - name: Build formal paper
+        run: python scripts/build_paper.py
+
+      - name: Build and verify submission ZIP
+        run: python scripts/package_submission.py --skip-paper-build
+
+      - name: Show build metadata
+        run: |
+          cat 08_submission/paper_build.json
+          cat 08_submission/package_build.json
+
+      - name: Upload formal submission artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AFMU-2026-B-formal-submission
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            08_submission/B题-多源融合机器人定位及任务优化.pdf
+            05_results/q4/result.xlsx
+            08_submission/AFMU-2026-B-submission.zip
+            08_submission/paper_build.json
+            08_submission/package_build.json
+            08_submission/audit/**
