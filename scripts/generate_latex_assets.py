@@ -50,16 +50,29 @@ def require_new_q4_schema(q4: dict) -> None:
     required = {
         "coverage_count", "selected_task_count", "shooting_count", "photography_count",
         "greedy_coverage_count", "greedy_photography_count", "total_normalized_margin",
+        "candidate_generation", "continuous_refinement",
     }
     missing = sorted(required - set(q4))
     if missing:
         raise RuntimeError(
-            "Q4 formal results are stale (legacy nine-capacity run). Re-run "
-            "03_models/q4/run_q4.py before building the paper. Missing keys: "
-            + ", ".join(missing)
+            "Q4 formal results are stale. Re-run the latest 03_models/q4/run_q4.py "
+            "before building the paper. Missing keys: " + ", ".join(missing)
         )
-    if q4.get("milp", {}).get("artificial_capacity", "legacy") is not None:
+    milp = q4.get("milp", {})
+    if milp.get("artificial_capacity", "legacy") is not None:
         raise RuntimeError("Q4 formal results still contain an artificial capacity constraint.")
+    if milp.get("cross_task_time_mutex", "legacy") is not False:
+        raise RuntimeError("Q4 formal results still contain a cross-task preparation-time mutex.")
+    generation = q4.get("candidate_generation", {})
+    if not math.isclose(float(generation.get("photo_angle_bin_deg", -1.0)), 5.0, abs_tol=1e-12):
+        raise RuntimeError("Q4 paper build requires reference-aligned 5-degree photo bearing bins.")
+    if not math.isclose(float(generation.get("continuous_recheck_step_s", -1.0)), 0.01, abs_tol=1e-12):
+        raise RuntimeError("Q4 paper build requires 0.01 s continuous candidate recheck.")
+    refinement = q4.get("continuous_refinement", {})
+    if not math.isclose(float(refinement.get("half_width_s", -1.0)), 0.1, abs_tol=1e-12):
+        raise RuntimeError("Q4 paper build requires +/-0.1 s continuous local refinement.")
+    if not math.isclose(float(refinement.get("evaluation_step_s", -1.0)), 0.01, abs_tol=1e-12):
+        raise RuntimeError("Q4 paper build requires 0.01 s local-refinement evaluation.")
 
 
 def write_macros() -> None:
