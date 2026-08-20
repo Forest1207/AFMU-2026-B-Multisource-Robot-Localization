@@ -3,8 +3,7 @@
 Formal Q4 follows the problem statement/reference-package interpretation:
 there is no nine-task capacity and no cross-task preparation-time mutex.  The
 Excel template is extended downward when the optimal plan contains more rows;
-its red instruction/example region is preserved byte-for-semantics at the cell
-value/style level.
+its red instruction/example region is preserved at the cell value/style level.
 """
 
 from __future__ import annotations
@@ -22,6 +21,7 @@ import numpy as np
 import pandas as pd
 from openpyxl import load_workbook
 from scipy.interpolate import PchipInterpolator
+from scipy.optimize import minimize_scalar
 
 import photography_model as photo
 import shooting_model as shoot
@@ -52,13 +52,7 @@ def _cell_signature(cell) -> dict:
 
 
 def _protected_snapshot(path: str | Path) -> dict:
-    """Snapshot cells that the submission writer is never allowed to change.
-
-    A:E below row 1 are the expandable result table.  The original header and
-    all H:L instruction/example cells are protected.  This matches the problem
-    statement's explicit requirement not to change the red text without
-    inventing a nine-row capacity that is not stated in the task.
-    """
+    """Snapshot cells the result writer is never allowed to change."""
     wb = load_workbook(path, data_only=False)
     ws = wb[wb.sheetnames[0]]
     cells = {}
@@ -78,17 +72,133 @@ def _protected_snapshot(path: str | Path) -> dict:
     }
 
 
-# Backward-compatible name used by older validation tooling.
 _untouched_snapshot = _protected_snapshot
+
+
+def _preparation_s(candidate: Candidate) -> float:
+    return shoot.PREPARATION_S if candidate.task == shoot.TASK_NAME else photo.PREPARATION_S
+
+
+def _candidate_at_time(candidate: Candidate, execution_time: float,
+                       trajectory: TrajectoryState, target_map: dict,
+                       step: float = 0.01) -> Candidate:
+    preparation = _preparation_s(candidate)
+    start = execution_time - preparation
+    metrics = _continuous_metrics(
+        trajectory, target_map[candidate.target_id], start, execution_time, step
+    )
+    return replace(
+        candidate,
+        preparation_start_s=float(start),
+        execution_time_s=float(execution_time),
+        angle_deg=metrics["angle_deg"],
+        normalized_margin=metrics["margin"],
+        min_distance_m=metrics["min_distance_m"],
+        max_distance_m=metrics["max_distance_m"],
+        max_speed_mps=metrics["max_speed_mps"],
+        max_acceleration_mps2=metrics["max_acceleration_mps2"],
+    )
+
+
+def _photo_angle_compatible(candidate: Candidate, selected: list[Candidate],
+                            own_index: int) -> bool:
+    if candidate.task != photo.TASK_NAME:
+        return True
+    for index, other in enumerate(selected):
+        if index == own_index or other.task != photo.TASK_NAME:
+            continue
+        if other.target_id != candidate.target_id:
+            continue
+        if photo.circular_separation_deg(candidate.angle_deg, other.angle_deg) < photo.MIN_ANGLE_SEPARATION_DEG - 1e-9:
+            return False
+    return True
+
+
+def refine_selected_tasks(selected: list[Candidate], trajectory: TrajectoryState,
+                          targets, half_width_s: float = 0.1) -> tuple[list[Candidate], dict]:
+    """Reference-style bounded continuous refinement around each MILP time.
+
+    Each selected execution time is optimized within +/-0.1 s for the minimum
+    normalized margin over its full preparation window.  A photography move is
+    accepted only if it preserves the >=60 degree separation from every other
+    selected view of the same target.
+    """
+    target_map = {target.target_id: target for target in targets}
+    refined = list(selected)
+    improvements: list[float] = []
+    moved = 0
+
+    for index, original in enumerate(list(refined)):
+        preparation = _preparation_s(original)
+        lower = max(
+            float(original.execution_time_s) - half_width_s,
+            float(trajectory.time[0]) + preparation,
+        )
+        upper = min(
+            float(original.execution_time_s) + half_width_s,
+            float(trajectory.time[-1]),
+        )
+        original_eval = _candidate_at_time(original, original.execution_time_s, trajectory, target_map)
+
+        def objective(value: float) -> float:
+            evaluated = _candidate_at_time(original, float(value), trajectory, target_map)
+            return -float(evaluated.normalized_margin)
+
+        fit = minimize_scalar(
+            objective,
+            bounds=(lower, upper),
+            method="bounded",
+            options={"xatol": 1e-7, "maxiter": 100},
+        )
+        accepted = original_eval
+        if fit.success:
+            proposal = _candidate_at_time(original, float(fit.x), trajectory, target_map)
+            if (
+                proposal.normalized_margin >= original_eval.normalized_margin - 1e-10
+                and _photo_angle_compatible(proposal, refined, index)
+            ):
+                accepted = proposal
+
+        refined[index] = accepted
+        improvement = accepted.normalized_margin - original_eval.normalized_margin
+        improvements.append(float(improvement))
+        moved += int(abs(accepted.execution_time_s - original.execution_time_s) > 1e-8)
+
+    return refined, {
+        "method": "bounded continuous search within +/-0.1 s",
+        "half_width_s": half_width_s,
+        "evaluation_step_s": 0.01,
+        "task_count": len(refined),
+        "moved_task_count": moved,
+        "mean_margin_improvement": float(np.mean(improvements)) if improvements else 0.0,
+        "min_margin_improvement": float(np.min(improvements)) if improvements else 0.0,
+        "max_margin_improvement": float(np.max(improvements)) if improvements else 0.0,
+    }
+
+
+def _verify_combinatorial(selected: list[Candidate]) -> None:
+    shooting_ids = [item.target_id for item in selected if item.task == shoot.TASK_NAME]
+    if len(shooting_ids) != len(set(shooting_ids)):
+        raise RuntimeError("Rounded/refined schedule contains duplicate shooting target.")
+    photos = [item for item in selected if item.task == photo.TASK_NAME]
+    for position, first in enumerate(photos):
+        for second in photos[position + 1:]:
+            if first.target_id != second.target_id:
+                continue
+            separation = photo.circular_separation_deg(first.angle_deg, second.angle_deg)
+            if separation < photo.MIN_ANGLE_SEPARATION_DEG - 1e-9:
+                raise RuntimeError(
+                    f"Rounded/refined photo angle conflict: {first.target_id} separation={separation:.6f} deg"
+                )
 
 
 def _rounded_and_verified(selected: list[Candidate], trajectory: TrajectoryState,
                           targets) -> list[Candidate]:
     target_map = {target.target_id: target for target in targets}
-    rounded = []
+    rounded: list[Candidate] = []
     for candidate in selected:
         end = round(candidate.execution_time_s, 2)
-        preparation = shoot.PREPARATION_S if candidate.task == shoot.TASK_NAME else photo.PREPARATION_S
+        preparation = _preparation_s(candidate)
         start = round(end - preparation, 2)
         metrics = _continuous_metrics(
             trajectory, target_map[candidate.target_id], start, end, 0.01
@@ -110,17 +220,12 @@ def _rounded_and_verified(selected: list[Candidate], trajectory: TrajectoryState
             max_acceleration_mps2=metrics["max_acceleration_mps2"],
         ))
     rounded.sort(key=lambda item: (item.execution_time_s, item.task, item.target_id))
+    _verify_combinatorial(rounded)
     return rounded
 
 
 def greedy_baseline(candidates: list[Candidate]) -> list[Candidate]:
-    """Reference-style baseline: one highest-margin candidate per feasible target.
-
-    For photography this deliberately keeps only one photo per target; the MILP
-    can then demonstrate the value of its second lexicographic objective by
-    selecting additional views at >=60 degree separation without sacrificing
-    first-level target coverage.
-    """
+    """Reference baseline: one highest-margin candidate per feasible target."""
     groups: dict[tuple[str, str], list[Candidate]] = {}
     for candidate in candidates:
         groups.setdefault((candidate.task, candidate.target_id), []).append(candidate)
@@ -191,9 +296,6 @@ def write_result_template(template: str | Path, output: str | Path,
     shutil.copy2(template, output)
     wb = load_workbook(output)
     ws = wb[wb.sheetnames[0]]
-
-    # Clear only the original editable result cells.  Rows are then extended as
-    # needed; the red instruction/example area H:L is never touched.
     original_rows = ws.max_row
     for row in range(2, original_rows + 1):
         for column in range(1, 6):
@@ -224,18 +326,17 @@ def write_result_template(template: str | Path, output: str | Path,
 
 
 def _write_summary(path: Path, parameters: dict) -> None:
-    ratio = (
-        parameters["selected_task_count"] / parameters["greedy_task_count"]
-        if parameters["greedy_task_count"] else float("nan")
-    )
+    refinement = parameters["continuous_refinement"]
     text = f"""# 问题四正式结果摘要
 
 - 主模型不设置人为的 9 项任务容量，也不加入题面未给出的跨任务准备时间互斥约束。
 - 一级目标：最大化可覆盖目标数；二级目标：覆盖数固定后最大化满足 60° 角差的有效拍照次数；三级目标：前两级固定后最大化总安全裕度。
+- 拍照候选按 5° 方位角箱压缩，并对所有保留候选做 0.01 s 完整准备窗口连续复核。
 - 连续复核候选数：**{parameters['candidate_count']}**；最终覆盖目标数：**{parameters['coverage_count']}**。
 - 最终任务记录共 **{parameters['selected_task_count']}** 条，其中射击 **{parameters['shooting_count']}** 次、拍照 **{parameters['photography_count']}** 次；射击期望命中数为 **{parameters['expected_shooting_hits']:.2f}**。
+- MILP 后在每个任务附近 ±0.1 s 做连续时间裕度精修，共移动 {refinement['moved_task_count']} 个任务；最终两位小数时刻再次按 0.01 s 完整准备窗口复核。
 - 贪心基线按每个可行目标独立选取一个最大安全裕度时刻，共 {parameters['greedy_task_count']} 条记录；MILP 在不牺牲一级覆盖目标数的前提下通过多角度拍照增加有效任务记录。
-- 三阶段 HiGHS MILP 均要求 0 relative gap；最终两位小数时刻再次按 0.01 s 完整准备窗口复核。
+- 三阶段 HiGHS MILP 均要求 0 relative gap。
 - `result.xlsx` 允许在 A:E 向下扩展结果行；原模板表头和 H:L 红色说明/范例保持不变。模板中的初始 9 行不解释为题目任务容量。
 """
     path.write_text(text, encoding="utf-8")
@@ -254,9 +355,10 @@ def main() -> None:
 
     trajectory = TrajectoryState.load(args.trajectory)
     targets = load_targets(args.targets)
-    candidates = generate_candidates(trajectory, targets)
+    candidates = generate_candidates(trajectory, targets, photo_angle_bin_deg=5.0)
     schedule = optimize_schedule(candidates)
-    selected = _rounded_and_verified(schedule.selected, trajectory, targets)
+    refined, refinement = refine_selected_tasks(schedule.selected, trajectory, targets)
+    selected = _rounded_and_verified(refined, trajectory, targets)
     greedy = greedy_baseline(candidates)
 
     robust_scenarios = {
@@ -307,6 +409,10 @@ def main() -> None:
         "targets_workbook": str(args.targets.resolve()),
         "targets_sha256": sha256(args.targets),
         "target_counts": {"shooting": 18, "photography": 18},
+        "candidate_generation": {
+            "photo_angle_bin_deg": 5.0,
+            "continuous_recheck_step_s": 0.01,
+        },
         "candidate_count": len(candidates),
         "candidate_count_by_task": candidate_frame.groupby("task").size().to_dict(),
         "coverage_count": schedule.coverage_count,
@@ -333,6 +439,7 @@ def main() -> None:
             "stage2_gap": schedule.stage2_gap,
             "stage3_gap": schedule.stage3_gap,
         },
+        "continuous_refinement": refinement,
         "continuous_recheck_step_s": 0.01,
         "robustness_scenarios": robust_scenarios,
         "result_workbook": workbook,
