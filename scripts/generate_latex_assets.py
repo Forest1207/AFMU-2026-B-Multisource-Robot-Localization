@@ -24,13 +24,13 @@ def load_json(path: Path) -> dict:
 
 
 def tex_escape(value: object) -> str:
-    text = str(value)
-    for source, target in {
-        "\\": r"\textbackslash{}", "&": r"\&", "%": r"\%", "$": r"\$",
-        "#": r"\#", "_": r"\_", "{": r"\{", "}": r"\}",
-    }.items():
-        text = text.replace(source, target)
-    return text
+    mapping = {
+        "\\": r"\textbackslash{}",
+        "&": r"\&", "%": r"\%", "$": r"\$", "#": r"\#",
+        "_": r"\_", "{": r"\{", "}": r"\}", "~": r"\textasciitilde{}",
+        "^": r"\textasciicircum{}",
+    }
+    return "".join(mapping.get(char, char) for char in str(value))
 
 
 def fmt(value: float, digits: int = 4) -> str:
@@ -127,7 +127,9 @@ Q3 & {reporting['q3']['reported_delta_s']:.2f} & 10 & 偏差检验驱动稳健�
 \caption{{问题二时空标定与融合关键结果}}
 \label{{tab:q2-calibration}}
 \begin{{tabular}}{{lr}}
-\toprule 指标 & 数值 \\ \midrule
+\toprule
+指标 & 数值 \\
+\midrule
 统一时间偏差 $\delta$ / s & {reporting['q2']['reported_delta_s']:.2f} \\
 相对系统偏差 $b_x$ / m & {q2['bias_x_m']:.3f} \\
 相对系统偏差 $b_y$ / m & {q2['bias_y_m']:.3f} \\
@@ -147,7 +149,9 @@ Q3 & {reporting['q3']['reported_delta_s']:.2f} & 10 & 偏差检验驱动稳健�
 \caption{{问题三系统偏差判定}}
 \label{{tab:q3-bias-test}}
 \begin{{tabular}}{{lr}}
-\toprule 指标 & 数值 \\ \midrule
+\toprule
+指标 & 数值 \\
+\midrule
 统一时间偏差 $\delta$ / s & {reporting['q3']['reported_delta_s']:.2f} \\
 HAC--Wald $p$ 值 & {q3['wald']['p_value']:.4f} \\
 偏差模 / m & {q3['wald']['bias_norm']:.3f} \\
@@ -186,17 +190,21 @@ def write_schedule_table() -> None:
     missing = [column for column in columns if column not in frame.columns]
     if missing:
         raise ValueError(f"optimized_schedule.csv missing columns: {missing}")
+    header = "序号 & 目标编号 & 任务 & 开始准备 / s & 执行 / s " + r"\\"
     lines = [
-        "% Auto-generated.", r"\begin{longtable}{cllrr}",
+        "% Auto-generated.",
+        r"\begin{longtable}{cllrr}",
         r"\caption{问题四最终任务调度}\label{tab:q4-schedule}\\",
-        r"\toprule", r"序号 & 目标编号 & 任务 & 开始准备 / s & 执行 / s \\", r"\midrule",
-        r"\endfirsthead", r"\toprule", r"序号 & 目标编号 & 任务 & 开始准备 / s & 执行 / s \\", r"\midrule", r"\endhead",
+        r"\toprule", header, r"\midrule", r"\endfirsthead",
+        r"\toprule", header, r"\midrule", r"\endhead",
     ]
     for _, row in frame[columns].iterrows():
-        lines.append(
+        body = (
             f"{int(row['序号'])} & {tex_escape(row['目标编号'])} & {tex_escape(row['任务'])} & "
-            f"{float(row['开始准备时刻(s)']):.2f} & {float(row['任务执行时刻(s)']):.2f} \\\\"
+            f"{float(row['开始准备时刻(s)']):.2f} & {float(row['任务执行时刻(s)']):.2f} "
+            + r"\\"
         )
+        lines.append(body)
     lines += [r"\bottomrule", r"\end{longtable}"]
     (GENERATED / "table_q4_schedule.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
