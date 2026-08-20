@@ -55,7 +55,11 @@ def audit_reporting_convention() -> list[str]:
     p1 = load_json(RESULTS / "q1" / "parameters.json")
     p2 = load_json(RESULTS / "q2" / "parameters.json")
     p3 = load_json(RESULTS / "q3" / "parameters.json")
-    expected = {"q1": float(p1["time_offset_s"]), "q2": -float(p2["time_offset_s"]), "q3": -float(p3["time_offset_s"])}
+    expected = {
+        "q1": float(p1["time_offset_s"]),
+        "q2": -float(p2["time_offset_s"]),
+        "q3": -float(p3["time_offset_s"]),
+    }
     for key, value in expected.items():
         if not math.isclose(float(conventions[key]["delta_s"]), value, rel_tol=0.0, abs_tol=1e-10):
             errors.append(f"reporting convention {key}: delta conversion mismatch")
@@ -86,11 +90,27 @@ def audit_figures() -> list[str]:
 def audit_q4() -> list[str]:
     errors: list[str] = []
     params = load_json(RESULTS / "q4" / "parameters.json")
-    required = {"coverage_count", "selected_task_count", "shooting_count", "photography_count",
-                "greedy_coverage_count", "greedy_photography_count"}
+    required = {
+        "coverage_count", "selected_task_count", "shooting_count", "photography_count",
+        "greedy_coverage_count", "greedy_photography_count", "candidate_generation",
+        "continuous_refinement", "total_normalized_margin",
+    }
     missing = required - set(params)
     if missing:
-        return ["Q4: stale legacy result schema; re-run Q4. Missing: " + ", ".join(sorted(missing))]
+        return ["Q4: stale formal result schema; re-run latest Q4. Missing: " + ", ".join(sorted(missing))]
+
+    generation = params.get("candidate_generation", {})
+    if not math.isclose(float(generation.get("photo_angle_bin_deg", -1)), 5.0, abs_tol=1e-12):
+        errors.append("Q4: formal candidates were not generated with 5-degree photo bearing bins")
+    if not math.isclose(float(generation.get("continuous_recheck_step_s", -1)), 0.01, abs_tol=1e-12):
+        errors.append("Q4: candidate continuous recheck step is not 0.01 s")
+
+    refinement = params.get("continuous_refinement", {})
+    if not math.isclose(float(refinement.get("half_width_s", -1)), 0.1, abs_tol=1e-12):
+        errors.append("Q4: continuous refinement half-width is not +/-0.1 s")
+    if not math.isclose(float(refinement.get("evaluation_step_s", -1)), 0.01, abs_tol=1e-12):
+        errors.append("Q4: continuous refinement evaluation step is not 0.01 s")
+
     schedule = pd.read_csv(RESULTS / "q4" / "optimized_schedule.csv")
     if len(schedule) != int(params["selected_task_count"]):
         errors.append("Q4: schedule row count mismatch")
@@ -102,6 +122,7 @@ def audit_q4() -> list[str]:
         errors.append("Q4: MILP coverage below greedy baseline")
     if int(params["photography_count"]) < int(params["greedy_photography_count"]):
         errors.append("Q4: MILP photo count below greedy baseline")
+
     milp = params.get("milp", {})
     if milp.get("artificial_capacity", "legacy") is not None:
         errors.append("Q4: artificial capacity still enabled")
@@ -111,6 +132,7 @@ def audit_q4() -> list[str]:
         gap = milp.get(f"stage{stage}_gap")
         if gap is not None and abs(float(gap)) > 1e-12:
             errors.append(f"Q4: stage{stage} MIP gap={gap}")
+
     workbook = params.get("result_workbook", {})
     if workbook.get("protected_snapshot_equal") is not True:
         errors.append("Q4: protected template cells changed")
@@ -140,8 +162,14 @@ def run_audit() -> dict:
 
 def write_report(report: dict, output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "audit_report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    lines = ["# Submission Audit Report", "", f"- status: **{'PASS' if report['passed'] else 'FAIL'}**", f"- error count: **{report['error_count']}**", "", "## Checks", ""]
+    (output_dir / "audit_report.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    lines = [
+        "# Submission Audit Report", "",
+        f"- status: **{'PASS' if report['passed'] else 'FAIL'}**",
+        f"- error count: **{report['error_count']}**", "", "## Checks", "",
+    ]
     lines += [f"- {'PASS' if passed else 'FAIL'} `{label}`" for label, passed in report["checks"].items()]
     lines += ["", "## Errors", ""] + ([f"- {e}" for e in report["errors"]] if report["errors"] else ["- None"])
     (output_dir / "audit_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -154,8 +182,10 @@ def main() -> None:
     report = run_audit()
     write_report(report, args.output_dir)
     print(f"[audit_results] {'PASS' if report['passed'] else 'FAIL'} errors={report['error_count']}")
-    for error in report["errors"][:20]: print(f"  - {error}")
-    if not report["passed"]: raise SystemExit(1)
+    for error in report["errors"][:20]:
+        print(f"  - {error}")
+    if not report["passed"]:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
