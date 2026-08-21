@@ -265,6 +265,15 @@ t_n=t_{\min}^{\mathrm{out}}+nh_o,\qquad n=0,1,\ldots,N_o.
 \end{pseudocodelines}
 \end{pseudocodeblock}
 
+连续轨迹构造、相关粗定位、位置误差精修和等间隔重建之间的关系如
+图\ref{fig:q1-framework}所示。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.98\textwidth]{q1/method_flow.pdf}
+  \caption{问题一时间配准与轨迹重建流程}
+  \label{fig:q1-framework}
+\end{figure}
+
 \subsubsection{结果分析}\label{sec:q1-results}
 
 当公共区间长度阈值取 \(T_{\min}=60\ \mathrm{s}\) 时，式

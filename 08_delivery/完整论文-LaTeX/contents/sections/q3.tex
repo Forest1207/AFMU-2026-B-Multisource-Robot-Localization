@@ -2,193 +2,497 @@
 
 \subsubsection{模型三的建立}\label{sec:q3-establishment}
 
-\noindent\textbf{（1）实际数据时间配准与相对残差。}
+\noindent\textbf{（1）实际观测的时间配准。}
 
-附件 3
-的两设备绝对时间区间不直接重叠，故先分别将时间重置为各自的经过时间，对中心化二维位置特征作相关分析，得到粗时间偏差。随后沿用问题二的固定公共评价网格和标准逐轴
-Huber 剖面目标作连续细化。以方式 1 为参考时钟，定义
+设机器人在参考时间轴上的真实轨迹为 \(\mathbf p^\star(t)\)。以方式 1
+的时钟为参考，问题三的两组实际定位观测满足
 
 \begin{equation}
-t_{2,\mathrm{ref}}=t_2-\Delta t,
-\qquad
-\mathbf d_k=\mathbf z_2(t_k+\Delta t)-\mathbf z_1(t_k).
-\label{eq:q3-time-map-residual}
+\begin{aligned}
+\mathbf z_i^{(1)}
+&=\mathbf p^\star\!\left(t_i^{(1)}\right)
++\boldsymbol\varepsilon_i^{(1)},\\
+\mathbf z_j^{(2)}
+&=\mathbf p^\star\!\left(t_j^{(2)}-\Delta t\right)
++\mathbf b(t_j^{(2)})
++\boldsymbol\varepsilon_j^{(2)},
+\end{aligned}
+\label{eq:q3-observation}
 \end{equation}
 
-所得粗值为 \(-368.82\) s，正式估计为
+其中，\(\Delta t\) 为固定时间偏差，\(\mathbf b(t)\) 为待判定的相对系统偏差。
+方式 2 的设备时刻映射到参考时间轴为
 
 \begin{equation}
-\boxed{\widehat{\Delta t}\approx-367.88\ \mathrm{s}}.
-\label{eq:q3-time-offset}
+t_{2,\mathrm{ref}}=t_2-\Delta t.
+\label{eq:q3-time-map}
 \end{equation}
 
-由于 \(t_{2,\mathrm{ref}}=t_2-(-367.88)=t_2+367.88\)，方式 2
-设备时钟比方式 1 参考时钟落后约 367.88 s；映射时其时间戳整体增加约
-367.88 s（向后平移）。插值方法、稳健迭代和搜索范围的九个对照情景给出
-\([-367.9614,-367.8715]\) s，主值按 0.01 s 报告。
-
-没有外部真值时，可辨识的只是两设备之间的相对空间差
-\(\mathbf b=E(\mathbf d_k)\)，不能判断误差应归因于哪一设备。
-
-\noindent\textbf{（2）统计—工程双阈值偏差判定。}
-
-为避免把时序相关残差当作独立样本，采用 Newey--West/HAC
-长期协方差估计样本均值的协方差\cite{neweywest1987}
-\(\widehat{\boldsymbol\Sigma}_{\bar d}\)，检验
+由于两组设备时间区间不直接重叠，先定义各自的经过时间
 
 \begin{equation}
-H_0:\mathbf b=\mathbf 0,
+s_i^{(m)}=t_i^{(m)}-t_1^{(m)},\qquad m=1,2,
+\label{eq:q3-elapsed-time}
+\end{equation}
+
+再对中心化二维位置特征计算归一化互相关，得到粗时间偏差 \(h_c\)。
+以 \(h_c\) 为中心构造精搜索域 \(\mathcal D\)，并沿用
+式\eqref{eq:q2-fixed-grid}--\eqref{eq:q2-calibration-estimator}
+的固定公共网格和 Huber 剖面目标，得到
+
+\begin{equation}
+\widehat{\Delta t}
+=\arg\min_{\delta\in\mathcal D}J_H(\delta).
+\label{eq:q3-time-estimator}
+\end{equation}
+
+时间对齐后，在公共评价网格 \(\{t_k\}_{k=1}^{N}\) 上构造未作空间校正的
+相对残差
+
+\begin{equation}
+\mathbf d_k=
+\widetilde{\mathbf z}_2(t_k+\widehat{\Delta t})
+-\widetilde{\mathbf z}_1(t_k).
+\label{eq:q3-aligned-residual}
+\end{equation}
+
+没有外部真值时，\(\mathbf d_k\) 只能用于辨识两设备之间的相对空间差，
+不能判断误差应归因于哪一设备。
+
+\noindent\textbf{（2）HAC-Wald 偏差检验。}
+
+检验假设为
+
+\begin{equation}
+H_0:\mathbb E(\mathbf d_k)=\mathbf 0,
 \qquad
-W=\bar{\mathbf d}^{\mathsf T}
-\widehat{\boldsymbol\Sigma}_{\bar d}^{-1}\bar{\mathbf d}
-\mathop{\sim}_{H_0}\chi_2^2.
+H_1:\mathbb E(\mathbf d_k)\ne\mathbf 0.
+\label{eq:q3-hypothesis}
+\end{equation}
+
+记样本均值及滞后 \(r\) 阶样本自协方差为
+
+\begin{equation}
+\overline{\mathbf d}
+=\frac{1}{N}\sum_{k=1}^{N}\mathbf d_k,
+\qquad
+\widehat{\boldsymbol\Gamma}_r
+=\frac{1}{N}\sum_{k=r+1}^{N}
+(\mathbf d_k-\overline{\mathbf d})
+(\mathbf d_{k-r}-\overline{\mathbf d})^\mathsf T.
+\label{eq:q3-autocovariance}
+\end{equation}
+
+采用 Newey--West 核构造样本均值的 HAC 协方差估计
+\cite{neweywest1987}：
+
+\begin{equation}
+\widehat{\boldsymbol\Sigma}_{\overline d}
+=\frac{1}{N}
+\left[
+\widehat{\boldsymbol\Gamma}_0+
+\sum_{r=1}^{L}
+\left(1-\frac{r}{L+1}\right)
+\left(
+\widehat{\boldsymbol\Gamma}_r+
+\widehat{\boldsymbol\Gamma}_r^\mathsf T
+\right)
+\right],
+\label{eq:q3-hac-covariance}
+\end{equation}
+
+其中 \(L\) 为 HAC 截断阶数。Wald 统计量为
+
+\begin{equation}
+W=\overline{\mathbf d}^{\,\mathsf T}
+\widehat{\boldsymbol\Sigma}_{\overline d}^{-1}
+\overline{\mathbf d},
+\qquad
+W\mathop{\sim}_{H_0}\chi_2^2.
 \label{eq:q3-wald}
 \end{equation}
 
-同时定义工程效应指数
+\noindent\textbf{（3）工程效应与移动块 Bootstrap。}
+
+统计显著不必然意味着工程上需要校正。令
 
 \begin{equation}
-E_b=\frac{\|\bar{\mathbf d}\|_2}{s_r},
+r_k=\|\mathbf d_k\|_2,\qquad
+s_r=1.4826\,
+\operatorname{median}_k
+\left|r_k-\operatorname{median}_{\ell}r_\ell\right|,
+\label{eq:q3-residual-scale}
+\end{equation}
+
+定义工程效应指数
+
+\begin{equation}
+E_b=\frac{\|\overline{\mathbf d}\|_2}{s_r}.
 \label{eq:q3-engineering-effect}
 \end{equation}
 
-其中 \(s_r\) 是二维残差模长的 MAD 稳健尺度。仅当 \(p<0.05\) 且
-\(E_b\ge0.25\)
-时，才认为偏差同时具有统计意义与工程意义，并在融合状态中启用偏差项。为检验推断对分布和相关结构的依赖，再使用保持局部时序结构的移动块
-bootstrap 构造逐轴置信区间\cite{kunsch1989}，并用 HAC 回归检验偏差趋势。
-
-\subsubsection{模型三的求解}\label{sec:q3-solution}
-
-求解时先由经过时间的中心化位置特征获得粗时间偏差，再在固定公共网格上连续细化；随后计算HAC长期协方差、移动块Bootstrap区间和趋势检验，并以统计显著性与工程效应的双阈值选择状态维度。
-
-实算普通均值为
+设统计显著性水平为 \(\alpha\)，工程效应阈值为 \(\eta\)，偏差启用判据为
 
 \begin{equation}
-\bar{\mathbf d}=(-0.134,-0.157)^{\mathsf T}\ \mathrm{m},
-\qquad \|\bar{\mathbf d}\|_2=0.206\ \mathrm{m}.
-\label{eq:q3-mean-residual}
+I_b=
+\mathbf 1\!\left\{
+p_{\mathrm{HAC}}<\alpha
+\ \land\
+E_b\ge\eta
+\right\}.
+\label{eq:q3-bias-decision}
 \end{equation}
 
-HAC-Wald 统计量为 2.094，\(p=0.3511\)，故在 5\% 水平不拒绝
-\(H_0\)；工程效应指数为 0.0681，也低于阈值 0.25。2000 次、块长 14
-的移动块 bootstrap 给出
+为避免依赖渐近分布，同时保留残差的局部时序结构，采用移动块
+Bootstrap\cite{kunsch1989}。给定块长 \(\ell\)，构造首尾相接的残差块
 
 \begin{equation}
-b_x\in[-0.413,0.138]\ \mathrm{m},\qquad
-b_y\in[-0.428,0.120]\ \mathrm{m},
-\label{eq:q3-bootstrap-ci}
+\mathcal B_j=
+\left(
+\mathbf d_j,\mathbf d_{j+1},\ldots,\mathbf d_{j+\ell-1}
+\right),
+\label{eq:q3-bootstrap-block}
 \end{equation}
 
-两轴区间均覆盖零。x、y 方向 HAC 趋势检验 p 值分别为 0.378 和
-0.921，亦未检出漂移。将 HAC 阶数/块长改为
-\((4,7)\)、\((8,14)\)、\((16,28)\) 时，三个情景的 p 值为
-0.305、0.351、0.373，结论一致。
-
-据此，本数据在给定显著性水平和工程阈值下\textbf{未发现具有统计与工程意义的相对系统偏差}，正式融合不启用常量或随机游走偏差状态。该表述不是证明真实偏差严格等于零。
-
-\subsubsection{算法实现}\label{sec:q3-algorithm}
-
-\begin{pseudocodeblock}{算法3\quad 偏差检验驱动的选择性融合}
-{\heiti 输入：}两路实际定位序列，显著性水平0.05，工程效应阈值0.25。\par
-{\heiti 输出：}偏差存在性判定、所选状态模型及10 Hz融合状态。\par
-\begin{enumerate}[label={\heiti 步骤~\arabic*:},leftmargin=5.5em,itemsep=1pt,topsep=3pt]
-  \item 粗估并连续细化时间偏差，按式\eqref{eq:q3-time-map-residual}形成同步相对残差；
-  \item 计算HAC-Wald统计量、工程效应指数、移动块Bootstrap区间及HAC趋势检验；
-  \item 若 \(p<0.05\) 且 \(E_b\ge0.25\)，则在无显著趋势时启用常量偏差状态、在存在趋势时启用随机游走偏差状态；否则采用六维无偏差状态；
-  \item 在关闭门控反馈时选择过程噪声，随后按校正事件时刻执行异步Kalman滤波和99\% NIS门控；
-  \item 执行RTS后向平滑，以0.1 s步长生成轨迹，输出判定结果、状态及模型内标准差。
-\end{enumerate}
-\end{pseudocodeblock}
-
-\noindent\textbf{选择性异步融合模型。}
-
-在不启用偏差状态的分支中，采用六维常加速度状态
+每次有放回抽取若干完整块并截取前 \(N\) 个残差，计算重抽样均值
+\(\overline{\mathbf d}^{*(b)}\)。重复 \(B\) 次后，分别取两个坐标方向的
+\(\alpha/2\) 与 \(1-\alpha/2\) 分位数，得到逐轴置信区间
 
 \begin{equation}
-\mathbf x=(x,y,v_x,v_y,a_x,a_y)^{\mathsf T},
-\label{eq:q3-state}
+\mathrm{CI}_r=
+\left[
+Q_{\alpha/2}
+\!\left(\overline d_r^{\,*}\right),
+Q_{1-\alpha/2}
+\!\left(\overline d_r^{\,*}\right)
+\right],
+\qquad r\in\{x,y\}.
+\label{eq:q3-bootstrap-ci-estimator}
 \end{equation}
 
-在 4 Hz 与 5 Hz
-原始观测的校正事件时刻逐次更新，不把插值点重复当作观测。两设备测量协方差由各自位置三阶差分的
-MAD 尺度估计为
+\noindent\textbf{（4）偏差趋势与状态维度选择。}
+
+为了区分固定偏差与缓慢漂移，对每个坐标拟合
 
 \begin{equation}
-\mathbf R_1=\operatorname{diag}(16.06,18.21),\qquad
-\mathbf R_2=\operatorname{diag}(7.24,8.94)\quad(\mathrm m^2).
-\label{eq:q3-measurement-noise}
+d_{kr}=\beta_{0r}+\beta_{1r}t_k+u_{kr},
+\qquad r\in\{x,y\},
+\label{eq:q3-trend-model}
 \end{equation}
 
-过程噪声调参阶段关闭门控反馈。对每个候选 jerk 谱密度 \(q\)，使用门控前
-\(\mathbf S_{0,k}\) 计算二维 NIS，并令
+并使用 HAC 协方差检验 \(H_0:\beta_{1r}=0\)。令 \(I_{\mathrm{tr}}\)
+表示至少一个坐标方向检出显著趋势，则状态模型按
 
 \begin{equation}
-\mathbf e_k=\operatorname{chol}(\mathbf S_{0,k})^{-1}\boldsymbol\nu_k,
-\label{eq:q3-whitened-innovation}
+\mathcal M=
+\begin{cases}
+\mathcal M_0,& I_b=0,\\
+\mathcal M_{\mathrm c},& I_b=1,\ I_{\mathrm{tr}}=0,\\
+\mathcal M_{\mathrm{rw}},& I_b=1,\ I_{\mathrm{tr}}=1
+\end{cases}
+\label{eq:q3-model-selection}
 \end{equation}
 
-以
+选择。其中，\(\mathcal M_0\) 为无偏差状态，
+\(\mathcal M_{\mathrm c}\) 为常量偏差状态，
+\(\mathcal M_{\mathrm{rw}}\) 为随机游走偏差状态。
+
+无偏差状态与问题二一致：
 
 \begin{equation}
-S(q)=|\overline{\mathrm{NIS}}-2|+2\overline{|r_1(\mathbf e)|}
+\mathbf x_k^{(0)}
+=\left(
+\mathbf p_k^\mathsf T,
+\mathbf v_k^\mathsf T,
+\mathbf a_k^\mathsf T
+\right)^\mathsf T.
+\label{eq:q3-state-no-bias}
+\end{equation}
+
+启用偏差时扩展为
+
+\begin{equation}
+\mathbf x_k^{(b)}
+=\left(
+\mathbf p_k^\mathsf T,
+\mathbf v_k^\mathsf T,
+\mathbf a_k^\mathsf T,
+\mathbf b_k^\mathsf T
+\right)^\mathsf T.
+\label{eq:q3-state-with-bias}
+\end{equation}
+
+扩展状态的测量矩阵为
+
+\begin{equation}
+\mathbf H_1=
+\begin{bmatrix}
+\mathbf I_2&\mathbf 0&\mathbf 0&\mathbf 0
+\end{bmatrix},
+\qquad
+\mathbf H_2=
+\begin{bmatrix}
+\mathbf I_2&\mathbf 0&\mathbf 0&\mathbf I_2
+\end{bmatrix}.
+\label{eq:q3-bias-observation-matrix}
+\end{equation}
+
+常量偏差模型满足
+\(\mathbf b_k=\mathbf b_{k-1}\)；随机游走模型满足
+
+\begin{equation}
+\mathbf b_k=\mathbf b_{k-1}+\boldsymbol\xi_k,
+\qquad
+\boldsymbol\xi_k\sim
+\mathcal N(\mathbf 0,q_b\tau_k\mathbf I_2).
+\label{eq:q3-bias-random-walk}
+\end{equation}
+
+\noindent\textbf{（5）选择性异步融合。}
+
+两设备测量协方差仍由式\eqref{eq:q2-third-difference}和
+式\eqref{eq:q2-measurement-covariance}估计。将方式 2 的事件时刻按
+式\eqref{eq:q3-time-map}校正后，与方式 1 的原始事件合并排序。
+根据式\eqref{eq:q3-model-selection}选择状态维度，再执行
+式\eqref{eq:q2-kalman-prediction}--\eqref{eq:q2-rts}的异步 Kalman
+滤波和 RTS 平滑。
+
+过程噪声调参阶段关闭门控反馈。对白化创新
+\(\mathbf e_k=\operatorname{chol}(\mathbf S_{0,k})^{-1}\boldsymbol\nu_k\)，
+在候选集 \(\mathcal Q\) 上最小化
+
+\begin{equation}
+S(q)=
+\left|\overline{\gamma}(q)-2\right|
++2\,\overline{\left|\rho_1(\mathbf e;q)\right|},
+\qquad
+\widehat q=\arg\min_{q\in\mathcal Q}S(q).
 \label{eq:q3-process-score}
 \end{equation}
 
-选择参数，其中 \(r_1\) 为分设备、分坐标的 Pearson lag-1 相关。得到
-\(q=3.1623\)，位于候选网格内部。固定该值后运行 99\% NIS 稳健门控和 RTS
-后向平滑。10 Hz
-非事件时刻由其前一平滑事件状态按状态方程作短时传播；相应协方差是同一传播近似下的模型内标准差，并非把未来观测条件重新插入每个
-10 Hz 中间节点后的严格连续时间平滑协方差。当前最大传播间隔不超过 0.208
-s，并在问题四中另以约束裕度和扰动情景控制该近似的使用边界。
+固定 \(\widehat q\) 后运行 NIS 稳健门控。对于 10 Hz 非事件时刻，从前一
+RTS 平滑事件状态按状态方程传播。由输出协方差的位置子矩阵
+\(\mathbf P_{p,k}\) 定义二维合成位置标准差
+
+\begin{equation}
+\sigma_{p,k}=
+\sqrt{\operatorname{tr}(\mathbf P_{p,k})}.
+\label{eq:q3-position-std}
+\end{equation}
+
+\subsubsection{模型三的求解}\label{sec:q3-solution}
+
+\begin{pseudocodeblock}{算法3\quad 偏差检验驱动的选择性融合}
+{\heiti 输入：}两路实际定位序列
+\(\mathcal Z_1,\mathcal Z_2\)，粗搜索集 \(\mathcal H\)，
+精搜索半宽 \(L_t\)，显著性水平 \(\alpha\)，工程阈值 \(\eta\)，
+HAC 阶数 \(L\)，Bootstrap 次数 \(B\) 与块长 \(\ell\)，
+过程噪声候选集 \(\mathcal Q\)。\par
+{\heiti 输出：}时间偏差 \(\widehat{\Delta t}\)、偏差判定
+\(I_b\)、所选状态模型 \(\mathcal M\) 及 10 Hz 融合状态。\par
+\begin{enumerate}[label={\heiti 步骤~\arabic*:},leftmargin=5.5em,itemsep=1pt,topsep=3pt]
+  \item 按式\eqref{eq:q3-elapsed-time}重置两路时间，利用中心化位置特征的
+  归一化互相关获得粗时间偏差 \(h_c\)；
+  \item 在 \([h_c-L_t,h_c+L_t]\) 内最小化固定网格 Huber 剖面目标，
+  由式\eqref{eq:q3-time-estimator}得到 \(\widehat{\Delta t}\)；
+  \item 按式\eqref{eq:q3-aligned-residual}构造同步残差，计算
+  \(\overline{\mathbf d}\)、HAC 协方差、Wald 统计量和工程效应指数；
+  \item 重复 \(B\) 次移动块 Bootstrap，按
+  式\eqref{eq:q3-bootstrap-ci-estimator}构造逐轴置信区间；
+  \item 拟合式\eqref{eq:q3-trend-model}并执行 HAC 趋势检验，按
+  式\eqref{eq:q3-bias-decision}和式\eqref{eq:q3-model-selection}
+  选择状态模型；
+  \item 由位置三阶差分估计两设备测量协方差，关闭门控反馈并按
+  式\eqref{eq:q3-process-score}选择 \(\widehat q\)；
+  \item 按校正事件时刻执行所选模型的异步 Kalman 滤波与 NIS 稳健门控，
+  再执行 RTS 后向平滑；
+  \item 在公共支持域内按 0.1 s 间隔传播状态，输出位置、速度、加速度及
+  式\eqref{eq:q3-position-std}定义的模型内位置标准差。
+\end{enumerate}
+\end{pseudocodeblock}
+
+时间配准、偏差检验、状态模型选择和事件融合之间的关系如
+图\ref{fig:q3-framework}所示。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.98\textwidth]{q3/method_flow.pdf}
+  \caption{问题三偏差检验与选择性融合流程}
+  \label{fig:q3-framework}
+\end{figure}
 
 \subsubsection{结果分析}\label{sec:q3-results}
 
-门控前平均 NIS 为 2.0127，95\% 分位为 5.9590；门控后平均 NIS 为
-1.9957。白化创新平均绝对 lag-1 为 0.0274，1.033\% 的观测触发降权。正式
-10 Hz 轨迹覆盖 445.0076--814.0076 s，共 3691
-行，位置、速度、加速度及协方差输出均有限；模型内二维位置合成标准差的中位数为
-0.961 m，最大值为 3.459
-m。该标准差只反映所建状态空间模型内的不确定性，不等同于无真值条件下的绝对定位误差。
+\noindent\textbf{（1）时间配准结果。}
 
-偏差置信区间见图\ref{fig:q3-bias-ci}，融合轨迹及模型内不确定性见图\ref{fig:q3-trajectory}。前者说明“不拒绝零偏差”来自区间证据而非把样本均值强制置零；后者给出下游任务优化实际使用的状态及其模型边界。
+两种定位方式分别包含 1381 个和 1621 个有效观测。经过时间上的中心化位置
+互相关得到粗时间偏差
 
-\subsubsection{模型检验与稳健性}\label{sec:q3-validation}
+\begin{equation}
+h_c=-368.82\ \mathrm s.
+\label{eq:q3-coarse-result}
+\end{equation}
 
-将过程噪声乘 0.1 或 10 后，轨迹 RMS 变化分别为 0.391 m 与 0.456
-m；门控概率改为 0.975 或 0.995 时，变化分别为 0.0391 m 与 0.0195
-m，偏差判定不变。上述偏差置信区间是在正式时间配准值给定条件下的条件推断；配准方法敏感性另行覆盖约
-0.09 s 的时间偏差变化，但未在每次 bootstrap
-重抽样内重新估计时间偏差，因此不把该区间解释为同时覆盖配准不确定性的联合置信区间。合成试验把真时间偏差
-0.18 s 回收为 0.1785 s，把真相对偏差 \((0.60,-0.35)\) m 回收为
-\((0.599,-0.355)\) m。在 100 个 AR(1) 零偏差样本中，HAC-Wald
-的经验拒绝率为 8\%；对预设偏差 \((0.03,-0.03)\) m 的经验功效为 100\%；30
-个移动块 bootstrap 试验的双轴联合覆盖率为
-86.7\%。由此说明配准与偏差参数在已知真值试验中可回收，同时也如实保留有限样本下的
-I 类错误与覆盖边界。
+以 \(h_c\) 为中心取 10 s 精搜索半宽，搜索区间为
+\([-378.82,-358.82]\,\mathrm s\)。固定公共评价网格含 2910 个时刻，
+Huber 剖面连续精修得到
 
-残差时序见图\ref{fig:q3-bias-series}，过程噪声调参结果见图\ref{fig:q3-tuning}。残差的局部相关性说明独立同分布检验并不适用，而调参最优点位于候选域内部，支持正式过程噪声不是边界解。
+\begin{equation}
+\widehat{\Delta t}=-367.877619\ \mathrm s,
+\qquad
+t_{2,\mathrm{ref}}
+=t_2-(-367.877619)
+=t_2+367.877619\ \mathrm s.
+\label{eq:q3-time-offset}
+\end{equation}
+
+因此，方式 2 的设备时钟相对于方式 1 参考时钟落后约
+\(367.88\,\mathrm s\)，映射时需将方式 2 时间戳整体增加相应数值。
+
+固定网格 Huber 剖面的伴随位置中心为
+
+\begin{equation}
+\widehat{\mathbf b}_{\mathrm{prof}}
+=(-0.151775,-0.150330)^\mathsf T\ \mathrm m.
+\label{eq:q3-profile-bias-result}
+\end{equation}
+
+相应标定 RMSE 为 \(6.36335\,\mathrm m\)。该位置中心仅作为时间剖面目标中的
+伴随参数，系统偏差是否启用由后续统计检验决定。
+
+\noindent\textbf{（2）系统偏差统计判定。}
+
+时间配准后用于偏差推断的残差序列含 3000 个 10 Hz 时刻，其普通均值为
+
+\begin{equation}
+\overline{\mathbf d}
+=(-0.133731,-0.157069)^\mathsf T\ \mathrm m,
+\qquad
+\|\overline{\mathbf d}\|_2=0.206288\ \mathrm m.
+\label{eq:q3-mean-residual}
+\end{equation}
+
+HAC 截断阶数取 \(L=8\)，得到样本均值协方差
+
+\begin{equation}
+\widehat{\boldsymbol\Sigma}_{\overline d}
+=
+\begin{bmatrix}
+0.020304&0.001455\\
+0.001455&0.018041
+\end{bmatrix}
+\mathrm m^2.
+\label{eq:q3-hac-result}
+\end{equation}
+
+取 \(\alpha=0.05\)、工程阈值 \(\eta=0.25\)，检验结果见
+表\ref{tab:q3-decision}。Wald 检验未拒绝零相对偏差，工程效应指数也未达到
+启用偏差状态的阈值。
+
+\begin{table}[htbp]
+\centering
+\caption{问题三相对系统偏差的统计与工程判定}
+\label{tab:q3-decision}
+\begin{tabular}{lcc}
+\toprule
+判定量 & 计算结果 & 判定阈值\\
+\midrule
+HAC-Wald 统计量 \(W\) & \(2.0935\) & \(\chi^2_{2,0.95}\)\\
+\(p_{\mathrm{HAC}}\) & \(0.3511\) & \(0.05\)\\
+稳健噪声尺度 \(s_r\) / m & \(3.0300\) & --\\
+工程效应指数 \(E_b\) & \(0.0681\) & \(0.25\)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+移动块 Bootstrap 取 \(B=2000\)、块长 \(\ell=14\)，所得 95\%
+置信区间为
+
+\begin{equation}
+b_x\in[-0.413289,0.138470]\ \mathrm m,
+\qquad
+b_y\in[-0.428052,0.119683]\ \mathrm m.
+\label{eq:q3-bootstrap-ci}
+\end{equation}
+
+两轴区间均覆盖零。图\ref{fig:q3-bias-ci}同时给出了样本均值和移动块
+Bootstrap 区间，零水平线均穿过两个坐标方向的置信区间。
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=.80\textwidth]{q3/bias_confidence_interval.pdf}
-  \caption{模型三相对偏差估计及95\%移动块Bootstrap置信区间}
+  \includegraphics[width=.76\textwidth]{q3/bias_confidence_interval.pdf}
+  \caption{问题三相对偏差估计及 95\% 移动块 Bootstrap 置信区间}
   \label{fig:q3-bias-ci}
 \end{figure}
+
+x、y 方向的 HAC 趋势斜率分别为
+\(-1.4675\times10^{-3}\,\mathrm{m/s}\) 和
+\(1.4894\times10^{-4}\,\mathrm{m/s}\)，对应 \(p\) 值为
+0.3783 和 0.9208，均未检出显著漂移。图\ref{fig:q3-bias-series}
+显示残差存在明显的局部时序相关，因此偏差均值的协方差不能按独立样本估计；
+两条滚动均值曲线则未呈现贯穿观测区间的单调漂移。
+
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=.90\textwidth]{q3/bias_time_series.pdf}
-  \caption{模型三配准后两坐标方向的相对偏差时序}
+  \includegraphics[width=.86\textwidth]{q3/bias_time_series.pdf}
+  \caption{问题三时间配准后的两坐标相对残差时序}
   \label{fig:q3-bias-series}
 \end{figure}
+
+综合 \(p_{\mathrm{HAC}}\)、\(E_b\)、Bootstrap 区间和趋势检验，在给定
+显著性水平与工程阈值下，未发现具有统计与工程意义的相对系统偏差，
+即 \(I_b=0\)，选择六维无偏差状态模型 \(\mathcal M_0\)。
+该结论表示现有样本不足以支持启用偏差状态，不等同于证明真实偏差严格为零。
+
+\noindent\textbf{（3）噪声参数与异步融合。}
+
+位置三阶差分的 MAD 估计给出
+
+\begin{equation}
+\widehat{\mathbf R}_1
+=\operatorname{diag}(16.0645,18.2067)\ \mathrm{m}^2,
+\qquad
+\widehat{\mathbf R}_2
+=\operatorname{diag}(7.2399,8.9392)\ \mathrm{m}^2.
+\label{eq:q3-measurement-noise-result}
+\end{equation}
+
+过程噪声候选集取 \([10^{-6},10^3]\) 上的对数网格。
+式\eqref{eq:q3-process-score}在
+
+\begin{equation}
+\widehat q=3.1623
+\label{eq:q3-process-noise-result}
+\end{equation}
+
+处取得最小值，该值位于候选区间内部。图\ref{fig:q3-tuning}给出了
+过程噪声谱密度与 NIS/白化创新综合得分的关系。
+
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=.86\textwidth]{q3/fused_trajectory_uncertainty.pdf}
-  \caption{模型三445.0076--814.0076 s内的10 Hz融合轨迹及模型内位置不确定性}
-  \label{fig:q3-trajectory}
-\end{figure}
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=.82\textwidth]{q3/process_noise_tuning.pdf}
-  \caption{模型三基于门控前NIS与白化创新相关的过程噪声选择}
+  \includegraphics[width=.80\textwidth]{q3/process_noise_tuning.pdf}
+  \caption{问题三基于门控前创新统计的过程噪声选择}
   \label{fig:q3-tuning}
+\end{figure}
+
+固定 \(\widehat q\) 后采用 99\% NIS 门控。门控前平均 NIS 为
+2.0127、95\% 分位为 5.9590，门控后平均 NIS 为 1.9957；
+白化创新平均绝对一阶相关为 0.0274，共有 1.033\% 的观测触发协方差放大。
+
+\noindent\textbf{（4）10 Hz 融合状态与不确定性。}
+
+融合轨迹的公共输出区间为
+\(445.0076\sim814.0076\,\mathrm s\)，按 0.1 s 间隔共生成
+3691 个状态点。位置、速度、加速度和协方差派生量均为有限值；
+10 Hz 非事件时刻从前一平滑事件节点传播的最大时间间隔为 0.208 s。
+
+二维合成位置标准差的中位数为 \(0.9606\,\mathrm m\)，最大值为
+\(3.4593\,\mathrm m\)。图\ref{fig:q3-trajectory}以颜色表示
+\(\sigma_{p,k}\)，并标记公共输出区间的起点和终点。该标准差只反映所建
+状态空间模型内的不确定性，不等同于融合轨迹相对于未知真实轨迹的绝对误差。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=.72\textwidth]{q3/fused_trajectory_uncertainty.pdf}
+  \caption{问题三 10 Hz 融合轨迹及模型内位置标准差}
+  \label{fig:q3-trajectory}
 \end{figure}

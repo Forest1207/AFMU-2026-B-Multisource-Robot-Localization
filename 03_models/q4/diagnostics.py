@@ -32,10 +32,10 @@ def plot_optimization_framework(path: str | Path) -> None:
     ax.axis("off")
 
     colors = {
-        "input": "#D9EAF7",
+        "input": "#ECEFF1",
         "candidate": "#DDF1E4",
         "baseline": "#F8E9C7",
-        "optimization": "#E9E2F3",
+        "optimization": "#F0EAE0",
         "output": "#F4E1DC",
         "line": "#5F6B7A",
         "muted": "#66757F",
@@ -87,22 +87,22 @@ def plot_optimization_framework(path: str | Path) -> None:
             color="#172126")
 
     ax.text(1.25, 6.25, "输入与状态", ha="center", fontsize=10.5,
-            fontweight="bold", color="#315B73")
+            fontweight="bold", color="#4F5B62")
     box(0.20, 4.90, 2.10, 1.05, "轨迹状态", [r"$\mathbf{s}(t)=(\mathbf{p},v,a)$", "问题三输出的 10 Hz 状态"], colors["input"])
     box(0.20, 3.55, 2.10, 1.05, "任务对象", [r"目标坐标 $\mathbf{g}_j$", "射击与拍照任务类型"], colors["input"])
-    box(0.20, 2.20, 2.10, 1.05, "规则参数", [r"$L_s,L_p,\varepsilon$", "距离、速度、加速度、角差"], colors["input"])
+    box(0.20, 2.20, 2.10, 1.05, "参数", [r"$L_s,L_p,\varepsilon$", "距离、速度、加速度、角差"], colors["input"])
 
     ax.text(3.85, 6.25, "候选构造", ha="center", fontsize=10.5,
             fontweight="bold", color="#2D6A4F")
-    box(2.75, 4.75, 2.20, 1.20, "完整准备窗筛选",
+    box(2.75, 4.75, 2.20, 1.20, "筛选",
         [r"$I_c=[t_c-L_k,t_c]$", "窗口内各时刻均满足物理约束"], colors["candidate"])
-    box(2.75, 3.20, 2.20, 1.20, "候选压缩",
+    box(2.75, 3.20, 2.20, 1.20, "候选",
         [r"时间步长 $h_c$", r"方向角分箱 $\Delta\theta$", "保留高裕度代表点"], colors["candidate"])
-    box(2.75, 1.65, 2.20, 1.20, "细网格复核",
+    box(2.75, 1.65, 2.20, 1.20, "细网格核查",
         [r"复核步长 $h_f$", r"计算 $m_c$，形成 $\mathcal{C}$"], colors["candidate"])
 
     ax.text(7.25, 6.25, "基线与精确优化", ha="center", fontsize=10.5,
-            fontweight="bold", color="#6A4C78")
+            fontweight="bold", color="#6B5B45")
     box(5.55, 4.75, 1.95, 1.20, "贪心基线",
         ["按执行时刻扫描", r"得到下界 $N_G$"], colors["baseline"])
     box(7.85, 4.75, 2.15, 1.20, "冲突建模",
@@ -118,9 +118,7 @@ def plot_optimization_framework(path: str | Path) -> None:
             fontweight="bold", color="#8A4F45")
     box(10.45, 4.45, 1.55, 1.50, "时刻输出",
         ["执行时刻舍入", "按时间排序"], colors["output"], 8.8)
-    box(10.45, 2.55, 1.55, 1.35, "可行性复核",
-        ["完整准备窗", "任务间冲突", "角差与唯一性"], colors["output"], 8.6)
-    box(10.45, 0.95, 1.55, 1.05, "最终日程",
+    box(10.45, 1.65, 1.55, 1.05, "结果输出",
         [r"$N^*,z^*$ 与任务表"], colors["output"], 8.8)
 
     routed_arrow([(2.30, 5.42), (2.53, 5.42), (2.53, 5.35), (2.75, 5.35)])
@@ -138,13 +136,7 @@ def plot_optimization_framework(path: str | Path) -> None:
     arrow(6.58, 3.20, 7.25, 2.85)
     arrow(8.97, 3.20, 8.30, 2.85)
     routed_arrow([(8.80, 2.18), (10.18, 2.18), (10.18, 5.20), (10.45, 5.20)])
-    arrow(11.22, 4.45, 11.22, 3.90)
-    arrow(11.22, 2.55, 11.22, 2.00)
-
-    ax.text(6.1, 0.38,
-            "词典序优先级：任务总数  >  最小安全裕度  >  总安全裕度",
-            ha="center", va="center", fontsize=10.2, fontweight="bold",
-            color="#37474F")
+    arrow(11.22, 4.45, 11.22, 2.70)
     fig.tight_layout(pad=0.35)
     save(fig, path)
 

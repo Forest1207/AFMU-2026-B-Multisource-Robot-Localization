@@ -2,224 +2,505 @@
 
 \subsubsection{模型二的建立}\label{sec:q2-establishment}
 
-\noindent\textbf{（1）时间映射与二维相对系统偏差。}
+\noindent\textbf{（1）含噪观测模型与时间映射。}
 
-本问沿用经典多传感器数据融合的分层思想\cite{hall1997}，并用 Huber 损失抑制粗大残差对时空标定的影响\cite{huber1964}。
-
-以定位方式 1 的时钟为参考，定义定位方式 2 的设备时刻到参考时刻的映射为
+设机器人在参考时间轴上的真实连续轨迹为
+\(\mathbf p^\star(t)=(x^\star(t),y^\star(t))^\mathsf T\)。以定位方式 1
+的时钟为参考，两种定位方式的离散观测满足
 
 \begin{equation}
-t_{2,\mathrm{ref}}=t_2-\Delta t,
+\begin{aligned}
+\mathbf z_i^{(1)}
+  &=\mathbf p^\star\!\left(t_i^{(1)}\right)
+    +\boldsymbol\varepsilon_i^{(1)},\\
+\mathbf z_j^{(2)}
+  &=\mathbf p^\star\!\left(t_j^{(2)}-\Delta t\right)
+    +\mathbf b+\boldsymbol\varepsilon_j^{(2)},
+\end{aligned}
+\label{eq:q2-observation}
+\end{equation}
+
+其中，\(\Delta t\) 为方式 2 相对于方式 1 的固定时间偏差，
+\(\mathbf b=(b_x,b_y)^\mathsf T\) 为方式 2 相对于方式 1
+的固定空间偏差，随机误差满足
+
+\begin{equation}
+\mathbb E\!\left(\boldsymbol\varepsilon^{(m)}\right)=\mathbf 0,\qquad
+\operatorname{Cov}\!\left(\boldsymbol\varepsilon^{(m)}\right)=\mathbf R_m,
+\qquad m=1,2.
+\label{eq:q2-noise-assumption}
+\end{equation}
+
+由式\eqref{eq:q2-observation}，方式 2 的设备时刻映射到参考时间轴为
+
+\begin{equation}
+t_{2,\mathrm{ref}}=t_2-\Delta t.
 \label{eq:q2-time-map}
 \end{equation}
 
-并定义两设备之间的固定相对偏差为
+分别由两组离散观测构造连续位置函数
+\(\widetilde{\mathbf z}_1(t)\) 与
+\(\widetilde{\mathbf z}_2(t)\)。对候选时间偏差
+\(\delta\in\mathcal D\)，其公共支持区间为
 
 \begin{equation}
-\mathbf b=\mathbf z_2-\mathbf z_1=(b_x,b_y)^\mathsf T.
-\label{eq:q2-relative-bias}
+\mathcal I(\delta)=
+[t_{1,\min},t_{1,\max}]
+\cap[t_{2,\min}-\delta,t_{2,\max}-\delta].
+\label{eq:q2-overlap}
 \end{equation}
 
-对于给定候选 \(\Delta t\)，在整个搜索区间共同有效的固定网格 \(\{t_k\}\)
-上构造差值
+为使不同候选值在相同样本集合上评价，取固定公共区间
 
 \begin{equation}
-\mathbf d_k(\Delta t)=\mathbf z_2(t_k+\Delta t)-\mathbf z_1(t_k).
+\mathcal I_{\mathrm{fix}}
+=\bigcap_{\delta\in\mathcal D}\mathcal I(\delta),
+\qquad
+\mathcal T_{\mathrm{fix}}=\{t_k\}_{k=1}^{N}
+\subset\mathcal I_{\mathrm{fix}}.
+\label{eq:q2-fixed-grid}
+\end{equation}
+
+\noindent\textbf{（2）时间偏差的粗估计。}
+
+对连续位置函数求导，得到两种定位方式的速度序列
+\(\mathbf v_m(t)=\mathrm d\widetilde{\mathbf z}_m(t)/\mathrm dt\)。
+在粗网格上定义二维速度特征的归一化互相关
+
+\begin{equation}
+C(h)=
+\frac{\displaystyle
+\sum_{t\in\mathcal T_h}
+\left(\mathbf v_1(t)-\overline{\mathbf v}_1\right)^\mathsf T
+\left(\mathbf v_2(t+h)-\overline{\mathbf v}_2\right)}
+{\displaystyle
+\sqrt{\sum_{t\in\mathcal T_h}
+\left\|\mathbf v_1(t)-\overline{\mathbf v}_1\right\|_2^2}
+\sqrt{\sum_{t\in\mathcal T_h}
+\left\|\mathbf v_2(t+h)-\overline{\mathbf v}_2\right\|_2^2}},
+\label{eq:q2-ncc}
+\end{equation}
+
+其中，\(\mathcal T_h\) 为平移后仍位于两组观测支持域内的粗评价网格。
+粗时间偏差取为
+
+\begin{equation}
+h_c=\arg\max_{h\in\mathcal H} C(h),
+\label{eq:q2-coarse-offset}
+\end{equation}
+
+并据此在 \(h_c\) 邻域内构造精搜索域 \(\mathcal D\)。
+
+\noindent\textbf{（3）Huber 剖面标定。}
+
+对任意候选 \(\delta\)，在固定公共网格上构造两设备的位置差
+
+\begin{equation}
+\mathbf d_k(\delta)=
+\widetilde{\mathbf z}_2(t_k+\delta)
+-\widetilde{\mathbf z}_1(t_k).
 \label{eq:q2-residual}
 \end{equation}
 
-对坐标分量 \(j\in\{x,y\}\)，令
+对坐标分量 \(r\in\{x,y\}\)，采用 MAD 给出固定稳健尺度
 
 \begin{equation}
-u_{kj}=\frac{d_{kj}-b_j}{s_j},\qquad
-w_{kj}=\begin{cases}
-1,&|u_{kj}|\le c,\\
-c/|u_{kj}|,&|u_{kj}|>c,
-\end{cases}\quad c=1.345,
-\label{eq:q2-huber-weights}
+s_r=1.4826\,
+\operatorname{median}_k
+\left|d_{kr}(\delta_0)
+-\operatorname{median}_{\ell}d_{\ell r}(\delta_0)\right|,
+\label{eq:q2-robust-scale}
 \end{equation}
 
-并用标准逐轴 Huber IRLS 求解剖面偏差
+其中 \(\delta_0\) 为精搜索域中点。尺度在整个精搜索过程中保持不变。
+令
 
 \begin{equation}
-\widehat b_j(\Delta t)
-=\frac{\sum_k w_{kj}d_{kj}(\Delta t)}{\sum_k w_{kj}},
+u_{kr}=\frac{d_{kr}(\delta)-b_r}{s_r},\qquad
+\rho_c(u)=
+\begin{cases}
+\dfrac{u^2}{2},& |u|\le c,\\[2mm]
+c|u|-\dfrac{c^2}{2},& |u|>c,
+\end{cases}
+\label{eq:q2-huber-loss}
+\end{equation}
+
+则给定 \(\delta\) 时，空间偏差由逐轴 Huber 估计确定：
+
+\begin{equation}
+\widehat b_r(\delta)
+=\arg\min_{b_r}
+\sum_{k=1}^{N}s_r^2
+\rho_c\!\left(
+\frac{d_{kr}(\delta)-b_r}{s_r}
+\right).
+\label{eq:q2-profile-bias}
+\end{equation}
+
+采用 IRLS 求解式\eqref{eq:q2-profile-bias}。第 \(\ell\) 次迭代的权重与更新量为
+
+\begin{equation}
+w_{kr}^{(\ell)}=
+\min\!\left(1,\frac{c}{|u_{kr}^{(\ell)}|}\right),
+\qquad
+b_r^{(\ell+1)}
+=\frac{\sum_k w_{kr}^{(\ell)}d_{kr}(\delta)}
+{\sum_k w_{kr}^{(\ell)}}.
 \label{eq:q2-irls-bias}
 \end{equation}
 
-再最小化
+将 \(\widehat{\mathbf b}(\delta)\) 回代，得到一维剖面目标
 
 \begin{equation}
-J_H(\Delta t)=
-\frac{1}{N}\sum_{k=1}^{N}\sum_{j\in\{x,y\}}
-2s_j^2\rho_c(u_{kj}),
+J_H(\delta)=
+\frac{2}{N}\sum_{k=1}^{N}\sum_{r\in\{x,y\}}
+s_r^2\rho_c\!\left(
+\frac{d_{kr}(\delta)-\widehat b_r(\delta)}{s_r}
+\right),
 \label{eq:q2-huber-objective}
 \end{equation}
 
-其中 \(\rho_c\) 为标准 Huber 损失。尺度 \(s_j\)
-在本次搜索固定公共网格的搜索中点处稳健估计一次，随后对所有候选
-\(\Delta t\) 冻结，保证不同候选目标值可比。
-
-固定评价网格可避免不同候选偏差使用不同样本集合，从而防止目标函数因公共区间移动而产生数值伪偏移。运动特征互相关只用于给出粗中心；考虑数据噪声较强，精搜索采用粗值左右各
-10 s 的全扫描和局部连续细化。
-
-实算得到粗偏差 52.72 s，最终
+从而
 
 \begin{equation}
-\boxed{\widehat{\Delta t}\approx50.17\ \mathrm{s}},\qquad
-\boxed{\widehat{\mathbf b}\approx(3.47,-1.83)^\mathsf T\ \mathrm{m}},
-\label{eq:q2-calibration-result}
+\widehat{\Delta t}
+=\arg\min_{\delta\in\mathcal D}J_H(\delta),
+\qquad
+\widehat{\mathbf b}
+=\widehat{\mathbf b}(\widehat{\Delta t}).
+\label{eq:q2-calibration-estimator}
 \end{equation}
 
-对应机器值为 50.171732 s 与 \((3.466998,-1.833200)\) m，偏差模长约 3.92
-m。这里的 \(\mathbf b\)
-只表示两设备的相对系统差，因无外部真值，不能据此判断哪一设备存在绝对误差。普通最小二乘给出
-50.1706 s 与 \((3.4731,-1.8328)\)
-m，说明稳健化没有依赖少量异常点改变结论；含粗大离群点的合成试验中，Huber
-联合参数误差明显小于普通估计。
+\noindent\textbf{（4）测量噪声协方差估计。}
 
-偏差校正后，重叠区两流差值均值从约 \((3.4722,-1.8303)\) m 降至
-\((0.00516,0.00286)\) m。校正差值二维 RMSE 为 1.4592
-m，该量是两套含噪观测之差，而不是融合轨迹相对真值的误差。
-
-\noindent\textbf{（2）异步常加速度状态空间模型。}
-
-融合阶段采用 Kalman 滤波的递推估计框架\cite{kalman1960}，并用 RTS 固定区间平滑利用离线全区间信息\cite{rts1965}。
-
-设状态为
+局部常加速度运动的三阶差分为零。对等间隔位置观测定义
 
 \begin{equation}
-\mathbf x(t)=(x,y,v_x,v_y,a_x,a_y)^\mathsf T.
+\Delta^3\mathbf z_i^{(m)}
+=\mathbf z_{i+3}^{(m)}-3\mathbf z_{i+2}^{(m)}
++3\mathbf z_{i+1}^{(m)}-\mathbf z_i^{(m)}.
+\label{eq:q2-third-difference}
+\end{equation}
+
+若相邻测量误差独立同分布，则每个坐标分量满足
+\(\operatorname{Var}(\Delta^3 z_r)=20\sigma_r^2\)。因此
+
+\begin{equation}
+\widehat\sigma_{mr}
+=\frac{1.4826}{\sqrt{20}}\,
+\operatorname{median}_i
+\left|
+\Delta^3z_{ir}^{(m)}
+-\operatorname{median}_{\ell}\Delta^3z_{\ell r}^{(m)}
+\right|,
+\qquad
+\widehat{\mathbf R}_m
+=\operatorname{diag}
+(\widehat\sigma_{mx}^2,\widehat\sigma_{my}^2).
+\label{eq:q2-measurement-covariance}
+\end{equation}
+
+\noindent\textbf{（5）异步常加速度状态空间模型。}
+
+将状态写为
+
+\begin{equation}
+\mathbf x(t)=
+\bigl(\mathbf p(t)^\mathsf T,
+\mathbf v(t)^\mathsf T,
+\mathbf a(t)^\mathsf T\bigr)^\mathsf T
+=(x,y,v_x,v_y,a_x,a_y)^\mathsf T.
 \label{eq:q2-state}
 \end{equation}
 
-相邻任意事件间隔为 \(\tau\) 时，采用常加速度转移
+相邻两个观测事件的时间间隔为 \(\tau_k\) 时，状态转移模型为
 
 \begin{equation}
-\mathbf x_{k|k-1}=\mathbf F(\tau_k)\mathbf x_{k-1|k-1}+\mathbf w_k,
-\label{eq:q2-prediction}
-\end{equation}
-
-其中每一坐标轴的转移块为
-
-\begin{equation}
+\mathbf x_k=\mathbf F(\tau_k)\mathbf x_{k-1}+\mathbf w_k,
+\qquad
+\mathbf F(\tau)=
 \begin{bmatrix}
-1&\tau&\tau^2/2\\0&1&\tau\\0&0&1
-\end{bmatrix},
+\mathbf I_2&\tau\mathbf I_2&\dfrac{\tau^2}{2}\mathbf I_2\\
+\mathbf 0&\mathbf I_2&\tau\mathbf I_2\\
+\mathbf 0&\mathbf 0&\mathbf I_2
+\end{bmatrix}.
 \label{eq:q2-transition}
 \end{equation}
 
-过程噪声取白噪声 jerk 离散协方差。方式 2 的原始坐标先减去
-\(\widehat{\mathbf b}\)，再把 4 Hz 与 5 Hz
-原始观测按校正事件时刻排序执行 Kalman
-更新；没有把插值点作为重复观测输入。对于二维创新
-\(\boldsymbol\nu_k\)，计算
+采用白噪声 jerk 模型，其离散过程噪声协方差为
 
 \begin{equation}
-\mathrm{NIS}_k=\boldsymbol\nu_k^\mathsf T
-\mathbf S_k^{-1}\boldsymbol\nu_k.
+\mathbf Q(\tau;q)=q
+\begin{bmatrix}
+\dfrac{\tau^5}{20}\mathbf I_2&
+\dfrac{\tau^4}{8}\mathbf I_2&
+\dfrac{\tau^3}{6}\mathbf I_2\\
+\dfrac{\tau^4}{8}\mathbf I_2&
+\dfrac{\tau^3}{3}\mathbf I_2&
+\dfrac{\tau^2}{2}\mathbf I_2\\
+\dfrac{\tau^3}{6}\mathbf I_2&
+\dfrac{\tau^2}{2}\mathbf I_2&
+\tau\mathbf I_2
+\end{bmatrix},
+\label{eq:q2-process-covariance}
+\end{equation}
+
+其中 \(q\) 为 jerk 谱密度。令
+\(\mathbf H=[\mathbf I_2\ \mathbf 0\ \mathbf 0]\)。
+方式 2 的事件时刻按式\eqref{eq:q2-time-map}校正，位置观测减去
+\(\widehat{\mathbf b}\)；两路原始事件按校正时刻合并排序，不将插值点作为额外观测。
+
+对第 \(k\) 个事件，Kalman 预测与创新为
+
+\begin{equation}
+\begin{aligned}
+\widehat{\mathbf x}_{k|k-1}
+&=\mathbf F_k\widehat{\mathbf x}_{k-1|k-1},\\
+\mathbf P_{k|k-1}
+&=\mathbf F_k\mathbf P_{k-1|k-1}\mathbf F_k^\mathsf T+\mathbf Q_k,\\
+\boldsymbol\nu_k
+&=\mathbf y_k-\mathbf H\widehat{\mathbf x}_{k|k-1},\\
+\mathbf S_{0,k}
+&=\mathbf H\mathbf P_{k|k-1}\mathbf H^\mathsf T+\mathbf R_{m(k)}.
+\end{aligned}
+\label{eq:q2-kalman-prediction}
+\end{equation}
+
+定义门控前归一化创新平方
+
+\begin{equation}
+\gamma_k=\boldsymbol\nu_k^\mathsf T
+\mathbf S_{0,k}^{-1}\boldsymbol\nu_k.
 \label{eq:q2-nis}
 \end{equation}
 
-当其超过二维 \(\chi^2\) 分布 99\%
-门限时，仅按比例放大测量协方差并降低增益，而不直接删除观测。离线前向滤波完成后使用
-RTS 后向平滑，最后以 0.1 s 间隔传播平滑状态得到 10 Hz 输出。
-
-\subsubsection{模型二的求解}\label{sec:q2-solution}
-
-求解依次完成粗配准、固定公共网格上的Huber IRLS与连续细化、测量协方差估计、无门控反馈的过程噪声选择，以及异步Kalman滤波与RTS平滑。
-
-\noindent\textbf{（1）测量噪声与过程噪声。}
-
-在短局部窗口内，常加速度轨迹的三阶有限差分为零。若单设备位置噪声独立同分布，系数
-\((-1,3,-3,1)\) 使三阶差分噪声方差为原噪声方差的 20
-倍。因此分别对两设备三阶差分使用 MAD 稳健尺度估计，得到
+设门限 \(g_\alpha=\chi^2_{2,\alpha}\)，按
 
 \begin{equation}
-\mathbf R_1=\operatorname{diag}(0.68991,0.71228)\ \mathrm{m}^2,
-\quad
-\mathbf R_2=\operatorname{diag}(0.65003,0.77553)\ \mathrm{m}^2.
-\label{eq:q2-measurement-noise}
+\lambda_k=\max\!\left(1,\frac{\gamma_k}{g_\alpha}\right),
+\qquad
+\widetilde{\mathbf R}_k=\lambda_k\mathbf R_{m(k)}
+\label{eq:q2-robust-gate}
 \end{equation}
 
-这一做法依赖``局部运动可由二次项近似''的假设，但避免了仅凭两设备差值把方差任意对半拆分的不可识别问题。过程噪声
-\(q\) 在 \(10^{-11}\) 至 \(10^2\) 的对数网格上，以
+放大异常观测的协方差。随后计算
 
 \begin{equation}
-S(q)=|\overline{\mathrm{NIS}}-2|+2\,\overline{|\rho_1(\nu)|}
+\begin{aligned}
+\mathbf S_k
+&=\mathbf H\mathbf P_{k|k-1}\mathbf H^\mathsf T
++\widetilde{\mathbf R}_k,\\
+\mathbf K_k
+&=\mathbf P_{k|k-1}\mathbf H^\mathsf T\mathbf S_k^{-1},\\
+\widehat{\mathbf x}_{k|k}
+&=\widehat{\mathbf x}_{k|k-1}+\mathbf K_k\boldsymbol\nu_k,\\
+\mathbf P_{k|k}
+&=(\mathbf I-\mathbf K_k\mathbf H)\mathbf P_{k|k-1}.
+\end{aligned}
+\label{eq:q2-kalman-update}
+\end{equation}
+
+\noindent\textbf{（6）过程噪声选择与 RTS 平滑。}
+
+过程噪声调参阶段关闭式\eqref{eq:q2-robust-gate}中的协方差膨胀。令
+
+\begin{equation}
+\mathbf e_k=
+\operatorname{chol}(\mathbf S_{0,k})^{-1}\boldsymbol\nu_k,
+\label{eq:q2-whitened-innovation}
+\end{equation}
+
+并在候选集 \(\mathcal Q\) 上最小化
+
+\begin{equation}
+S(q)=
+\left|\overline{\gamma}(q)-2\right|
++2\,\overline{\left|\rho_1(\mathbf e;q)\right|},
+\qquad
+\widehat q=\arg\min_{q\in\mathcal Q}S(q),
 \label{eq:q2-process-score}
 \end{equation}
 
-选择，使二维 NIS 均值接近理论自由度
-2，同时压低白化创新的一阶相关。调参阶段关闭协方差膨胀，并仅使用门控前的
-\(\mathbf S_{0,k}\) 与 \(\mathrm{NIS}_{0,k}\)：令
-\(\mathbf e_k=\operatorname{chol}(\mathbf S_{0,k})^{-1}\boldsymbol\nu_k\)，以
-\(\rho_1(\mathbf e)\) 计算相关项。选定 \(q\) 后才运行 99\%
-稳健门控，避免门控反馈参与过程噪声选择。最优值为
-\(q=3.162\times10^{-8}\)，位于候选网格内部。
+使二维 NIS 均值接近自由度 2，同时降低白化创新的一阶相关。
+固定 \(\widehat q\) 后运行稳健门控和完整前向滤波。
 
-图\ref{fig:q2-objective}中的稳健目标在50.17 s附近形成清晰的内部谷值；扩大搜索范围后边界目标仍显著高于最低点，故式\eqref{eq:q2-calibration-result}不是搜索截断造成的伪解。
+离线融合采用 RTS 后向平滑。对 \(k=K-1,\ldots,1\)，有
+
+\begin{equation}
+\begin{aligned}
+\mathbf G_k
+&=\mathbf P_{k|k}\mathbf F_{k+1}^\mathsf T
+\mathbf P_{k+1|k}^{-1},\\
+\widehat{\mathbf x}_{k|K}
+&=\widehat{\mathbf x}_{k|k}
++\mathbf G_k
+\left(\widehat{\mathbf x}_{k+1|K}
+-\widehat{\mathbf x}_{k+1|k}\right),\\
+\mathbf P_{k|K}
+&=\mathbf P_{k|k}
++\mathbf G_k
+\left(\mathbf P_{k+1|K}-\mathbf P_{k+1|k}\right)
+\mathbf G_k^\mathsf T.
+\end{aligned}
+\label{eq:q2-rts}
+\end{equation}
+
+最后仅在两路数据的公共支持域内，以
+\(\Delta t_{\mathrm{out}}=0.1\,\mathrm s\) 传播平滑状态，生成 10 Hz
+的位置、速度与加速度序列。
+
+\subsubsection{模型二的求解}\label{sec:q2-solution}
+
+\begin{pseudocodeblock}{算法2\quad 稳健时空标定与异步融合}
+{\heiti 输入：}两路含噪定位序列
+\(\mathcal Z_1,\mathcal Z_2\)，粗搜索集 \(\mathcal H\)，
+精搜索半宽 \(L\)，Huber 阈值 \(c\)，IRLS 次数 \(M\)，
+过程噪声候选集 \(\mathcal Q\)，门控概率 \(\alpha\)。\par
+{\heiti 输出：}时间偏差 \(\widehat{\Delta t}\)、相对空间偏差
+\(\widehat{\mathbf b}\) 及 10 Hz 融合状态序列。\par
+\begin{enumerate}[label={\heiti 步骤~\arabic*:},leftmargin=5.5em,itemsep=1pt,topsep=3pt]
+  \item 构造两路连续位置函数及速度特征，按式\eqref{eq:q2-ncc}计算
+  \(C(h)\)，由式\eqref{eq:q2-coarse-offset}得到 \(h_c\)；
+  \item 令 \(\mathcal D=[h_c-L,h_c+L]\)，按式\eqref{eq:q2-fixed-grid}
+  构造固定公共评价网格，并由式\eqref{eq:q2-robust-scale}确定固定尺度；
+  \item 对每个 \(\delta\in\mathcal D\)，迭代 \(M\) 次
+  式\eqref{eq:q2-irls-bias}，计算剖面目标 \(J_H(\delta)\)；
+  \item 连续最小化式\eqref{eq:q2-huber-objective}，按
+  式\eqref{eq:q2-calibration-estimator}得到
+  \(\widehat{\Delta t}\) 与 \(\widehat{\mathbf b}\)；
+  \item 由式\eqref{eq:q2-third-difference}和
+  式\eqref{eq:q2-measurement-covariance}估计
+  \(\widehat{\mathbf R}_1,\widehat{\mathbf R}_2\)；
+  \item 关闭门控反馈，对 \(q\in\mathcal Q\) 运行前向滤波，按
+  式\eqref{eq:q2-process-score}选择 \(\widehat q\)；
+  \item 按校正时刻合并原始事件，依次执行
+  式\eqref{eq:q2-kalman-prediction}--\eqref{eq:q2-kalman-update}；
+  \item 执行式\eqref{eq:q2-rts}的后向平滑，在公共支持域内按
+  0.1 s 间隔输出融合状态序列。
+\end{enumerate}
+\end{pseudocodeblock}
+
+噪声刻画、时空联合标定和异步状态估计之间的关系如
+图\ref{fig:q2-framework}所示。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=.98\textwidth]{q2/method_flow.pdf}
+  \caption{问题二稳健标定与异步融合流程}
+  \label{fig:q2-framework}
+\end{figure}
+
+\subsubsection{结果分析}\label{sec:q2-results}
+
+\noindent\textbf{（1）时间与空间偏差估计。}
+
+两种定位方式分别包含 3000 个和 3948 个有效观测。归一化互相关得到粗时间
+偏差 \(h_c=52.72\,\mathrm s\)，据此取精搜索区间
+\([42.72,62.72]\,\mathrm s\)。固定公共评价网格含 6897 个 10 Hz
+时刻，Huber 阈值取 \(c=1.345\)，逐轴 IRLS 迭代 4 次。
+
+图\ref{fig:q2-objective}给出了精搜索区间内的目标函数剖面。Huber
+剖面目标在区间内部取得唯一最低点，连续精修值为
+
+\begin{equation}
+\widehat{\Delta t}=50.171732\ \mathrm s,
+\qquad
+t_{2,\mathrm{ref}}=t_2-50.171732\ \mathrm s.
+\label{eq:q2-calibration-result}
+\end{equation}
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=.84\textwidth]{q2/objective_profile.pdf}
-  \caption{模型二固定尺度Huber联合配准的目标函数剖面}
+  \caption{问题二时空标定目标函数剖面}
   \label{fig:q2-objective}
 \end{figure}
 
-\subsubsection{算法实现}\label{sec:q2-algorithm}
+将式\eqref{eq:q2-calibration-result}代入逐轴 Huber 估计，得到
 
-\begin{pseudocodeblock}{算法2\quad 稳健时空标定与异步融合}
-{\heiti 输入：}两路含噪定位序列，Huber阈值 \(c=1.345\)，过程噪声候选集。\par
-{\heiti 输出：}时间偏差、二维相对偏差及10 Hz融合状态。\par
-\begin{enumerate}[label={\heiti 步骤~\arabic*:},leftmargin=5.5em,itemsep=1pt,topsep=3pt]
-  \item 生成粗时间候选，在固定公共网格上逐轴执行式\eqref{eq:q2-huber-weights}和式\eqref{eq:q2-irls-bias}；
-  \item 连续最小化式\eqref{eq:q2-huber-objective}，得到时间偏差与相对空间偏差；
-  \item 由位置三阶差分估计测量协方差；关闭门控反馈，按式\eqref{eq:q2-process-score}选取过程噪声；
-  \item 按校正时刻合并并排序原始事件；对每个事件先预测，再计算NIS；若NIS越过99\%门限，则放大测量协方差后更新，否则直接更新；
-  \item 完成全部事件更新后执行RTS后向平滑，在公共支持域内按0.1 s步长输出状态并返回结果。
-\end{enumerate}
-\end{pseudocodeblock}
+\begin{equation}
+\widehat{\mathbf b}
+=(3.466998,-1.833200)^\mathsf T\ \mathrm m,
+\qquad
+\|\widehat{\mathbf b}\|_2=3.921824\ \mathrm m.
+\label{eq:q2-bias-result}
+\end{equation}
 
-\subsubsection{结果分析}\label{sec:q2-results}
+该估计表明，方式 2 相对于方式 1 在 \(x\) 方向存在正向平移，在 \(y\)
+方向存在负向平移。由于缺少外部真值，\(\widehat{\mathbf b}\)
+仅表示两设备的相对系统偏差，不用于判定单个设备的绝对误差。
 
-门控前创新均值 NIS 为 1.9647，95\% 分位为 5.7980；门控后均值为
-1.9481。白化创新一阶相关绝对值均值为 0.0153，0.892\%
-的观测触发稳健降权。分设备 HAC 均值检验 p 值为 0.903 和
-0.338；虽然统计检验不能证明严格零均值，但均值效应指数最大仅
-0.0246，全程趋势效应指数最大 0.0942，均低于 0.25 的工程阈值。
+\noindent\textbf{（2）时空校正效果。}
 
-最终轨迹覆盖 102.0--951.5 s，共 8496 个 10 Hz
-状态点，位置、速度和加速度全部有限。相对于``校正后两流等权平均''的基线，RTS
-轨迹三阶差分粗糙度显著降低；该指标只说明随机高频抖动受抑制，不被解释为未知真值下的绝对精度提升。
+表\ref{tab:q2-correction}列出校正前后两设备位置差的统计量。
 
-校正前后的两设备位置关系见图\ref{fig:q2-calibration}，10 Hz融合轨迹见图\ref{fig:q2-trajectory}。前者表明时间与相对空间偏差需要联合标定，后者只支持噪声抑制和状态连续性，不构成无外部真值条件下的绝对定位精度证明。
+固定网格上的 Huber 标定 RMSE 为 \(1.45262\,\mathrm m\)。
+在校正后的 10 Hz 重叠网格上重新计算，两设备位置差的二维 RMSE 为
+\(1.45918\,\mathrm m\)。两者的评价网格不同，均表示含噪观测之间的差异，
+不是融合轨迹相对于真实轨迹的绝对误差。
+
+\begin{table}[htbp]
+\centering
+\caption{问题二时空校正前后的两设备位置差}
+\label{tab:q2-correction}
+\begin{tabular}{lcc}
+\toprule
+统计量 & 校正前 & 校正后\\
+\midrule
+\(\overline{\Delta x}\) / m & \(3.47216\) & \(0.00516\)\\
+\(\overline{\Delta y}\) / m & \(-1.83035\) & \(0.00286\)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+校正前后的二维位置关系见图\ref{fig:q2-calibration}。校正前两条轨迹存在明显
+平移，按式\eqref{eq:q2-calibration-result}和式\eqref{eq:q2-bias-result}
+同时校正时间与空间偏差后，两组含噪观测围绕同一运动轨迹分布。
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=.90\textwidth]{q2/calibration_comparison.pdf}
-  \caption{模型二时空标定前后的两设备二维位置比较}
+  \caption{问题二时空校正前后的两设备二维位置}
   \label{fig:q2-calibration}
 \end{figure}
-\begin{figure}[htbp]
+
+\noindent\textbf{（3）噪声参数与异步融合。}
+
+三阶差分的 MAD 稳健估计给出
+
+\begin{equation}
+\widehat{\mathbf R}_1
+=\operatorname{diag}(0.68991,0.71228)\ \mathrm{m}^2,
+\qquad
+\widehat{\mathbf R}_2
+=\operatorname{diag}(0.65003,0.77553)\ \mathrm{m}^2.
+\label{eq:q2-measurement-noise-result}
+\end{equation}
+
+过程噪声候选集取
+\(\mathcal Q=[10^{-11},10^2]\) 上的对数网格。式\eqref{eq:q2-process-score}
+在
+
+\begin{equation}
+\widehat q=3.162\times10^{-8}
+\label{eq:q2-process-noise-result}
+\end{equation}
+
+处取得最小值，该值位于候选网格内部。固定 \(\widehat q\) 后采用
+\(\alpha=0.99\) 的 NIS 门控。门控前 NIS 均值为 1.9647、95\%
+分位为 5.7980，门控后 NIS 均值为 1.9481；白化创新一阶相关绝对值均值为
+0.0153，共有 0.892\% 的观测触发协方差放大。
+
+\noindent\textbf{（4）10 Hz 融合轨迹。}
+
+异步 Kalman 滤波与 RTS 平滑后的公共输出区间为
+\(102.0\sim951.5\,\mathrm s\)。按 0.1 s 间隔共生成 8496 个状态点，
+每个状态同时包含位置、速度和加速度，全部分量均为有限值。
+图\ref{fig:q2-trajectory}给出了 10 Hz 融合位置轨迹；起点与终点标记分别对应
+公共支持区间的首末时刻。
+
+\begin{figure}[H]
   \centering
-  \includegraphics[width=.86\textwidth]{q2/fused_trajectory_10hz.pdf}
-  \caption{模型二在102.0--951.5 s内输出的10 Hz融合轨迹}
+  \includegraphics[width=.80\textwidth]{q2/fused_trajectory_10hz.pdf}
+  \caption{问题二异步 Kalman/RTS 的 10 Hz 融合轨迹}
   \label{fig:q2-trajectory}
-\end{figure}
-
-\subsubsection{模型检验与稳健性}\label{sec:q2-validation}
-
-插值方法、IRLS 次数和搜索宽度的 12 个对照情景给出 50.1694--50.2699 s
-的时间偏差范围，空间偏差始终约为 \((3.47,-1.83)\) m，因此物理结论按 0.01
-s 和 0.01 m 报告。将正式过程噪声乘 10 或乘 0.1 后，轨迹 RMS 变化分别为
-0.0346 m 和 0.0654 m。将门控概率从 0.99 改为 0.975 或 0.995 时，轨迹 RMS
-变化仅为 0.00334 m 和 0.00153
-m。由此保留正式参数。创新均值、趋势、白化相关和门控前NIS诊断见图\ref{fig:q2-innovations}；各诊断量均在既定工程阈值内，说明过程噪声选择没有依赖门控反馈形成自洽循环。
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=.92\textwidth]{q2/innovation_diagnostics.pdf}
-  \caption{模型二分设备分坐标白化创新与门控前NIS诊断}
-  \label{fig:q2-innovations}
 \end{figure}
