@@ -32,22 +32,27 @@ def plot_optimization_framework(path: str | Path) -> None:
     ax.axis("off")
 
     colors = {
-        "input": "#DCEAF4",
-        "candidate": "#DDEFE4",
-        "baseline": "#F5E6C8",
-        "optimization": "#E8E1F0",
-        "output": "#F1E2DE",
-        "line": "#37474F",
+        "input": "#D9EAF7",
+        "candidate": "#DDF1E4",
+        "baseline": "#F8E9C7",
+        "optimization": "#E9E2F3",
+        "output": "#F4E1DC",
+        "line": "#5F6B7A",
         "muted": "#66757F",
     }
 
     def box(x: float, y: float, w: float, h: float, title: str,
             lines: list[str], fill: str, fontsize: float = 9.2) -> None:
-        ax.add_patch(Rectangle((x, y), w, h, facecolor=fill,
+        header_h = 0.34
+        ax.add_patch(Rectangle((x, y), w, h, facecolor="white",
                                edgecolor=colors["line"], linewidth=1.05))
-        ax.text(x + 0.12, y + h - 0.22, title, ha="left", va="top",
-                fontsize=10.2, fontweight="bold", color="#182126")
-        ax.text(x + 0.12, y + h - 0.62, "\n".join(lines), ha="left", va="top",
+        ax.add_patch(Rectangle((x, y + h - header_h), w, header_h,
+                               facecolor=fill, edgecolor="none"))
+        ax.plot([x, x + w], [y + h - header_h, y + h - header_h],
+                color=colors["line"], linewidth=0.75)
+        ax.text(x + 0.12, y + h - header_h / 2, title, ha="left", va="center",
+                fontsize=9.8, fontweight="bold", color="#263238")
+        ax.text(x + 0.12, y + h - 0.49, "\n".join(lines), ha="left", va="top",
                 fontsize=fontsize, color="#263238", linespacing=1.28)
 
     def arrow(x1: float, y1: float, x2: float, y2: float,
@@ -118,9 +123,9 @@ def plot_optimization_framework(path: str | Path) -> None:
     box(10.45, 0.95, 1.55, 1.05, "最终日程",
         [r"$N^*,z^*$ 与任务表"], colors["output"], 8.8)
 
-    arrow(2.30, 5.42, 2.75, 5.35)
-    arrow(2.30, 4.07, 2.75, 5.15, bend=-0.14)
-    arrow(2.30, 2.72, 2.75, 4.95, bend=-0.22)
+    routed_arrow([(2.30, 5.42), (2.53, 5.42), (2.53, 5.35), (2.75, 5.35)])
+    routed_arrow([(2.30, 4.07), (2.48, 4.07), (2.48, 5.15), (2.75, 5.15)])
+    routed_arrow([(2.30, 2.72), (2.43, 2.72), (2.43, 4.95), (2.75, 4.95)])
     arrow(3.85, 4.75, 3.85, 4.40)
     arrow(3.85, 3.20, 3.85, 2.85)
     routed_arrow([(4.95, 2.25), (5.20, 2.25), (5.20, 5.35), (5.55, 5.35)],

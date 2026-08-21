@@ -108,6 +108,9 @@ def main() -> None:
         (args.figures / f"{stem}.{suffix}").exists()
         for stem in stems for suffix in ("png", "svg", "pdf")
     )
+    checks["framework_drawio_source_exists"] = (
+        args.figures / "optimization_framework.drawio"
+    ).exists()
     report = {"ok": bool(all(checks.values())), "checks": checks}
     args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))

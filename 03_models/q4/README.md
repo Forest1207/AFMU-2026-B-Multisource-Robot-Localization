@@ -30,6 +30,7 @@
 - `scheduler.py`：三阶段词典序 MILP。
 - `run_q4.py`：正式主入口、贪心基线、扰动检验和模板保真写入。
 - `make_figures.py` / `diagnostics.py`：五组正式图件，包括候选分布、任务时间轴、约束裕度、轨迹目标关系与总体优化框架。
+- `optimization_framework.drawio`：总体优化框架的 draw.io 可编辑源文件；绘图程序会将其同步至正式图件目录。
 - `validation.py`：约束、MILP、CSV、XLSX 和图件的机器门禁。
 - `test_synthetic.py`：时间冲突、射击唯一性和拍照角度冲突的合成调度测试。
 
@@ -37,7 +38,7 @@
 
 ## 图表分工
 
-- `optimization_framework`：展示输入状态、候选构造、贪心下界、冲突建模、三级词典序优化与舍入复核之间的数学关系。
+- `optimization_framework`：采用 draw.io 风格展示输入状态、候选构造、贪心下界、冲突建模、三级词典序优化与舍入复核之间的数学关系，并提供 `.drawio` 可编辑源文件。
 - `candidate_feasibility_map`：展示各目标的可行时段、候选密度及最终入选点，解释优化的搜索空间。
 - `optimized_schedule_timeline`：展示准备区间和执行时刻，直接检查单资源互斥关系。
 - `constraint_margins`：分解距离、速度与加速度裕度，定位最终日程中的紧约束任务。

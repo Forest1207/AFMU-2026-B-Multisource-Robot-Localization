@@ -49,5 +49,8 @@
         "pdf"
       ]
     }
+  ],
+  "editable_sources": [
+    "optimization_framework.drawio"
   ]
 }

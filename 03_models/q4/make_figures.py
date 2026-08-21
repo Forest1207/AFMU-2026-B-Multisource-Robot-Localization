@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shutil
 from pathlib import Path
 
 import pandas as pd
@@ -50,6 +51,10 @@ def main() -> None:
     plot_schedule(schedule, args.figures / "optimized_schedule_timeline.png")
     plot_margins(schedule, args.figures / "constraint_margins.png")
     plot_optimization_framework(args.figures / "optimization_framework.png")
+    shutil.copyfile(
+        Path(__file__).with_name("optimization_framework.drawio"),
+        args.figures / "optimization_framework.drawio",
+    )
     stems = ["trajectory_targets_schedule", "candidate_feasibility_map",
              "optimized_schedule_timeline", "constraint_margins",
              "optimization_framework"]
@@ -61,6 +66,7 @@ def main() -> None:
         "source_results": ["feasible_tasks.csv", "optimized_schedule.csv", "parameters.json"],
         "figures": [{"stem": stem, "formats": ["png", "svg", "pdf"]}
                     for stem in stems],
+        "editable_sources": ["optimization_framework.drawio"],
     }
     (args.results / "figure_manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
